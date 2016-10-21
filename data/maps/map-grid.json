@@ -1,0 +1,393 @@
+{
+    "map": {
+        "nodes": {
+            "node": [
+                {
+                    "_x": "0",
+                    "_y": "5",
+                    "_item": ""
+                },
+                {
+                    "_x": "0",
+                    "_y": "6",
+                    "_item": ""
+                },
+                {
+                    "_x": "0",
+                    "_y": "7",
+                    "_item": "chair"
+                },
+                {
+                    "_x": "0",
+                    "_y": "8",
+                    "_item": "barstool"
+                },
+                {
+                    "_x": "0",
+                    "_y": "9",
+                    "_item": ""
+                },
+                {
+                    "_x": "0",
+                    "_y": "10",
+                    "_item": "sofa"
+                },
+                {
+                    "_x": "0",
+                    "_y": "11",
+                    "_item": "hatrack"
+                },
+                {
+                    "_x": "0",
+                    "_y": "12",
+                    "_item": ""
+                },
+                {
+                    "_x": "1",
+                    "_y": "5",
+                    "_item": "hatrack"
+                },
+                {
+                    "_x": "1",
+                    "_y": "6",
+                    "_item": "easel"
+                },
+                {
+                    "_x": "1",
+                    "_y": "7",
+                    "_item": "lamp"
+                },
+                {
+                    "_x": "1",
+                    "_y": "8",
+                    "_item": ""
+                },
+                {
+                    "_x": "1",
+                    "_y": "9",
+                    "_item": ""
+                },
+                {
+                    "_x": "1",
+                    "_y": "10",
+                    "_item": "chair"
+                },
+                {
+                    "_x": "1",
+                    "_y": "11",
+                    "_item": ""
+                },
+                {
+                    "_x": "1",
+                    "_y": "12",
+                    "_item": ""
+                },
+                {
+                    "_x": "2",
+                    "_y": "5",
+                    "_item": ""
+                },
+                {
+                    "_x": "2",
+                    "_y": "6",
+                    "_item": ""
+                },
+                {
+                    "_x": "2",
+                    "_y": "7",
+                    "_item": ""
+                },
+                {
+                    "_x": "2",
+                    "_y": "8",
+                    "_item": ""
+                },
+                {
+                    "_x": "2",
+                    "_y": "9",
+                    "_item": ""
+                },
+                {
+                    "_x": "2",
+                    "_y": "10",
+                    "_item": ""
+                },
+                {
+                    "_x": "3",
+                    "_y": "5",
+                    "_item": ""
+                },
+                {
+                    "_x": "3",
+                    "_y": "6",
+                    "_item": "sofa"
+                },
+                {
+                    "_x": "3",
+                    "_y": "7",
+                    "_item": ""
+                },
+                {
+                    "_x": "3",
+                    "_y": "8",
+                    "_item": "easel"
+                },
+                {
+                    "_x": "4",
+                    "_y": "7",
+                    "_item": ""
+                },
+                {
+                    "_x": "4",
+                    "_y": "8",
+                    "_item": "lamp"
+                }
+            ]
+        },
+        "edges": {
+            "edge": [
+                {
+                    "_node1": "0,5",
+                    "_node2": "0,6",
+                    "_wall": "fish",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "0,6",
+                    "_node2": "0,7",
+                    "_wall": "fish",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "0,7",
+                    "_node2": "0,8",
+                    "_wall": "butterfly",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "0,8",
+                    "_node2": "0,9",
+                    "_wall": "butterfly",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "0,9",
+                    "_node2": "0,10",
+                    "_wall": "butterfly",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "0,10",
+                    "_node2": "0,11",
+                    "_wall": "butterfly",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "0,11",
+                    "_node2": "0,12",
+                    "_wall": "butterfly",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "1,5",
+                    "_node2": "1,6",
+                    "_wall": "fish",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "1,6",
+                    "_node2": "1,7",
+                    "_wall": "fish",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "1,7",
+                    "_node2": "1,8",
+                    "_wall": "tower",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "1,8",
+                    "_node2": "1,9",
+                    "_wall": "butterfly",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "1,9",
+                    "_node2": "1,10",
+                    "_wall": "butterfly",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "1,11",
+                    "_node2": "1,12",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "2,5",
+                    "_node2": "2,6",
+                    "_wall": "fish",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "2,6",
+                    "_node2": "2,7",
+                    "_wall": "fish",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "2,8",
+                    "_node2": "2,9",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "2,9",
+                    "_node2": "2,10",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "3,5",
+                    "_node2": "3,6",
+                    "_wall": "fish",
+                    "_floor": "yellow"
+                },
+                {
+                    "_node1": "3,6",
+                    "_node2": "3,7",
+                    "_wall": "fish",
+                    "_floor": "yellow"
+                },
+                {
+                    "_node1": "3,7",
+                    "_node2": "3,8",
+                    "_wall": "tower",
+                    "_floor": "yellow"
+                },
+                {
+                    "_node1": "4,7",
+                    "_node2": "4,8",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "0,5",
+                    "_node2": "1,5",
+                    "_wall": "fish",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "1,5",
+                    "_node2": "2,5",
+                    "_wall": "fish",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "2,5",
+                    "_node2": "3,5",
+                    "_wall": "fish",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "0,6",
+                    "_node2": "1,6",
+                    "_wall": "fish",
+                    "_floor": "flower"
+                },
+                {
+                    "_node1": "1,6",
+                    "_node2": "2,6",
+                    "_wall": "fish",
+                    "_floor": "flower"
+                },
+                {
+                    "_node1": "2,6",
+                    "_node2": "3,6",
+                    "_wall": "fish",
+                    "_floor": "flower"
+                },
+                {
+                    "_node1": "0,7",
+                    "_node2": "1,7",
+                    "_wall": "fish",
+                    "_floor": "wood"
+                },
+                {
+                    "_node1": "1,7",
+                    "_node2": "2,7",
+                    "_wall": "tower",
+                    "_floor": "wood"
+                },
+                {
+                    "_node1": "2,7",
+                    "_node2": "3,7",
+                    "_wall": "tower",
+                    "_floor": "wood"
+                },
+                {
+                    "_node1": "0,8",
+                    "_node2": "1,8",
+                    "_wall": "butterfly",
+                    "_floor": "gravel"
+                },
+                {
+                    "_node1": "1,8",
+                    "_node2": "2,8",
+                    "_wall": "tower",
+                    "_floor": "gravel"
+                },
+                {
+                    "_node1": "2,8",
+                    "_node2": "3,8",
+                    "_wall": "tower",
+                    "_floor": "gravel"
+                },
+                {
+                    "_node1": "3,8",
+                    "_node2": "4,8",
+                    "_wall": "tower",
+                    "_floor": "gravel"
+                },
+                {
+                    "_node1": "0,9",
+                    "_node2": "1,9",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "1,9",
+                    "_node2": "2,9",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "0,10",
+                    "_node2": "1,10",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "1,10",
+                    "_node2": "2,10",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "0,11",
+                    "_node2": "1,11",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "0,12",
+                    "_node2": "1,12",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                }
+            ]
+        },
+        "_name": "Grid"
+    }
+}

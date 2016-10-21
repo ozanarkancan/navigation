@@ -1,0 +1,449 @@
+{
+    "map": {
+        "nodes": {
+            "node": [
+                {
+                    "_x": "14",
+                    "_y": "18",
+                    "_item": ""
+                },
+                {
+                    "_x": "14",
+                    "_y": "19",
+                    "_item": "lamp"
+                },
+                {
+                    "_x": "14",
+                    "_y": "20",
+                    "_item": ""
+                },
+                {
+                    "_x": "15",
+                    "_y": "17",
+                    "_item": ""
+                },
+                {
+                    "_x": "15",
+                    "_y": "18",
+                    "_item": "hatrack"
+                },
+                {
+                    "_x": "15",
+                    "_y": "19",
+                    "_item": ""
+                },
+                {
+                    "_x": "15",
+                    "_y": "20",
+                    "_item": ""
+                },
+                {
+                    "_x": "16",
+                    "_y": "17",
+                    "_item": ""
+                },
+                {
+                    "_x": "16",
+                    "_y": "18",
+                    "_item": ""
+                },
+                {
+                    "_x": "16",
+                    "_y": "19",
+                    "_item": ""
+                },
+                {
+                    "_x": "17",
+                    "_y": "15",
+                    "_item": ""
+                },
+                {
+                    "_x": "17",
+                    "_y": "16",
+                    "_item": ""
+                },
+                {
+                    "_x": "17",
+                    "_y": "17",
+                    "_item": "barstool"
+                },
+                {
+                    "_x": "17",
+                    "_y": "18",
+                    "_item": "chair"
+                },
+                {
+                    "_x": "17",
+                    "_y": "19",
+                    "_item": ""
+                },
+                {
+                    "_x": "18",
+                    "_y": "15",
+                    "_item": ""
+                },
+                {
+                    "_x": "18",
+                    "_y": "16",
+                    "_item": "sofa"
+                },
+                {
+                    "_x": "18",
+                    "_y": "17",
+                    "_item": "sofa"
+                },
+                {
+                    "_x": "18",
+                    "_y": "18",
+                    "_item": ""
+                },
+                {
+                    "_x": "18",
+                    "_y": "19",
+                    "_item": ""
+                },
+                {
+                    "_x": "19",
+                    "_y": "15",
+                    "_item": "chair"
+                },
+                {
+                    "_x": "19",
+                    "_y": "16",
+                    "_item": ""
+                },
+                {
+                    "_x": "19",
+                    "_y": "17",
+                    "_item": ""
+                },
+                {
+                    "_x": "19",
+                    "_y": "18",
+                    "_item": ""
+                },
+                {
+                    "_x": "19",
+                    "_y": "19",
+                    "_item": ""
+                },
+                {
+                    "_x": "19",
+                    "_y": "20",
+                    "_item": "easel"
+                },
+                {
+                    "_x": "19",
+                    "_y": "21",
+                    "_item": ""
+                },
+                {
+                    "_x": "20",
+                    "_y": "15",
+                    "_item": ""
+                },
+                {
+                    "_x": "20",
+                    "_y": "16",
+                    "_item": ""
+                },
+                {
+                    "_x": "20",
+                    "_y": "17",
+                    "_item": "easel"
+                },
+                {
+                    "_x": "20",
+                    "_y": "18",
+                    "_item": ""
+                },
+                {
+                    "_x": "21",
+                    "_y": "15",
+                    "_item": ""
+                },
+                {
+                    "_x": "21",
+                    "_y": "17",
+                    "_item": ""
+                },
+                {
+                    "_x": "22",
+                    "_y": "15",
+                    "_item": ""
+                },
+                {
+                    "_x": "22",
+                    "_y": "16",
+                    "_item": "lamp"
+                },
+                {
+                    "_x": "22",
+                    "_y": "17",
+                    "_item": ""
+                },
+                {
+                    "_x": "23",
+                    "_y": "15",
+                    "_item": "hatrack"
+                },
+                {
+                    "_x": "23",
+                    "_y": "16",
+                    "_item": ""
+                }
+            ]
+        },
+        "edges": {
+            "edge": [
+                {
+                    "_node1": "14,19",
+                    "_node2": "14,20",
+                    "_wall": "fish",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "15,17",
+                    "_node2": "15,18",
+                    "_wall": "fish",
+                    "_floor": "yellow"
+                },
+                {
+                    "_node1": "15,18",
+                    "_node2": "15,19",
+                    "_wall": "fish",
+                    "_floor": "yellow"
+                },
+                {
+                    "_node1": "15,19",
+                    "_node2": "15,20",
+                    "_wall": "fish",
+                    "_floor": "yellow"
+                },
+                {
+                    "_node1": "16,18",
+                    "_node2": "16,19",
+                    "_wall": "fish",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "17,15",
+                    "_node2": "17,16",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "17,17",
+                    "_node2": "17,18",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "17,18",
+                    "_node2": "17,19",
+                    "_wall": "fish",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "18,16",
+                    "_node2": "18,17",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "19,15",
+                    "_node2": "19,16",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "19,18",
+                    "_node2": "19,19",
+                    "_wall": "tower",
+                    "_floor": "flower"
+                },
+                {
+                    "_node1": "19,19",
+                    "_node2": "19,20",
+                    "_wall": "tower",
+                    "_floor": "flower"
+                },
+                {
+                    "_node1": "19,20",
+                    "_node2": "19,21",
+                    "_wall": "tower",
+                    "_floor": "flower"
+                },
+                {
+                    "_node1": "20,16",
+                    "_node2": "20,17",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "20,17",
+                    "_node2": "20,18",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "22,16",
+                    "_node2": "22,17",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "23,15",
+                    "_node2": "23,16",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "18,15",
+                    "_node2": "19,15",
+                    "_wall": "butterfly",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "19,15",
+                    "_node2": "20,15",
+                    "_wall": "butterfly",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "20,15",
+                    "_node2": "21,15",
+                    "_wall": "butterfly",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "21,15",
+                    "_node2": "22,15",
+                    "_wall": "butterfly",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "22,15",
+                    "_node2": "23,15",
+                    "_wall": "butterfly",
+                    "_floor": "grass"
+                },
+                {
+                    "_node1": "17,16",
+                    "_node2": "18,16",
+                    "_wall": "tower",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "18,16",
+                    "_node2": "19,16",
+                    "_wall": "tower",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "19,16",
+                    "_node2": "20,16",
+                    "_wall": "butterfly",
+                    "_floor": "brick"
+                },
+                {
+                    "_node1": "22,16",
+                    "_node2": "23,16",
+                    "_wall": "butterfly",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "15,17",
+                    "_node2": "16,17",
+                    "_wall": "fish",
+                    "_floor": "gravel"
+                },
+                {
+                    "_node1": "16,17",
+                    "_node2": "17,17",
+                    "_wall": "fish",
+                    "_floor": "gravel"
+                },
+                {
+                    "_node1": "17,17",
+                    "_node2": "18,17",
+                    "_wall": "tower",
+                    "_floor": "gravel"
+                },
+                {
+                    "_node1": "19,17",
+                    "_node2": "20,17",
+                    "_wall": "tower",
+                    "_floor": "wood"
+                },
+                {
+                    "_node1": "20,17",
+                    "_node2": "21,17",
+                    "_wall": "butterfly",
+                    "_floor": "wood"
+                },
+                {
+                    "_node1": "21,17",
+                    "_node2": "22,17",
+                    "_wall": "butterfly",
+                    "_floor": "wood"
+                },
+                {
+                    "_node1": "14,18",
+                    "_node2": "15,18",
+                    "_wall": "fish",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "15,18",
+                    "_node2": "16,18",
+                    "_wall": "fish",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "16,18",
+                    "_node2": "17,18",
+                    "_wall": "fish",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "17,18",
+                    "_node2": "18,18",
+                    "_wall": "tower",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "18,18",
+                    "_node2": "19,18",
+                    "_wall": "tower",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "19,18",
+                    "_node2": "20,18",
+                    "_wall": "tower",
+                    "_floor": "blue"
+                },
+                {
+                    "_node1": "14,19",
+                    "_node2": "15,19",
+                    "_wall": "fish",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "16,19",
+                    "_node2": "17,19",
+                    "_wall": "fish",
+                    "_floor": "concrete"
+                },
+                {
+                    "_node1": "18,19",
+                    "_node2": "19,19",
+                    "_wall": "tower",
+                    "_floor": "concrete"
+                }
+            ]
+        },
+        "_name": "Jelly"
+    }
+}
