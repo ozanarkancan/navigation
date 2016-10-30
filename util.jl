@@ -206,17 +206,19 @@ function action(curr, next)
 	return ygold
 end
 
-function build_instance(instance, map, vocab)
+function build_instance(instance, map, vocab; vdims=[39, 39])
 	ins = ins_arr(vocab, instance.text)
 	#ins = ins_char_arr(vocab, instance.text)
-	Y = []
-	states = []
+	
+	lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
+	states = zeros(Float32, vdims[1], vdims[2], lfeatvec, length(instance.path))
+	Y = zeros(Float32, 4, length(instance.path))
 
 	for i=1:length(instance.path)
 		curr = instance.path[i]
 		next = i == length(instance.path) ? curr : instance.path[i+1]
-		push!(Y, action(curr, next))
-		push!(states, state_agent_centric(map, curr))
+		Y[:, i] = action(curr, next)
+		states[:, :, :, i] = state_agent_centric(map, curr)
 	end
 
 	return (ins, states, Y)
