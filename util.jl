@@ -215,14 +215,14 @@ function build_instance(instance, map, vocab; vdims=[39, 39])
 	for i=1:length(ins); words[i, :] = ins[i]; end
 	
 	lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
-	states = zeros(Float32, vdims[1], vdims[2], lfeatvec, length(instance.path))
+	states = Any[]
 	Y = zeros(Float32, length(instance.path), 4)
 
 	for i=1:length(instance.path)
 		curr = instance.path[i]
 		next = i == length(instance.path) ? curr : instance.path[i+1]
 		Y[i, :] = action(curr, next)
-		states[:, :, :, i] = state_agent_centric(map, curr)
+		push!(states, state_agent_centric(map, curr))
 	end
 
 	return (words, states, Y)
