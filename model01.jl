@@ -1,5 +1,7 @@
 using Knet, AutoGrad
 
+include("inits.jl")
+
 function spatial(filters, bias, emb, x)
 	c = conv4(filters, x) .+ bias
 	h = reshape(c, 1, size(emb, 1))
@@ -57,22 +59,22 @@ function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, nu
 	weights = Dict()
 	input = embed
 	
-	weights["enc_w"] = winit*randn(input+hidden, 4*hidden)
-	weights["enc_b"] = zeros(1, 4*hidden)
+	weights["enc_w"] = xavier(Float32, input+hidden, 4*hidden)
+	weights["enc_b"] = zeros(Float32, 1, 4*hidden)
 	weights["enc_b"][1:hidden] = 1 # forget gate bias
 
-	weights["dec_w"] = winit*randn(input+hidden, 4*hidden)
-	weights["dec_b"] = zeros(1, 4*hidden)
+	weights["dec_w"] = xavier(Float32, input+hidden, 4*hidden)
+	weights["dec_b"] = zeros(Float32, 1, 4*hidden)
 	weights["dec_b"][1:hidden] = 1 # forget gate bias
 
 	worldfeats = (worldsize[1] - window + 1) * (worldsize[2] - window + 1) * numfilters
 
-	weights["emb_word"] = winit*randn(vocab, embed)
-	weights["emb_world"] = winit*randn(worldfeats, embed)
-	weights["filters_w"] = winit*randn(window, window, onehotworld, numfilters)
-	weights["filters_b"] = zeros(1, 1, numfilters, 1)
+	weights["emb_word"] = xavier(Float32, vocab, embed)
+	weights["emb_world"] = xavier(Float32, worldfeats, embed)
+	weights["filters_w"] = xavier(Float32, window, window, onehotworld, numfilters)
+	weights["filters_b"] = zeros(Float32, 1, 1, numfilters, 1)
 	
-	weights["soft_w"] = winit*randn(hidden,4)
+	weights["soft_w"] = xavier(Float32, hidden, 4)
 	weights["soft_b"] = zeros(1,4)
 
 	for k in keys(weights); weights[k] = convert(atype, weights[k]); end
