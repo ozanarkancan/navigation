@@ -121,12 +121,13 @@ function train(w, prms, data; gclip=10.0)
 	return lss / cnt
 end
 
-#=
-function test(w, data, maps; limactions=35)
+function test(weights, data, maps; limactions=35)
 	scss = 0.0
 
-	for (instruction, wordmatrices) in data
-		for w=1:length(wordmatrices); forw(net, wordmatrices[w]); end
+	for (instruction, words) in data
+		words = convert(KnetArray{Float32}, words)
+		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b"],2)/4), 1)
+		encode(weights["enc_w"], weights["enc_b"], weights["emb_word"], state, words)
 
 		current = instruction.path[1]
 		nactions = 0
@@ -137,9 +138,11 @@ function test(w, data, maps; limactions=35)
 		actions = Any[]
 
 		while !stop
-			state = state_agent_centric(maps[instruction.map], current)
-			ypred = forw(net, state; decode=true)
-			action = indmax(to_host(ypred))
+			view = state_agent_centric(maps[instruction.map], current)
+			view = convert(KnetArray{Float32}, view)
+			x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], view)
+			ypred = decode(weights["dec_w"], weights["dec_b"], weights["soft_w"], weights["soft_b"], state, x)
+			action = indmax(Array(ypred))
 			push!(actions, action)
 			current = getlocation(maps[instruction.map], current, action)
 			nactions += 1
@@ -157,10 +160,7 @@ function test(w, data, maps; limactions=35)
 		end
 
 		flush(STDOUT)
-
-		reset!(net)
 	end
 
 	return scss / length(data)
 end
-=#

@@ -48,7 +48,11 @@ function ins_arr(d, ins)
 			push!(arr, onehot)
 		end
 	end
-	return arr
+
+	words = zeros(Float32, length(arr), vocablength+1)
+	for i=1:length(arr); words[i, :] = arr[i]; end
+
+	return words
 end
 
 #converts chars to onehots
@@ -207,13 +211,9 @@ function action(curr, next)
 end
 
 function build_instance(instance, map, vocab; vdims=[39, 39])
-	ins = ins_arr(vocab, instance.text)
+	words = ins_arr(vocab, instance.text)
 	#ins = ins_char_arr(vocab, instance.text)
 
-	words = zeros(Float32, length(ins), length(vocab)+1)
-
-	for i=1:length(ins); words[i, :] = ins[i]; end
-	
 	lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
 	states = Any[]
 	Y = zeros(Float32, length(instance.path), 4)

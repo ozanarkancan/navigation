@@ -58,60 +58,18 @@ function main()
 	w = initweights(KnetArray{Float32}, args["hidden"], length(d["vocab"])+1, args["embed"], 0.1, args["window"], vdims[3], args["filters"])
 	prms = initparams(w; lr=args["lr"])
 	
-	#test_ins = getinstructions(args["testfile"])
-	#test_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), test_ins)
-	#test_data = map(ins-> (ins, ins_char_arr(d["vocab"], ins.text)), test_ins)
-
-	for i=1:args["epoch"]
-		@time lss = train(w, prms, d["data"])
-		#@time tst_acc = test(net, test_data, d["maps"])
-		
-		#println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc)")
-		println("Epoch: $(i), trn loss: $(lss)")
-		flush(STDOUT)
-	end
-end
-
-#=
-function main()
-	println("*** Parameters ***")
-	for k in keys(args); println("$k -> $(args[k])"); end
-	flush(STDOUT)
-
-	d = load(args["trainfile"])
-	vdims = size(d["data"][1][2][1])
-	
-	if args["model"] == "model07.jl"
-		encoder = compile(:encoder; hidden=args["hidden"], embed=args["embed"])
-		decoder = compile(:decoder; hidden=args["hidden"], dims=(args["window"], args["window"], vdims[3], args["filters"]))
-
-		setp(encoder, adam=true, lr=args["lr"])
-		setp(decoder, adam=true, lr=args["lr"])
-		
-		net = (encoder, decoder)
-		trnf = (net,data) -> train(net, data; hidden=args["hidden"])
-	else
-		net = compile(:model; hidden=args["hidden"], embed=args["embed"], dims=(args["window"], args["window"], vdims[3], args["filters"]))
-		setp(net, adam=true, lr=args["lr"])
-		trnf = train
-	end
-	
 	test_ins = getinstructions(args["testfile"])
 	test_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), test_ins)
 	#test_data = map(ins-> (ins, ins_char_arr(d["vocab"], ins.text)), test_ins)
 
 	for i=1:args["epoch"]
-		@time lss = trnf(net, d["data"])
-		@time tst_acc = test(net, test_data, d["maps"])
-		if i % 5 == 0
-			gc()
-		end
-
+		@time lss = train(w, prms, d["data"])
+		@time tst_acc = test(w, test_data, d["maps"])
+		
 		println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc)")
 		flush(STDOUT)
 	end
 end
-=#
 
 main()
 
