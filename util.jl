@@ -209,6 +209,10 @@ end
 function build_instance(instance, map, vocab; vdims=[39, 39])
 	ins = ins_arr(vocab, instance.text)
 	#ins = ins_char_arr(vocab, instance.text)
+
+	words = zeros(Float32, length(ins), length(vocab)+1)
+
+	for i=1:length(ins); words[i, :] = ins[i]; end
 	
 	lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
 	states = zeros(Float32, vdims[1], vdims[2], lfeatvec, length(instance.path))
@@ -221,7 +225,7 @@ function build_instance(instance, map, vocab; vdims=[39, 39])
 		states[:, :, :, i] = state_agent_centric(map, curr)
 	end
 
-	return (ins, states, Y)
+	return (words, states, Y)
 end
 
 function build_data(trainfiles, outfile)
