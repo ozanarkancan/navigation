@@ -1,10 +1,12 @@
 using Knet, AutoGrad
 
-function spatial(w, x)
-	return conv4(w, x)
+function spatial(filters, bias, emb, x)
+	c = conv4(w, x) .+ bias
+	h = reshape(c, 1, prod(size(c)))
+	return h * emb
 end
 
-function lstm(weight,bias,hidden,cell,input;encode=true)
+function lstm(weight,bias,hidden,cell,input)
 	gates   = hcat(input,hidden) * weight .+ bias
 	hsize   = size(hidden,2)
 	forget  = sigm(gates[:,1:hsize])
@@ -16,54 +18,74 @@ function lstm(weight,bias,hidden,cell,input;encode=true)
 	return (hidden,cell)
 end
 
-function predict(w, s, x; encode=true)
-	if encode
-		x = x * w[end-3]
-	else
-		x = spatial(w[end-2], x)
+function encode(weight, bias, emb, state, words)
+	x = words * emb
+	for i=1:size(words, 1)
+		state[1], state[2] = lstm(weight, bias, state[1], state[2], x[i, :])
 	end
-
-	for i = 1:2:length(s)
-		(s[i],s[i+1]) = lstm(w[i+1],w[i+1],s[i],s[i+1],x;encode=encode)
-		x = s[i]
-	end
-	return x * w[end-1] .+ w[end]
 end
 
-function loss(param,state,sequence,range=1:length(sequence)-1)
+function decode(weight, bias, soft_w, soft_b, state, x)
+	state[1], state[2] = lstm(weight, bias, state[1], state[2], x)
+	
+	return state[1] * soft_w .+ soft_b
+end
+
+function loss(weights,state,words,views,ygold)
 	total = 0.0; count = 0
-	atype = typeof(getval(param[1]))
-	input = convert(atype,sequence[first(range)])
-	for t in range
-		ypred = predict(param,state,input)
+
+	#encode
+	encode(weights["enc_w"], weights["enc_b"], weights["emb_word"], state, words)
+
+	#decode
+	for i=1:size(views)[end]
+		x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], views[:, :, :, i])
+		ypred = decode(weights["dec_w"], weights["dec_b"], weights["soft_w"], weights["soft_b"], state, x)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
-		ygold = convert(atype,sequence[t+1])
-		total += sum(ygold .* ynorm)
-		count += size(ygold,1)
-		input = ygold
+		total += sum(ygold[i, :] .* ynorm)
+		#count += size(ygold,1)
+		count += 1
 	end
 	return -total / count
 end
 
 lossgradient = grad(loss)
 
-# param[2k-1,2k]: weight and bias for the k'th lstm layer
-# param[end-2]: embedding matrix
-# param[end-1,end]: weight and bias for final prediction
-function initweights(atype, hidden, vocab, embed, winit, window, onehot)
-	param = Array(Any, 2*length(hidden)+3)
+function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, numfilters; worldsize=[39, 39])
+	weights = Dict()
 	input = embed
-	for k = 1:length(hidden)
-		param[2k-1] = winit*randn(input+hidden[k], 4*hidden[k])
-		param[2k]   = zeros(1, 4*hidden[k])
-		param[2k][1:hidden[k]] = 1 # forget gate bias
-		input = hidden[k]
+	
+	weights["enc_w"] = winit*randn(input+hidden, 4*hidden)
+	weights["enc_b"] = = zeros(1, 4*hidden)
+	weights["enc_b"][1:hidden[k]] = 1 # forget gate bias
+
+	weights["dec_w"] = winit*randn(input+hidden, 4*hidden)
+	weights["dec_b"] = = zeros(1, 4*hidden)
+	weights["dec_b"][1:hidden[k]] = 1 # forget gate bias
+
+	worldfeats = (world[1] - window + 1) * (world[2] - window + 1) * numfilters
+
+	param["emb_word"] = winit*randn(vocab, embed)
+	param["emb_world"] = winit*randn(worldfeats, embed)
+	param["filters_w"] = winit*randn(window, window, onehotworld, numfilters)
+	param["filters_b"] = zeros(1, 1, numfilters, 1)
+	
+	weights["soft_w"] = winit*randn(hidden,4)
+	weights["soft_b"] = zeros(1,4)
+
+	for k in keys(weights)
+		weights[k] = convert(atype, weights[k])
 	end
-	param[end-3] = winit*randn(vocab,embed)
-	param[end-2] = winit*randn(window, window, onehot, 1)
-	param[end-1] = winit*randn(hidden[end],vocab)
-	param[end] = zeros(1,vocab)
-	return map(p->convert(atype,p), param)
+	
+	return weights
+end
+
+function initparams(ws; lr=0.001)
+	prms = Dict()
+	
+	for k in keys(ws); prms[k] = Adam(ws[i];lr=lr) end;
+
+	return prms
 end
 
 # state[2k-1,2k]: hidden and cell for the k'th lstm layer
@@ -79,18 +101,17 @@ end
 function train(w, prms, data; gclip=10.0)
 	lss = 0.0
 	cnt = 0.0
-	for (ins, states, Y) in data
+	for (words, states, Y) in data
 		#load data to gpu
-		ins = convert(KnetArray, ins)
+		words = convert(KnetArray, words)
 		states = convert(KnetArray, states)
 		Y = convert(KnetArray, Y)
-		for w=1:length(ins); sforw(net, ins[w]; dropout=true); end
-		for i=1:length(states); ypred = sforw(net, states[i]; decode=true, dropout=true); lss += softloss(ypred, Y[i]); cnt += 1; end
-		for i=length(Y):-1:1; sback(net, Y[i], softloss); end
-		for w in ins; sback(net); end
 
-		update!(net; gclip = gclip)
-		reset!(net)
+		#call loss
+		#update weights
+		for k in keys(w)
+			update!(w[k], g[k], prms[k])
+		end
 	end
 
 	return lss / cnt
