@@ -4,3 +4,4 @@
 deps/deps.jl
 *.jld
 logs/
+qjob.sh
