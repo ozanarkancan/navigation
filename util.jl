@@ -226,7 +226,7 @@ function build_instance(instance, map, vocab; vdims=[39, 39])
 end
 
 function minibatch(data; bs=100)
-	sort!(data; by=t->size(t[1],1))
+	sort!(data; by=t->length(t[1])+length(t[2]))
 	batches = []
 
 	vocab = size(data[1][1][1], 2)
@@ -236,32 +236,40 @@ function minibatch(data; bs=100)
 		l = i + bs - 1
 		l = l > length(data) ? length(data) : l
 		words = Any[]
-		maskouts = Any[]
 		views = Any[]
 		ys = Any[]
+		maskouts = Any[]
 
-		
-		for j=i:l
-			maskout = ones(Float32, (l-i+1), 4)
-			
+		maxe = maximum(map(ind->length(data[ind][1]), i:l))
+		maxd = maximum(map(ind->length(data[ind][2]), i:l))
+
+		for enc=1:maxe
 			word = zeros(Float32, (l-i+1), vocab)
+
+			for j=i:l
+				t = j-i+1
+				if length(data[j][1]) >= enc
+					word[t, :] = data[j][1][enc]
+				end
+			end
+			push!(words, word)
+		end
+
+		for dec=1:maxd
 			view = zeros(Float32, vdims[1], vdims[2], vdims[3], (l-i+1))
 			y = zeros(Float32, (l-i+1), 4)
+			maskout = ones(Float32, (l-i+1), 4)
 
-			t = j-i+1
-
-			if length(data[j][1]) >= t
-				word[t, :] = data[j][1][t]
+			for j=i:l
+				t = j-i+1
+				if length(data[j][2]) >= dec
+					view[:, :, :, t] = data[j][2][dec]
+					y[t, :] = data[j][3][dec, :]
+				else
+					maskout[t, :] = 0.0
+				end
 			end
 
-			if length(data[j][2]) >= t
-				view[:, :, :, t] = data[j][2][t]
-				y[t, :] = data[j][3][t, :]
-			else
-				maskout[t, :] = 0.0
-			end
-
-			push!(words, word)
 			push!(views, view)
 			push!(ys, y)
 			push!(maskouts, maskout)
@@ -295,7 +303,7 @@ function build_data(trainfiles, outfile)
 	println("Converting data...")
 	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
 	
-	batches = minibatch(trn_data; bs=32)
+	batches = minibatch(trn_data; bs=100)
 
 	println("Saving...")
 

@@ -3,8 +3,8 @@ using Knet, AutoGrad
 include("inits.jl")
 
 function spatial(filters, bias, emb, x)
-	c = conv4(filters, x) .+ bias
-	h = reshape(c, 1, size(emb, 1))
+	c = relu(conv4(filters, x) .+ bias)
+	h = transpose(mat(c))
 	return h * emb
 end
 
@@ -21,9 +21,9 @@ function lstm(weight,bias,hidden,cell,input)
 end
 
 function encode(weight, bias, emb, state, words)
-	x = words * emb
-	for i=1:size(words, 1)
-		state[1], state[2] = lstm(weight, bias, state[1], state[2], x[i, :])
+	for w in words
+		x = w * emb
+		state[1], state[2] = lstm(weight, bias, state[1], state[2], x)
 	end
 end
 
@@ -33,7 +33,7 @@ function decode(weight, bias, soft_w, soft_b, state, x)
 	return state[1] * soft_w .+ soft_b
 end
 
-function loss(weights,state,words,views,ygold;lss=nothing)
+function loss(weights, state, words, views, ys, maskouts;lss=nothing)
 	total = 0.0; count = 0
 
 	#encode
@@ -43,13 +43,13 @@ function loss(weights,state,words,views,ygold;lss=nothing)
 		x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], views[i])
 		ypred = decode(weights["dec_w"], weights["dec_b"], weights["soft_w"], weights["soft_b"], state, x)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
-		total += sum(ygold[i, :] .* ynorm)
-		#count += size(ygold,1)
-		count += 1
+		total += sum(ys[i] .* ynorm .* maskouts[i])
+		count += sum(maskouts[i]) / 4
 	end
 
 	nll = -total/count
-	lss[1] = getval(nll)
+	lss[1] = AutoGrad.getval(nll)
+	lss[2] = AutoGrad.getval(count)
 	return nll
 end
 
@@ -101,25 +101,26 @@ end
 function train(w, prms, data; gclip=10.0)
 	lss = 0.0
 	cnt = 0.0
-	nll = Float32[0]
-	for (words, views, Y) in data
-		state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b"],2)/4), 1)
+	nll = Float32[0, 0]
+	for (words, views, ys, maskouts) in data
+		bs = size(words[1], 1)
+		state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b"],2)/4), bs)
 
 		#load data to gpu
-		words = convert(KnetArray{Float32}, words)
+		words = map(t->convert(KnetArray{Float32}, t), words)
 		views = map(v->convert(KnetArray{Float32}, v), views)
-		Y = convert(KnetArray{Float32}, Y)
+		ys = map(t->convert(KnetArray{Float32}, t), ys)
+		maskouts = map(t->convert(KnetArray{Float32}, t), maskouts)
 
-		g = lossgradient(w, state, words, views, Y; lss=nll)
+		g = lossgradient(w, state, words, views, ys, maskouts; lss=nll)
 		#update weights
 		for k in keys(w)
-			update!(w[k], g[k], prms[k])
+			Knet.update!(w[k], g[k], prms[k])
 		end
 
-		lss += nll[1]
-		cnt += 1.0
+		lss += nll[1] * nll[2]
+		cnt += nll[2]
 	end
-
 	return lss / cnt
 end
 
@@ -127,7 +128,7 @@ function test(weights, data, maps; limactions=35)
 	scss = 0.0
 
 	for (instruction, words) in data
-		words = convert(KnetArray{Float32}, words)
+		words = map(v->convert(KnetArray{Float32},v), words)
 		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b"],2)/4), 1)
 		encode(weights["enc_w"], weights["enc_b"], weights["emb_word"], state, words)
 
