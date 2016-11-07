@@ -39,4 +39,30 @@ function teststate()
 
 end
 
-teststate()
+function testmb()
+	trainfiles = ["data/instructions/SingleSentenceZeroInitial.grid.json","data/instructions/SingleSentenceZeroInitial.jelly.json"]
+	fname = "data/maps/map-grid.json"
+	grid = getmap(fname)
+
+	fname = "data/maps/map-jelly.json"
+	jelly = getmap(fname)
+
+	fname = "data/maps/map-l.json"
+	l = getmap(fname)
+
+	maps = Dict("Grid" => grid, "Jelly" => jelly, "L" => l)
+
+	trn_ins = getinstructions(trainfiles[1])
+	append!(trn_ins, getinstructions(trainfiles[2]))
+
+	println("Building the vocab...")
+	vocab = build_dict(trn_ins)
+	#vocab = build_char_dict(trn_ins)
+
+	println("Converting data...")
+	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
+	minibatch(trn_data)
+end
+
+#teststate()
+testmb()

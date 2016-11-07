@@ -1,5 +1,5 @@
 using JSON, TextAnalysis
-import DataStructures
+using DataStructures
 
 type Instruction
 	fname #file name

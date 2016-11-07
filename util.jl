@@ -43,16 +43,13 @@ function ins_arr(d, ins)
 	for w in ins
 		for t in split(w, "-")
 			indx = haskey(d, t) ? d[t] : vocablength + 1
-			onehot = zeros(Float32, vocablength + 1, 1)
-			onehot[indx, 1] = 1.0
+			onehot = zeros(Float32, 1, vocablength + 1)
+			onehot[1, indx] = 1.0
 			push!(arr, onehot)
 		end
 	end
 
-	words = zeros(Float32, length(arr), vocablength+1)
-	for i=1:length(arr); words[i, :] = arr[i]; end
-
-	return words
+	return arr
 end
 
 #converts chars to onehots
@@ -228,6 +225,54 @@ function build_instance(instance, map, vocab; vdims=[39, 39])
 	return (words, states, Y)
 end
 
+function minibatch(data; bs=100)
+	sort!(data; by=t->size(t[1],1))
+	batches = []
+
+	vocab = size(data[1][1][1], 2)
+	vdims = size(data[1][2][1])
+
+	for i=1:bs:length(data)
+		l = i + bs - 1
+		l = l > length(data) ? length(data) : l
+		words = Any[]
+		maskouts = Any[]
+		views = Any[]
+		ys = Any[]
+
+		
+		for j=i:l
+			maskout = ones(Float32, (l-i+1), 4)
+			
+			word = zeros(Float32, (l-i+1), vocab)
+			view = zeros(Float32, vdims[1], vdims[2], vdims[3], (l-i+1))
+			y = zeros(Float32, (l-i+1), 4)
+
+			t = j-i+1
+
+			if length(data[j][1]) >= t
+				word[t, :] = data[j][1][t]
+			end
+
+			if length(data[j][2]) >= t
+				view[:, :, :, t] = data[j][2][t]
+				y[t, :] = data[j][3][t, :]
+			else
+				maskout[t, :] = 0.0
+			end
+
+			push!(words, word)
+			push!(views, view)
+			push!(ys, y)
+			push!(maskouts, maskout)
+		end
+
+		push!(batches, (words, views, ys, maskouts))
+	end
+
+	return batches
+end
+
 function build_data(trainfiles, outfile)
 	fname = "data/maps/map-grid.json"
 	grid = getmap(fname)
@@ -250,8 +295,10 @@ function build_data(trainfiles, outfile)
 	println("Converting data...")
 	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
 	
+	batches = minibatch(trn_data; bs=32)
+
 	println("Saving...")
 
-	save(outfile, "vocab", vocab, "maps", maps, "data", trn_data)
+	save(outfile, "vocab", vocab, "maps", maps, "data", batches)
 	println("Done!")
 end

@@ -1,5 +1,5 @@
 using JSON
-import DataStructures
+using DataStructures
 
 type Map
 	name
