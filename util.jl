@@ -258,7 +258,7 @@ function minibatch(data; bs=100)
 		for dec=1:maxd
 			view = zeros(Float32, vdims[1], vdims[2], vdims[3], (l-i+1))
 			y = zeros(Float32, (l-i+1), 4)
-			maskout = ones(Float32, (l-i+1), 4)
+			maskout = ones(Float32, (l-i+1), 1)
 
 			for j=i:l
 				t = j-i+1
@@ -266,7 +266,7 @@ function minibatch(data; bs=100)
 					view[:, :, :, t] = data[j][2][dec]
 					y[t, :] = data[j][3][dec, :]
 				else
-					maskout[t, :] = 0.0
+					maskout[t, 1] = 0.0
 				end
 			end
 

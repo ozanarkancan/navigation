@@ -43,8 +43,8 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing)
 		x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], views[i])
 		ypred = decode(weights["dec_w"], weights["dec_b"], weights["soft_w"], weights["soft_b"], state, x)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
-		total += sum(ys[i] .* ynorm .* maskouts[i])
-		count += sum(maskouts[i]) / 4
+		total += sum(sum(ys[i] .* ynorm, 2) .* maskouts[i])
+		count += sum(maskouts[i])
 	end
 
 	nll = -total/count
