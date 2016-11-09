@@ -102,7 +102,7 @@ function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, nu
 	weights["enc_b2"] = zeros(Float32, 1, 4*hidden)
 	weights["enc_b2"][1:hidden] = 1 # forget gate bias
 
-	weights["dec_w2"] = xavier(Float32, input+hidden, 4*hidden)
+	weights["dec_w2"] = xavier(Float32, hidden+hidden, 4*hidden)
 	weights["dec_b2"] = zeros(Float32, 1, 4*hidden)
 	weights["dec_b2"][1:hidden] = 1 # forget gate bias
 
