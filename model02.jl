@@ -139,7 +139,7 @@ function initstate(atype, hidden, batchsize)
 	return map(s->convert(atype,s), state)
 end
 
-function train(w, prms, data; gclip=10.0, pdrops=[0.5, 0.5, 0.5])
+function train(w, prms, data; gclip=10.0, pdrops=[0.3, 0.5, 0.7])
 	lss = 0.0
 	cnt = 0.0
 	nll = Float32[0, 0]
