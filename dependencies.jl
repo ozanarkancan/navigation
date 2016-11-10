@@ -1,0 +1,5 @@
+Pkg.add("Knet")
+Pkg.add("TextAnalysis")
+Pkg.add("JSON")
+Pkg.add("DataStructures")
+Pkg.add("ArgParse")
