@@ -75,7 +75,7 @@ function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, nu
 	weights["filters_b"] = zeros(Float32, 1, 1, numfilters, 1)
 	
 	weights["soft_w"] = xavier(Float32, hidden, 4)
-	weights["soft_b"] = zeros(1,4)
+	weights["soft_b"] = zeros(Float32, 1,4)
 
 	for k in keys(weights); weights[k] = convert(atype, weights[k]); end
 	
@@ -98,7 +98,7 @@ function initstate(atype, hidden, batchsize)
 	return map(s->convert(atype,s), state)
 end
 
-function train(w, prms, data; gclip=10.0)
+function train(w, prms, data; args=nothing)
 	lss = 0.0
 	cnt = 0.0
 	nll = Float32[0, 0]
@@ -124,7 +124,7 @@ function train(w, prms, data; gclip=10.0)
 	return lss / cnt
 end
 
-function test(weights, data, maps; limactions=35)
+function test(weights, data, maps; args=nothing)
 	scss = 0.0
 
 	for (instruction, words) in data
@@ -150,7 +150,7 @@ function test(weights, data, maps; limactions=35)
 			current = getlocation(maps[instruction.map], current, action)
 			nactions += 1
 
-			stop = nactions > limactions || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+			stop = nactions > args["limnactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 		end
 		println("Actions: $(reshape(collect(actions), 1, length(actions)))")
 		println("Current: $(current)")

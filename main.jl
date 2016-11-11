@@ -18,6 +18,9 @@ function parse_commandline()
 			help = "embedding size"
 			default = 128
 			arg_type = Int
+		"--limactions"
+			arg_type = Int
+			default = 35
 		"--epoch"
 			help = "number of epochs"
 			default = 100
@@ -39,6 +42,14 @@ function parse_commandline()
 		"--model"
 			help = "model file"
 			default = "model01.jl"
+		"--pdrops"
+			help = "dropout rates"
+			nargs = '+'
+			default = [0.2, 0.5, 0.5]
+		"--bs"
+			help = "batch size"
+			default = 100
+			arg_type = Int
 	end
 	return parse_args(s)
 end		
@@ -53,9 +64,10 @@ function main()
 	flush(STDOUT)
 
 	d = load(args["trainfile"])
-	vdims = size(d["data"][1][2][1])
+	trn_data = minibatch(d["data"];bs=args["bs"])
+	vdims = size(trn_data[1][2][1])
 
-	w = initweights(KnetArray{Float32}, args["hidden"], length(d["vocab"])+1, args["embed"], 0.1, args["window"], vdims[3], args["filters"])
+	w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], 0.1, args["window"], vdims[3], args["filters"])
 	prms = initparams(w; lr=args["lr"])
 	
 	test_ins = getinstructions(args["testfile"])
@@ -63,8 +75,8 @@ function main()
 	#test_data = map(ins-> (ins, ins_char_arr(d["vocab"], ins.text)), test_ins)
 
 	for i=1:args["epoch"]
-		@time lss = train(w, prms, d["data"])
-		@time tst_acc = test(w, test_data, d["maps"])
+		@time lss = train(w, prms, trn_data; args=args)
+		@time tst_acc = test(w, test_data, d["maps"]; args=args)
 		
 		println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc)")
 		flush(STDOUT)

@@ -72,7 +72,7 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 		x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], views[i])
 		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
-		total += sum(sum(ys[i] .* ynorm, 2) .* maskouts[i])
+		total += sum((ys[i] .* ynorm) .* maskouts[i])
 		count += sum(maskouts[i])
 	end
 
@@ -114,7 +114,7 @@ function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, nu
 	weights["filters_b"] = zeros(Float32, 1, 1, numfilters, 1)
 	
 	weights["soft_w"] = xavier(Float32, hidden, 4)
-	weights["soft_b"] = zeros(1,4)
+	weights["soft_b"] = zeros(Float32, 1,4)
 
 	for k in keys(weights); weights[k] = convert(atype, weights[k]); end
 	
@@ -139,7 +139,7 @@ function initstate(atype, hidden, batchsize)
 	return map(s->convert(atype,s), state)
 end
 
-function train(w, prms, data; gclip=10.0, pdrops=[0.3, 0.5, 0.7])
+function train(w, prms, data; args=nothing)
 	lss = 0.0
 	cnt = 0.0
 	nll = Float32[0, 0]
@@ -153,7 +153,7 @@ function train(w, prms, data; gclip=10.0, pdrops=[0.3, 0.5, 0.7])
 		ys = map(t->convert(KnetArray{Float32}, t), ys)
 		maskouts = map(t->convert(KnetArray{Float32}, t), maskouts)
 
-		g = lossgradient(w, state, words, views, ys, maskouts; lss=nll, dropout=true, pdrops=pdrops)
+		g = lossgradient(w, state, words, views, ys, maskouts; lss=nll, dropout=true, pdrops=args["pdrops"])
 		#update weights
 		for k in keys(w)
 			Knet.update!(w[k], g[k], prms[k])
@@ -165,9 +165,8 @@ function train(w, prms, data; gclip=10.0, pdrops=[0.3, 0.5, 0.7])
 	return lss / cnt
 end
 
-function test(weights, data, maps; limactions=35)
+function test(weights, data, maps; args=nothing)
 	scss = 0.0
-
 	for (instruction, words) in data
 		words = map(v->convert(KnetArray{Float32},v), words)
 		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1"],2)/4), 1)
@@ -191,7 +190,7 @@ function test(weights, data, maps; limactions=35)
 			current = getlocation(maps[instruction.map], current, action)
 			nactions += 1
 
-			stop = nactions > limactions || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 		end
 		println("Actions: $(reshape(collect(actions), 1, length(actions)))")
 		println("Current: $(current)")

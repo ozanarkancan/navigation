@@ -3,7 +3,7 @@ using Knet, AutoGrad
 include("inits.jl")
 
 function spatial(filters, bias, emb, x)
-	c = relu(conv4(filters, x) .+ bias)
+	c = sigm(conv4(filters, x) .+ bias)
 	h = transpose(mat(c))
 	return h * emb
 end
@@ -56,7 +56,6 @@ function encode(weight1_f, bias1_f, weight2_f, bias2_f, weight1_b, bias1_b, weig
 end
 
 function decode(weight1, bias1, weight2, bias2, soft_w, soft_b, state, x; dropout=false, pdrops=[0.5, 0.5, 0.5])
-	
 	if dropout && pdrops[1] > 0.0
 		x = x .* (rand!(similar(getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
 	end
@@ -95,7 +94,7 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 		x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], views[i])
 		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
-		total += sum(sum(ys[i] .* ynorm, 2) .* maskouts[i])
+		total += sum((ys[i] .* ynorm) .* maskouts[i])
 		count += sum(maskouts[i])
 	end
 
@@ -107,6 +106,81 @@ end
 
 lossgradient = grad(loss)
 
+function train(w, prms, data; args=nothing)
+	lss = 0.0
+	cnt = 0.0
+	nll = Float32[0, 0]
+	for (words, views, ys, maskouts) in data
+		bs = size(words[1], 1)
+		state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b1_f"],2)/4), bs)
+
+		#load data to gpu
+		words = map(t->convert(KnetArray{Float32}, t), words)
+		views = map(v->convert(KnetArray{Float32}, v), views)
+		ys = map(t->convert(KnetArray{Float32}, t), ys)
+		maskouts = map(t->convert(KnetArray{Float32}, t), maskouts)
+
+		g = lossgradient(w, state, words, views, ys, maskouts; lss=nll, dropout=true, pdrops=args["pdrops"])
+		#update weights
+		for k in keys(w)
+			Knet.update!(w[k], g[k], prms[k])
+		end
+
+		lss += nll[1] * nll[2]
+		cnt += nll[2]
+	end
+	return lss / cnt
+end
+
+function test(weights, data, maps; args=nothing)
+	scss = 0.0
+
+	for (instruction, words) in data
+		words = map(v->convert(KnetArray{Float32},v), words)
+		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1)
+		encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w2_f"], weights["enc_b2_f"],
+			weights["enc_w1_b"], weights["enc_b1_b"], weights["enc_w2_b"], weights["enc_b2_b"], weights["emb_word"], state, words)
+
+		state[1] = hcat(state[1], state[5])
+		state[2] = hcat(state[2], state[6])
+		state[3] = hcat(state[3], state[7])
+		state[4] = hcat(state[4], state[8])
+
+		current = instruction.path[1]
+		nactions = 0
+		stop = false
+
+		println("\n$(instruction.text)")
+		println("Path: $(instruction.path)")
+		actions = Any[]
+
+		while !stop
+			view = state_agent_centric(maps[instruction.map], current)
+			view = convert(KnetArray{Float32}, view)
+			x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], view)
+			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x)
+			action = indmax(Array(ypred))
+			push!(actions, action)
+			current = getlocation(maps[instruction.map], current, action)
+			nactions += 1
+
+			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+		end
+		println("Actions: $(reshape(collect(actions), 1, length(actions)))")
+		println("Current: $(current)")
+
+		if current == instruction.path[end]
+			scss += 1
+			println("SUCCESS")
+		else
+			println("FAILURE")
+		end
+
+		flush(STDOUT)
+	end
+
+	return scss / length(data)
+end
 function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, numfilters; worldsize=[39, 39])
 	weights = Dict()
 	input = embed
@@ -145,7 +219,7 @@ function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, nu
 	weights["filters_b"] = zeros(Float32, 1, 1, numfilters, 1)
 	
 	weights["soft_w"] = xavier(Float32, hidden*2, 4)
-	weights["soft_b"] = zeros(1,4)
+	weights["soft_b"] = zeros(Float32, 1,4)
 
 	for k in keys(weights); weights[k] = convert(atype, weights[k]); end
 	
@@ -178,78 +252,4 @@ function initstate(atype, hidden, batchsize)
 	return map(s->convert(atype,s), state)
 end
 
-function train(w, prms, data; gclip=10.0, pdrops=[0.3, 0.5, 0.7])
-	lss = 0.0
-	cnt = 0.0
-	nll = Float32[0, 0]
-	for (words, views, ys, maskouts) in data
-		bs = size(words[1], 1)
-		state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b1_f"],2)/4), bs)
 
-		#load data to gpu
-		words = map(t->convert(KnetArray{Float32}, t), words)
-		views = map(v->convert(KnetArray{Float32}, v), views)
-		ys = map(t->convert(KnetArray{Float32}, t), ys)
-		maskouts = map(t->convert(KnetArray{Float32}, t), maskouts)
-
-		g = lossgradient(w, state, words, views, ys, maskouts; lss=nll, dropout=true, pdrops=pdrops)
-		#update weights
-		for k in keys(w)
-			Knet.update!(w[k], g[k], prms[k])
-		end
-
-		lss += nll[1] * nll[2]
-		cnt += nll[2]
-	end
-	return lss / cnt
-end
-
-function test(weights, data, maps; limactions=35)
-	scss = 0.0
-
-	for (instruction, words) in data
-		words = map(v->convert(KnetArray{Float32},v), words)
-		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1)
-		encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w2_f"], weights["enc_b2_f"],
-			weights["enc_w1_b"], weights["enc_b1_b"], weights["enc_w2_b"], weights["enc_b2_b"], weights["emb_word"], state, words)
-
-		state[1] = hcat(state[1], state[5])
-		state[2] = hcat(state[2], state[6])
-		state[3] = hcat(state[3], state[7])
-		state[4] = hcat(state[4], state[8])
-
-		current = instruction.path[1]
-		nactions = 0
-		stop = false
-
-		println("\n$(instruction.text)")
-		println("Path: $(instruction.path)")
-		actions = Any[]
-
-		while !stop
-			view = state_agent_centric(maps[instruction.map], current)
-			view = convert(KnetArray{Float32}, view)
-			x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], view)
-			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x)
-			action = indmax(Array(ypred))
-			push!(actions, action)
-			current = getlocation(maps[instruction.map], current, action)
-			nactions += 1
-
-			stop = nactions > limactions || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
-		end
-		println("Actions: $(reshape(collect(actions), 1, length(actions)))")
-		println("Current: $(current)")
-
-		if current == instruction.path[end]
-			scss += 1
-			println("SUCCESS")
-		else
-			println("FAILURE")
-		end
-
-		flush(STDOUT)
-	end
-
-	return scss / length(data)
-end
