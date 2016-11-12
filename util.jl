@@ -211,7 +211,6 @@ function build_instance(instance, map, vocab; vdims=[39, 39])
 	words = ins_arr(vocab, instance.text)
 	#ins = ins_char_arr(vocab, instance.text)
 
-	lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
 	states = Any[]
 	Y = zeros(Float32, length(instance.path), 4)
 
@@ -226,7 +225,8 @@ function build_instance(instance, map, vocab; vdims=[39, 39])
 end
 
 function minibatch(data; bs=100)
-	sort!(data; by=t->length(t[1])+length(t[2]))
+	#sort!(data; by=t->length(t[1])+length(t[2]))
+	sort!(data; by=t->length(t[1]))
 	batches = []
 
 	vocab = size(data[1][1][1], 2)
@@ -303,10 +303,10 @@ function build_data(trainfiles, outfile)
 	println("Converting data...")
 	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
 	
-	batches = minibatch(trn_data; bs=100)
+	#batches = minibatch(trn_data; bs=bs)
 
 	println("Saving...")
 
-	save(outfile, "vocab", vocab, "maps", maps, "data", batches)
+	save(outfile, "vocab", vocab, "maps", maps, "data", trn_data)
 	println("Done!")
 end
