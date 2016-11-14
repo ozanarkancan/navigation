@@ -19,7 +19,7 @@ function getinstructions(fname)
 		prepare!(sd, strip_whitespace)
 		prepare!(sd, strip_case)
 
-		pathtext = (isa(example["path"], DataStructures.OrderedDict{AbstractString,Any}) || isa(example["path"], DataStructures.OrderedDict{UTF8String,Any})) ? example["path"]["__text"] : example["path"]
+		pathtext = (isa(example["path"], DataStructures.OrderedDict{AbstractString,Any}) || isa(example["path"], DataStructures.OrderedDict{String,Any})) ? example["path"]["__text"] : example["path"]
 		sd2 = StringDocument(pathtext)
 		prepare!(sd2, strip_whitespace)
 		path = eval(parse(text(sd2)))

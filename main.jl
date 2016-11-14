@@ -25,12 +25,16 @@ function parse_commandline()
 			help = "number of epochs"
 			default = 100
 			arg_type = Int
-		"--trainfile"
+		"--trainfiles"
 			help = "built training jld file"
-			default = "grid_l.jld"
-		"--testfile"
+			default = ["grid_jelly.jld", "grid_l.jld", "l_jelly.jld"]
+			nargs = '+'
+		"--testfiles"
 			help = "test file as regular instruction file(json)"
-			default = "data/instructions/SingleSentenceZeroInitial.jelly.json"
+			default = ["data/instructions/SingleSentenceZeroInitial.l.json",
+				"data/instructions/SingleSentenceZeroInitial.jelly.json",
+				"data/instructions/SingleSentenceZeroInitial.grid.json"]
+			nargs = '+'
 		"--window"
 			help = "size of the filter"
 			default = [3]
@@ -60,19 +64,16 @@ args = parse_commandline()
 
 include(args["model"])
 
-function main()
-	println("*** Parameters ***")
-	for k in keys(args); println("$k -> $(args[k])"); end
-	flush(STDOUT)
-
-	d = load(args["trainfile"])
+function execute(trainfile, testfile, args)
+	println("Train: $trainfile , test: $testfile")
+	d = load(trainfile)
 	trn_data = minibatch(d["data"];bs=args["bs"])
 	vdims = size(trn_data[1][2][1])
 
 	w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], 0.1, args["window"], vdims[3], args["filters"])
 	prms = initparams(w; lr=args["lr"])
 	
-	test_ins = getinstructions(args["testfile"])
+	test_ins = getinstructions(testfile)
 	test_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), test_ins)
 	#test_data = map(ins-> (ins, ins_char_arr(d["vocab"], ins.text)), test_ins)
 
@@ -80,8 +81,18 @@ function main()
 		@time lss = train(w, prms, trn_data; args=args)
 		@time tst_acc = test(w, test_data, d["maps"]; args=args)
 		
-		println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc)")
+		println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc), $testfile")
 		flush(STDOUT)
+	end
+end
+
+function main()
+	println("*** Parameters ***")
+	for k in keys(args); println("$k -> $(args[k])"); end
+	flush(STDOUT)
+
+	for i=1:length(args["trainfiles"])
+		execute(args["trainfiles"][i], args["testfiles"][i], args)
 	end
 end
 

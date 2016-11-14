@@ -1,13 +1,31 @@
+#using ArgParse
 include("util.jl")
 
-files = ["data/instructions/SingleSentenceZeroInitial.grid.json",
-"data/instructions/SingleSentenceZeroInitial.jelly.json"]
-build_data(files, "grid_jelly.jld")
+function main()
+	#=
+	s = ArgParseSettings()
 
-files = ["data/instructions/SingleSentenceZeroInitial.grid.json",
-"data/instructions/SingleSentenceZeroInitial.l.json"]
-build_data(files, "grid_l.jld")
+	@add_arg_table s begin
+		"--bs"
+		help = "batch size"
+		default = 100
+		arg_type = Int
+	end
 
-files = ["data/instructions/SingleSentenceZeroInitial.l.json",
-"data/instructions/SingleSentenceZeroInitial.jelly.json"]
-build_data(files, "l_jelly.jld")
+	args = parse_args(s)
+	=#
+
+	files = ["data/instructions/SingleSentenceZeroInitial.grid.json",
+	"data/instructions/SingleSentenceZeroInitial.jelly.json"]
+	build_data(files, string("grid_jelly.jld"))
+
+	files = ["data/instructions/SingleSentenceZeroInitial.grid.json",
+	"data/instructions/SingleSentenceZeroInitial.l.json"]
+	build_data(files, string("grid_l.jld"))
+
+	files = ["data/instructions/SingleSentenceZeroInitial.l.json",
+	"data/instructions/SingleSentenceZeroInitial.jelly.json"]
+	build_data(files, string("l_jelly.jld"))
+end
+
+main()
