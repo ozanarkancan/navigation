@@ -3,7 +3,7 @@ using Knet, AutoGrad
 include("inits.jl")
 
 function spatial(filters, bias, emb, x)
-	c = sigm(conv4(filters, x) .+ bias)
+	c = sigm(conv4(filters, x; padding=0) .+ bias)
 	h = transpose(mat(c))
 	return h * emb
 end
