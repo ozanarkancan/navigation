@@ -33,12 +33,14 @@ function parse_commandline()
 			default = "data/instructions/SingleSentenceZeroInitial.jelly.json"
 		"--window"
 			help = "size of the filter"
-			default = 3
+			default = [3]
 			arg_type = Int
+			nargs = '+'
 		"--filters"
 			help = "number of filters"
-			default = 30
+			default = [30]
 			arg_type = Int
+			nargs = '+'
 		"--model"
 			help = "model file"
 			default = "model01.jl"
