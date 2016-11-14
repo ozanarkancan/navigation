@@ -106,12 +106,12 @@ function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, nu
 	weights["dec_b2"] = zeros(Float32, 1, 4*hidden)
 	weights["dec_b2"][1:hidden] = 1 # forget gate bias
 
-	worldfeats = (worldsize[1] - window + 1) * (worldsize[2] - window + 1) * numfilters
+	worldfeats = (worldsize[1] - window[1] + 1) * (worldsize[2] - window[1] + 1) * numfilters[1]
 
 	weights["emb_word"] = xavier(Float32, vocab, embed)
 	weights["emb_world"] = xavier(Float32, worldfeats, embed)
-	weights["filters_w"] = xavier(Float32, window, window, onehotworld, numfilters)
-	weights["filters_b"] = zeros(Float32, 1, 1, numfilters, 1)
+	weights["filters_w"] = xavier(Float32, window[1], window[1], onehotworld, numfilters[1])
+	weights["filters_b"] = zeros(Float32, 1, 1, numfilters[1], 1)
 	
 	weights["soft_w"] = xavier(Float32, hidden, 4)
 	weights["soft_b"] = zeros(Float32, 1,4)

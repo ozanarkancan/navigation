@@ -55,12 +55,14 @@ function encode(weight1_f, bias1_f, weight2_f, bias2_f, weight1_b, bias1_b, weig
 	end
 end
 
-function decode(weight1, bias1, weight2, bias2, soft_w, soft_b, state, x; dropout=false, pdrops=[0.5, 0.5, 0.5])
+function decode(weight1, bias1, weight2, bias2, soft_w, soft_b, state, x, mask; dropout=false, pdrops=[0.5, 0.5, 0.5])
 	if dropout && pdrops[1] > 0.0
 		x = x .* (rand!(similar(getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
 	end
 
 	state[1], state[2] = lstm(weight1, bias1, state[1], state[2], x)
+	state[1] = state[1] .* mask
+	state[2] = state[2] .* mask
 
 	inp = state[1]
 	if dropout && pdrops[2] > 0.0
@@ -68,13 +70,17 @@ function decode(weight1, bias1, weight2, bias2, soft_w, soft_b, state, x; dropou
 	end
 
 	state[3], state[4] = lstm(weight2, bias2, state[3], state[4], inp)
+	state[3] = state[3] .* mask
+	state[4] = state[4] .* mask
 	
+	#=
 	inp = state[3]
 	if dropout && pdrops[3] > 0.0
 		inp = inp .* (rand!(similar(getval(inp))) .> pdrops[3]) * (1/(1-pdrops[3]))
 	end
+	=#
 
-	return inp * soft_w .+ soft_b
+	return (state[3] * soft_w .+ soft_b) .* mask
 end
 
 function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
@@ -92,7 +98,7 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 	#decode
 	for i=1:length(views)
 		x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], views[i])
-		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x)
+		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x, maskouts[i])
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
 		total += sum((ys[i] .* ynorm) .* maskouts[i])
 		count += sum(maskouts[i])
@@ -134,6 +140,7 @@ end
 
 function test(weights, data, maps; args=nothing)
 	scss = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
 
 	for (instruction, words) in data
 		words = map(v->convert(KnetArray{Float32},v), words)
@@ -158,7 +165,7 @@ function test(weights, data, maps; args=nothing)
 			view = state_agent_centric(maps[instruction.map], current)
 			view = convert(KnetArray{Float32}, view)
 			x = spatial(weights["filters_w"], weights["filters_b"], weights["emb_world"], view)
-			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x)
+			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x, mask)
 			action = indmax(Array(ypred))
 			push!(actions, action)
 			current = getlocation(maps[instruction.map], current, action)
@@ -211,12 +218,12 @@ function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, nu
 	weights["dec_b2"] = zeros(Float32, 1, 4*hidden*2)
 	weights["dec_b2"][1:(hidden*2)] = 1 # forget gate bias
 
-	worldfeats = (worldsize[1] - window + 1) * (worldsize[2] - window + 1) * numfilters
+	worldfeats = (worldsize[1] - window[1] + 1) * (worldsize[2] - window[1] + 1) * numfilters[1]
 
 	weights["emb_word"] = xavier(Float32, vocab, embed)
 	weights["emb_world"] = xavier(Float32, worldfeats, embed)
-	weights["filters_w"] = xavier(Float32, window, window, onehotworld, numfilters)
-	weights["filters_b"] = zeros(Float32, 1, 1, numfilters, 1)
+	weights["filters_w"] = xavier(Float32, window[1], window[1], onehotworld, numfilters[1])
+	weights["filters_b"] = zeros(Float32, 1, 1, numfilters[1], 1)
 	
 	weights["soft_w"] = xavier(Float32, hidden*2, 4)
 	weights["soft_b"] = zeros(Float32, 1,4)
