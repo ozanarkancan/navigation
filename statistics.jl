@@ -15,12 +15,31 @@ function printinfo(fname)
 	cs = map(x->x.chars, extracted)
 	ts = map(x->x.tokens, extracted)
 	ps = map(x->x.pathlength, extracted)
-
+	
+	println("Number of examples: $(length(instructions))")
 	println("Average instruction length (in chars): $(mean(cs)), std: $(std(cs)), max: $(maximum(cs)), min: $(minimum(cs))")
 	println("Average instruction length (in tokens): $(mean(ts)), std: $(std(ts)), max: $(maximum(ts)), min: $(minimum(ts))")
 	println("Average path length: $(mean(ps)), std: $(std(ps)), max: $(maximum(ps)), min: $(minimum(ps)), indmax: $(indmax(ps))")
-	println(instructions[indmax(ps)].text)
-	println(instructions[indmax(ps)].path)
+
+	ind1 = indmin(ps)
+	ind2 = indmax(ps)
+
+	println("\nInstruction with shortest path:")
+	println(instructions[ind1])
+	
+	println("\nInstruction with longest path:")
+	println(instructions[ind2])
+
+	ind1 = indmin(ts)
+	ind2 = indmax(ts)
+
+	println("\nInstruction with shortest text:")
+	println(instructions[ind1])
+	
+	println("\nInstruction with longest text:")
+	println(instructions[ind2])
+
+	println("\nTop 10 longest: $(sort(ps; rev=true)[1:10])")
 end
 
 function main()
@@ -36,6 +55,7 @@ function main()
 	println("\nL")
 	printinfo(fname)
 
+	println("\n*** Paragraph ***")
 	fname = "data/instructions/ParagraphRandom.grid.json"
 	println("\nGrid")
 	printinfo(fname)
