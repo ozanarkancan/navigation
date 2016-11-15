@@ -17,15 +17,15 @@ function main()
 
 	files = ["data/instructions/SingleSentenceZeroInitial.grid.json",
 	"data/instructions/SingleSentenceZeroInitial.jelly.json"]
-	build_data(files, string("grid_jelly.jld"))
+	build_data(files, string("grid_jelly.jld"); charenc=false)
 
 	files = ["data/instructions/SingleSentenceZeroInitial.grid.json",
 	"data/instructions/SingleSentenceZeroInitial.l.json"]
-	build_data(files, string("grid_l.jld"))
+	build_data(files, string("grid_l.jld"); charenc=false)
 
 	files = ["data/instructions/SingleSentenceZeroInitial.l.json",
 	"data/instructions/SingleSentenceZeroInitial.jelly.json"]
-	build_data(files, string("l_jelly.jld"))
+	build_data(files, string("l_jelly.jld"); charenc=false)
 end
 
 main()

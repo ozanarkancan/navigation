@@ -61,8 +61,8 @@ function ins_char_arr(d, ins)
 		t = i==length(ins) ? ins[i] : "$(ins[i]) "
 		for c in t
 			indx = haskey(d, c) ? d[c] : vocablength + 1
-			onehot = zeros(Float32, vocablength + 1, 1)
-			onehot[indx, 1] = 1.0
+			onehot = zeros(Float32, 1, vocablength + 1)
+			onehot[1, indx] = 1.0
 			push!(arr, onehot)
 		end
 	end
@@ -81,7 +81,7 @@ left hand side: left of the agent
 neighbors of a node are edges
 =#
 function state_agent_centric(map, loc; vdims = [39 39])
-	lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
+	lfeatvec = length(Items) + length(Floors) + length(Walls) + 3
 	view = zeros(Float32, vdims[1], vdims[2], lfeatvec, 1)
 	mid = [vdims[1] round(Int, vdims[2]/2)]
 	
@@ -112,6 +112,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 	i, j = mid
 	
 	view[i, j, map.nodes[(loc[1], loc[2])]] = 1.0
+	view[i,j, lfeatvec-2, 1] = 1.0
 
 	i = i - 1
 	#up
@@ -121,8 +122,10 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
 			view[i, j, length(Items) + floor, 1] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall, 1] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
 			i = i - 1
 			view[i, j, map.nodes[(next[1], next[2])], 1] = 1.0
+			view[i,j, lfeatvec-2, 1] = 1.0
 			current = next
 			i = i - 1
 		else
@@ -140,8 +143,10 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
 			view[i, j, length(Items) + floor, 1] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall, 1] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
 			j = j + 1
 			view[i, j, map.nodes[(next[1], next[2])], 1] = 1.0
+			view[i,j, lfeatvec-2, 1] = 1.0
 			current = next
 			j = j + 1
 		else
@@ -159,8 +164,10 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
 			view[i, j, length(Items) + floor] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
 			i = i + 1
 			view[i, j, map.nodes[(next[1], next[2])]] = 1.0
+			view[i,j, lfeatvec-2, 1] = 1.0
 			current = next
 			i = i + 1
 		else
@@ -178,8 +185,10 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
 			view[i, j, length(Items) + floor] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
 			j = j - 1
 			view[i, j, map.nodes[(next[1], next[2])]] = 1.0
+			view[i,j, lfeatvec-2, 1] = 1.0
 			current = next
 			j = j - 1
 		else
@@ -207,9 +216,8 @@ function action(curr, next)
 	return ygold
 end
 
-function build_instance(instance, map, vocab; vdims=[39, 39])
-	words = ins_arr(vocab, instance.text)
-	#ins = ins_char_arr(vocab, instance.text)
+function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false)
+	words = !charenc ? ins_arr(vocab, instance.text) : ins_char_arr(vocab, instance.text)
 
 	states = Any[]
 	Y = zeros(Float32, length(instance.path), 4)
@@ -281,7 +289,7 @@ function minibatch(data; bs=100)
 	return batches
 end
 
-function build_data(trainfiles, outfile)
+function build_data(trainfiles, outfile; charenc=false)
 	fname = "data/maps/map-grid.json"
 	grid = getmap(fname)
 
@@ -297,8 +305,7 @@ function build_data(trainfiles, outfile)
 	append!(trn_ins, getinstructions(trainfiles[2]))
 	
 	println("Building the vocab...")
-	vocab = build_dict(trn_ins)
-	#vocab = build_char_dict(trn_ins)
+	vocab = !charenc ? build_dict(trn_ins) : build_char_dict(trn_ins)
 
 	println("Converting data...")
 	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
