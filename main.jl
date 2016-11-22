@@ -56,6 +56,10 @@ function parse_commandline()
 			help = "batch size"
 			default = 100
 			arg_type = Int
+		"gclip"
+			help = "gradient clip"
+			default = 10.0
+			arg_type = Float64
 	end
 	return parse_args(s)
 end		
@@ -70,7 +74,13 @@ function execute(trainfile, testfile, args)
 	trn_data = minibatch(d["data"];bs=args["bs"])
 	vdims = size(trn_data[1][2][1])
 
+	println("Vocab: $(length(d["vocab"])), World: $(vdims[3])")
+
 	w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], 0.1, args["window"], vdims[3], args["filters"])
+
+	println("Model Prms:")
+	for k in keys(w); println("$k : $(size(w[k])) "); end
+
 	prms = initparams(w; lr=args["lr"])
 	
 	test_ins = getinstructions(testfile)
@@ -78,6 +88,7 @@ function execute(trainfile, testfile, args)
 	#test_data = map(ins-> (ins, ins_char_arr(d["vocab"], ins.text)), test_ins)
 
 	for i=1:args["epoch"]
+		shuffle!(trn_data)
 		@time lss = train(w, prms, trn_data; args=args)
 		@time tst_acc = test(w, test_data, d["maps"]; args=args)
 		

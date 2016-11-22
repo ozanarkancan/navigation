@@ -70,7 +70,7 @@ function decode(weight1, bias1, soft_w, soft_b, state, x, mask, encoding; dropou
 		inp = inp .* (rand!(similar(getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
-	return (inp * soft_w .+ soft_b) .* mask
+	return (inp * soft_w .+ soft_b)
 end
 
 function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
@@ -116,6 +116,21 @@ function train(w, prms, data; args=nothing)
 		maskouts = map(t->convert(KnetArray{Float32}, t), maskouts)
 
 		g = lossgradient(w, state, words, views, ys, maskouts; lss=nll, dropout=true, pdrops=args["pdrops"])
+
+		gnorm = 0
+
+		for k in keys(g); gnorm += sumabs2(g[k]); end
+		gnorm = sqrt(gnorm)
+		gclip = args["gclip"]
+
+		println("Gnorm: $gnorm")
+
+		if gnorm > gclip
+			for k in keys(g)
+				g[k] = g[k] * gclip / gnorm
+			end
+		end
+
 		#update weights
 		for k in keys(w)
 			Knet.update!(w[k], g[k], prms[k])
