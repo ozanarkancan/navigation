@@ -15,6 +15,13 @@ Walls = Dict("butterfly" => 1, "fish" => 2, "tower" => 3)
 Floors = Dict("blue" => 1, "brick" => 2, "concrete" => 3, "flower" => 4, 
 	"grass" => 5, "gravel" => 6, "wood" => 7, "yellow" => 8)
 
+Colors = Dict("black" => 1, "blue" => 2, "brown" => 3,
+	"green" => 4, "grey" => 5, "pink" => 6, "red" => 7, "yellow" => 8)
+
+ColorMapping = Dict(1 => ["blue"], 2 => ["red", "brown"], 3 => ["grey"],
+	4 => ["pink"], 5 => ["green"], 6 => ["black", "grey"],
+	7 => ["brown"], 8 => ["yellow", "green"])
+
 function getmap(fname)
 	j = JSON.parsefile(fname; dicttype=DataStructures.OrderedDict, use_mmap=true)
 	gridmap = j["map"]

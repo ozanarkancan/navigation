@@ -81,7 +81,7 @@ left hand side: left of the agent
 neighbors of a node are edges
 =#
 function state_agent_centric(map, loc; vdims = [39 39])
-	lfeatvec = length(Items) + length(Floors) + length(Walls) + 3
+	lfeatvec = length(Items) + length(Floors) + length(Walls) + length(Colors) + 3
 	view = zeros(Float32, vdims[1], vdims[2], lfeatvec, 1)
 	mid = [vdims[1] round(Int, vdims[2]/2)]
 	
@@ -122,6 +122,11 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
 			view[i, j, length(Items) + floor, 1] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall, 1] = 1.0
+
+			for c in ColorMapping[floor]
+				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+			end
+
 			view[i,j, lfeatvec-1, 1] = 1.0
 			i = i - 1
 			view[i, j, map.nodes[(next[1], next[2])], 1] = 1.0
@@ -129,7 +134,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			i = i - 1
 		else
-			view[i, j, lfeatvec, 1] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
+			#view[i, j, lfeatvec, 1] = 1.0
 			break
 		end
 	end
@@ -150,7 +156,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			j = j + 1
 		else
-			view[i, j, lfeatvec, 1] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
+			#view[i, j, lfeatvec, 1] = 1.0
 			break
 		end
 	end
@@ -171,7 +178,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			i = i + 1
 		else
-			view[i, j, lfeatvec] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
+			#view[i, j, lfeatvec] = 1.0
 			break
 		end
 	end
@@ -192,7 +200,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			j = j - 1
 		else
-			view[i, j, lfeatvec] = 1.0
+			view[i,j, lfeatvec-1, 1] = 1.0
+			#view[i, j, lfeatvec] = 1.0
 			break
 		end
 	end
@@ -233,7 +242,6 @@ function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false)
 end
 
 function minibatch(data; bs=100)
-	#sort!(data; by=t->length(t[1])+length(t[2]))
 	sort!(data; by=t->length(t[1]))
 	batches = []
 
@@ -250,12 +258,13 @@ function minibatch(data; bs=100)
 
 		maxe = maximum(map(ind->length(data[ind][1]), i:l))
 		maxd = maximum(map(ind->length(data[ind][2]), i:l))
-
+		
 		for enc=1:maxe
 			word = zeros(Float32, (l-i+1), vocab)
 
 			for j=i:l
 				t = j-i+1
+
 				if length(data[j][1]) >= enc
 					word[t, :] = data[j][1][enc]
 				end
@@ -289,7 +298,7 @@ function minibatch(data; bs=100)
 	return batches
 end
 
-function build_data(trainfiles, outfile; charenc=false)
+function build_data(trainfiles, testfile, outfile; charenc=false)
 	fname = "data/maps/map-grid.json"
 	grid = getmap(fname)
 
@@ -303,15 +312,15 @@ function build_data(trainfiles, outfile; charenc=false)
 	
 	trn_ins = getinstructions(trainfiles[1])
 	append!(trn_ins, getinstructions(trainfiles[2]))
+	tst_ins = getinstructions(testfile)
+	append!(tst_ins, trn_ins)
 	
 	println("Building the vocab...")
-	vocab = !charenc ? build_dict(trn_ins) : build_char_dict(trn_ins)
+	vocab = !charenc ? build_dict(tst_ins) : build_char_dict(tst_ins)
 
 	println("Converting data...")
 	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
 	
-	#batches = minibatch(trn_data; bs=bs)
-
 	println("Saving...")
 
 	save(outfile, "vocab", vocab, "maps", maps, "data", trn_data)
