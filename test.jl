@@ -61,7 +61,19 @@ function testmb()
 
 	println("Converting data...")
 	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
-	minibatch(trn_data)
+	mb = minibatch(trn_data; bs=50)
+	println("Length: $(length(mb))")
+	println(size(mb[1][1]))
+	for i=1:50
+		println(indmax(mb[1][1][1][i, :]))
+	end
+
+	for k in keys(vocab)
+		v = vocab[k]
+		if v in [43, 15, 277]
+			println("k,v: $((k,v))")
+		end
+	end
 end
 
 #teststate()
