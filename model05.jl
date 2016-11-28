@@ -56,7 +56,7 @@ function decode(weight1, bias1, soft_w, soft_b, state, x, mask; dropout=false, p
 		inp = inp .* (rand!(similar(getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
-	return (inp * soft_w .+ soft_b) .* mask
+	return (inp * soft_w .+ soft_b)
 end
 
 function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
@@ -64,7 +64,7 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 
 	#encode
 	encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"],
-		weights["emb_word"], state, words)
+		weights["emb_word"], state, words; dropout=dropout, pdrops=pdrops)
 
 	state[1] = hcat(state[1], state[3])
 	state[2] = hcat(state[2], state[4])
@@ -72,7 +72,8 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 	#decode
 	for i=1:length(views)
 		x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"], weights["emb_world"], views[i])
-		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w"], weights["soft_b"], state, x, maskouts[i])
+		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w"], weights["soft_b"], state, x, maskouts[i];
+			dropout=dropout, pdrops=pdrops)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
 		total += sum((ys[i] .* ynorm) .* maskouts[i])
 		count += sum(maskouts[i])
@@ -159,22 +160,22 @@ function test(weights, data, maps; args=nothing)
 
 	return scss / length(data)
 end
-function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, numfilters; worldsize=[39, 39])
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39])
 	weights = Dict()
 	input = embed
 	
 	#first layer
 	weights["enc_w1_f"] = xavier(Float32, input+hidden, 4*hidden)
 	weights["enc_b1_f"] = zeros(Float32, 1, 4*hidden)
-	#weights["enc_b1_f"][1:hidden] = 1 # forget gate bias
+	weights["enc_b1_f"][1:hidden] = 1 # forget gate bias
 	
 	weights["enc_w1_b"] = xavier(Float32, input+hidden, 4*hidden)
 	weights["enc_b1_b"] = zeros(Float32, 1, 4*hidden)
-	#weights["enc_b1_b"][1:hidden] = 1 # forget gate bias
+	weights["enc_b1_b"][1:hidden] = 1 # forget gate bias
 
 	weights["dec_w1"] = xavier(Float32, input+(hidden*2), 4*hidden*2)
 	weights["dec_b1"] = zeros(Float32, 1, 4*hidden*2)
-	#weights["dec_b1"][1:(hidden*2)] = 1 # forget gate bias
+	weights["dec_b1"][1:(hidden*2)] = 1 # forget gate bias
 
 	worldfeats = (worldsize[1] - window[1] - window[2] + 2) * (worldsize[2] - window[1] - window[2] + 2) * numfilters[2]
 

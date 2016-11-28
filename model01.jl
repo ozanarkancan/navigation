@@ -55,7 +55,7 @@ end
 
 lossgradient = grad(loss)
 
-function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, numfilters; worldsize=[39, 39])
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39])
 	weights = Dict()
 	input = embed
 	

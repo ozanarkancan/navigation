@@ -78,7 +78,7 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 
 	#encode
 	encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"],
-		weights["emb_word"], state, words)
+		weights["emb_word"], state, words; dropout=dropout, pdrops=pdrops)
 
 	encoding = hcat(state[1], state[3])
 	state[1] = hcat(state[1], state[3])
@@ -87,7 +87,8 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 	#decode
 	for i=1:length(views)
 		x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"], weights["emb_world"], views[i])
-		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_b"], state, x, maskouts[i], encoding)
+		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_b"], state, x, maskouts[i], encoding;
+			dropout=dropout, pdrops=pdrops)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
 		total += sum((ys[i] .* ynorm) .* maskouts[i])
 		count += sum(maskouts[i])
@@ -190,7 +191,7 @@ function test(weights, data, maps; args=nothing)
 
 	return scss / length(data)
 end
-function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, numfilters; worldsize=[39, 39])
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39])
 	weights = Dict()
 	input = embed
 	

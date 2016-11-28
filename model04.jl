@@ -82,7 +82,7 @@ function decode(weight1, bias1, weight2, bias2, soft_w, soft_b, state, x, mask; 
 		inp = inp .* (rand!(similar(getval(inp))) .> pdrops[3]) * (1/(1-pdrops[3]))
 	end
 
-	return (inp * soft_w .+ soft_b) .* mask
+	return (inp * soft_w .+ soft_b)
 end
 
 function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
@@ -90,7 +90,8 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 
 	#encode
 	encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w2_f"], weights["enc_b2_f"],
-		weights["enc_w1_b"], weights["enc_b1_b"], weights["enc_w2_b"], weights["enc_b2_b"], weights["emb_word"], state, words)
+		weights["enc_w1_b"], weights["enc_b1_b"], weights["enc_w2_b"], weights["enc_b2_b"], weights["emb_word"], state, words;
+		dropout=dropout, pdrops=pdrops)
 
 	state[1] = hcat(state[1], state[5])
 	state[2] = hcat(state[2], state[6])
@@ -100,7 +101,8 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 	#decode
 	for i=1:length(views)
 		x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"], weights["emb_world"], views[i])
-		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x, maskouts[i])
+		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["dec_w2"], weights["dec_b2"], weights["soft_w"], weights["soft_b"], state, x, maskouts[i];
+			dropout=dropout, pdrops=pdrops)
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
 		total += sum((ys[i] .* ynorm) .* maskouts[i])
 		count += sum(maskouts[i])
@@ -190,7 +192,7 @@ function test(weights, data, maps; args=nothing)
 
 	return scss / length(data)
 end
-function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, numfilters; worldsize=[39, 39])
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39])
 	weights = Dict()
 	input = embed
 	
