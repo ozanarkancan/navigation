@@ -67,7 +67,7 @@ function decode(weight1, bias1, soft_w, soft_b, state, x, mask, encoding; dropou
 
 	inp = state[1]
 	if dropout && pdrops[2] > 0.0
-		inp = inp .* (rand!(similar(getval(AutoGrad.inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
 	return (inp * soft_w .+ soft_b)

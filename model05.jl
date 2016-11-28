@@ -26,7 +26,7 @@ function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words; dropo
 		x = words[i] * emb
 
 		if dropout && pdrops[1] > 0.0
-			x = x .* (rand!(similar(getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
+			x = x .* (rand!(similar(AutoGrad.getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
 		end
 
 		state[1], state[2] = lstm(weight1_f, bias1_f, state[1], state[2], x)
@@ -35,7 +35,7 @@ function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words; dropo
 		x = words[end-i+1] * emb
 
 		if dropout && pdrops[1] > 0.0
-			x = x .* (rand!(similar(getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
+			x = x .* (rand!(similar(AutoGrad.getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
 		end
 
 		state[3], state[4] = lstm(weight1_b, bias1_b, state[3], state[4], x)
@@ -44,7 +44,7 @@ end
 
 function decode(weight1, bias1, soft_w, soft_b, state, x, mask; dropout=false, pdrops=[0.5, 0.5, 0.5])
 	if dropout && pdrops[1] > 0.0
-		x = x .* (rand!(similar(getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
+		x = x .* (rand!(similar(AutoGrad.getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
 	end
 
 	state[1], state[2] = lstm(weight1, bias1, state[1], state[2], x)
@@ -53,7 +53,7 @@ function decode(weight1, bias1, soft_w, soft_b, state, x, mask; dropout=false, p
 
 	inp = state[1]
 	if dropout && pdrops[2] > 0.0
-		inp = inp .* (rand!(similar(getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
 	return (inp * soft_w .+ soft_b)
