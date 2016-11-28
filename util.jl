@@ -140,6 +140,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 		end
 	end
 
+	current = loc[1:2]
 	i, j = mid
 	j = j + 1
 	#right
@@ -150,6 +151,12 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			view[i, j, length(Items) + floor, 1] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall, 1] = 1.0
 			view[i,j, lfeatvec-1, 1] = 1.0
+
+			for c in ColorMapping[floor]
+				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+			end
+
+
 			j = j + 1
 			view[i, j, map.nodes[(next[1], next[2])], 1] = 1.0
 			view[i,j, lfeatvec-2, 1] = 1.0
@@ -162,6 +169,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 		end
 	end
 
+	current = loc[1:2]
 	i, j = mid
 	i = i + 1
 	#down
@@ -172,6 +180,12 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			view[i, j, length(Items) + floor] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall] = 1.0
 			view[i,j, lfeatvec-1, 1] = 1.0
+
+			for c in ColorMapping[floor]
+				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+			end
+
+
 			i = i + 1
 			view[i, j, map.nodes[(next[1], next[2])]] = 1.0
 			view[i,j, lfeatvec-2, 1] = 1.0
@@ -184,6 +198,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 		end
 	end
 
+	current = loc[1:2]
 	i, j = mid
 	j = j - 1
 	#left
@@ -194,6 +209,12 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			view[i, j, length(Items) + floor] = 1.0
 			view[i, j, length(Items) + length(Floors) + wall] = 1.0
 			view[i,j, lfeatvec-1, 1] = 1.0
+
+			for c in ColorMapping[floor]
+				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+			end
+
+
 			j = j - 1
 			view[i, j, map.nodes[(next[1], next[2])]] = 1.0
 			view[i,j, lfeatvec-2, 1] = 1.0
@@ -208,6 +229,127 @@ function state_agent_centric(map, loc; vdims = [39 39])
 
 	return view
 end
+
+function state_agent_centric_multihot(map, loc)
+	lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
+	view = zeros(Float32, 1, length(Items) + 4 * lfeatvec)
+	
+	if loc[3] == 0
+		ux = 0; uy = -1;
+		rx = 1; ry = 0;
+		dx = 0; dy = 1;
+		lx = -1; ly = 0;
+	elseif loc[3] == 90
+		ux = 1; uy = 0;
+		rx = 0; ry = 1;
+		dx = -1; dy = 0;
+		lx = 0; ly = -1;
+	elseif loc[3] == 180
+		ux = 0; uy = 1;
+		rx = -1; ry = 0;
+		dx = 0; dy = -1;
+		lx = 1; ly = 0;
+	else
+		ux = -1; uy = 0;
+		rx = 0; ry = -1;
+		dx = 1; dy = 0;
+		lx = 0; ly = 1;
+	end
+	
+	current = loc[1:2]
+
+	view[1, map.nodes[(loc[1], loc[2])]] = 1.0
+	walkable = false
+
+	#up
+	while true
+		next = (current[1] + ux, current[2] + uy)
+		if haskey(map.edges[(current[1], current[2])], (next[1], next[2]))#check the wall existence
+			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
+			view[1, length(Items) + length(Items) + floor] = 1.0
+			view[1, length(Items) + length(Items) + length(Floors) + wall] = 1.0
+
+			view[1, length(Items) + map.nodes[(next[1], next[2])]] = 1.0
+			current = next
+			walkable = true
+		else
+			if !walkable
+				view[1, length(Items) + lfeatvec] = 1.0
+			end
+			break
+		end
+	end
+
+	current = loc[1:2]
+	walkable = false
+
+	#right
+	while true
+		next = (current[1] + rx, current[2] + ry)
+		if haskey(map.edges[(current[1], current[2])], (next[1], next[2]))#check the wall existence
+			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
+			view[1, length(Items) + lfeatvec + length(Items) + floor] = 1.0
+			view[1, length(Items) + lfeatvec + length(Items) + length(Floors) + wall] = 1.0
+
+			view[1, length(Items) + lfeatvec + map.nodes[(next[1], next[2])]] = 1.0
+			current = next
+			walkable = true
+		else
+			if !walkable
+				view[1, length(Items) + 2*lfeatvec] = 1.0
+			end
+			break
+		end
+	end
+
+	current = loc[1:2]
+	walkable = false
+
+	#down
+	while true
+		next = (current[1] + dx, current[2] + dy)
+		if haskey(map.edges[(current[1], current[2])], (next[1], next[2]))#check the wall existence
+			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
+			view[1, length(Items) + 2*lfeatvec + length(Items) + floor] = 1.0
+			view[1, length(Items) + 2*lfeatvec + length(Items) + length(Floors) + wall] = 1.0
+
+			view[1, length(Items) + 2*lfeatvec + map.nodes[(next[1], next[2])]] = 1.0
+			current = next
+			walkable = true
+		else
+			if !walkable
+				view[1, length(Items) + 3*lfeatvec] = 1.0
+			end
+			break
+		end
+	end
+
+	current = loc[1:2]
+	walkable = false
+
+	#left
+	while true
+		next = (current[1] + lx, current[2] + ly)
+
+		if haskey(map.edges[(current[1], current[2])], (next[1], next[2]))#check the wall existence
+			wall, floor = map.edges[(current[1], current[2])][(next[1], next[2])]
+			view[1, length(Items) + 3*lfeatvec + length(Items) + floor] = 1.0
+			view[1, length(Items) + 3*lfeatvec + length(Items) + length(Floors) + wall] = 1.0
+
+			view[1, length(Items) + 3*lfeatvec + map.nodes[(next[1], next[2])]] = 1.0
+			current = next
+			walkable = true
+		else
+			if !walkable
+				view[1, length(Items) + 4*lfeatvec] = 1.0
+			end
+			break
+		end
+	end
+
+	return view
+end
+
 
 function action(curr, next)
 	ygold = zeros(Float32, 4, 1)
@@ -225,7 +367,7 @@ function action(curr, next)
 	return ygold
 end
 
-function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false)
+function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false, encoding="grid")
 	words = !charenc ? ins_arr(vocab, instance.text) : ins_char_arr(vocab, instance.text)
 
 	states = Any[]
@@ -235,7 +377,7 @@ function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false)
 		curr = instance.path[i]
 		next = i == length(instance.path) ? curr : instance.path[i+1]
 		Y[i, :] = action(curr, next)
-		push!(states, state_agent_centric(map, curr))
+		push!(states, encoding == "grid" ? state_agent_centric(map, curr) : state_agent_centric_multihot(map, curr))
 	end
 
 	return (words, states, Y)
@@ -271,16 +413,23 @@ function minibatch(data; bs=100)
 			end
 			push!(words, word)
 		end
+		
+		multihot = length(vdims) == 2
 
 		for dec=1:maxd
-			view = zeros(Float32, vdims[1], vdims[2], vdims[3], (l-i+1))
+			view = multihot ? zeros(Float32, (l-i+1), vdims[2]) : zeros(Float32, vdims[1], vdims[2], vdims[3], (l-i+1))
 			y = zeros(Float32, (l-i+1), 4)
 			maskout = ones(Float32, (l-i+1), 1)
 
 			for j=i:l
 				t = j-i+1
 				if length(data[j][2]) >= dec
-					view[:, :, :, t] = data[j][2][dec]
+					if !multihot
+						view[:, :, :, t] = data[j][2][dec]
+					else
+						view[t, :] = data[j][2][dec]
+					end
+
 					y[t, :] = data[j][3][dec, :]
 				else
 					maskout[t, 1] = 0.0
@@ -298,7 +447,7 @@ function minibatch(data; bs=100)
 	return batches
 end
 
-function build_data(trainfiles, testfile, outfile; charenc=false)
+function build_data(trainfiles, testfile, outfile; charenc=false, encoding="grid")
 	fname = "data/maps/map-grid.json"
 	grid = getmap(fname)
 
@@ -319,7 +468,7 @@ function build_data(trainfiles, testfile, outfile; charenc=false)
 	vocab = !charenc ? build_dict(tst_ins) : build_char_dict(tst_ins)
 
 	println("Converting data...")
-	trn_data = map(x -> build_instance(x, maps[x.map], vocab), trn_ins)
+	trn_data = map(x -> build_instance(x, maps[x.map], vocab; encoding=encoding), trn_ins)
 	
 	println("Saving...")
 
