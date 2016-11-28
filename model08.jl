@@ -190,7 +190,7 @@ function test(weights, data, maps; args=nothing)
 
 	return scss / length(data)
 end
-function initweights(atype, hidden, vocab, embed, winit, window, onehotworld, numfilters; worldsize=[39, 39])
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39])
 	weights = Dict()
 	input = embed
 	
