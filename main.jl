@@ -52,11 +52,12 @@ function parse_commandline()
 			help = "dropout rates"
 			nargs = '+'
 			default = [0.2, 0.5, 0.5]
+			arg_type = Float64
 		"--bs"
 			help = "batch size"
 			default = 100
 			arg_type = Int
-		"gclip"
+		"--gclip"
 			help = "gradient clip"
 			default = 10.0
 			arg_type = Float64
@@ -74,9 +75,14 @@ function execute(trainfile, testfile, args)
 	trn_data = minibatch(d["data"];bs=args["bs"])
 	vdims = size(trn_data[1][2][1])
 
-	println("Vocab: $(length(d["vocab"])), World: $(vdims[3])")
-
-	w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], 0.1, args["window"], vdims[3], args["filters"])
+	println("Vocab: $(length(d["vocab"])), World: $(vdims)")
+	
+	w = nothing
+	if length(vdims) > 2
+		w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], args["window"], vdims[3], args["filters"])
+	else
+		w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], vdims[2])
+	end
 
 	println("Model Prms:")
 	for k in keys(w); println("$k : $(size(w[k])) "); end
@@ -98,6 +104,7 @@ function execute(trainfile, testfile, args)
 end
 
 function main()
+	srand(12345)
 	println("*** Parameters ***")
 	for k in keys(args); println("$k -> $(args[k])"); end
 	flush(STDOUT)
