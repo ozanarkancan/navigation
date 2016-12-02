@@ -1,3 +1,4 @@
+using Base.Test
 include("util.jl")
 
 function teststate()
@@ -76,5 +77,24 @@ function testmb()
 	end
 end
 
+function testget3()
+	grid, jelly, l = getallinstructions();
+
+	for ins in grid
+		@test ins.map == "Grid"
+	end
+
+	for ins in jelly
+		@test ins.map == "Jelly"
+	end
+
+	for ins in l
+		@test ins.map == "L"
+	end
+
+
+end
+
 #teststate()
-testmb()
+#testmb()
+testget3()
