@@ -1,11 +1,31 @@
 using JSON, TextAnalysis
 using DataStructures
+using JLD
 
 type Instruction
 	fname #file name
 	text #instruction as a list of tokens
 	path #path as a list of (x,y,orientation) tuples
 	map #map name
+end
+
+function getallinstructions(;fname="data/pickles/databag3.pickle")
+	raw_data = load("data/pickles/databag3.jld", "raw_data")
+
+	grid = Instruction[]
+	jelly = Instruction[]
+	l = Instruction[]
+
+	for (mp, arr) in [("grid", grid), ("jelly", jelly), ("l", l)]
+		instructions = raw_data[mp]
+		for ins in instructions
+			push!(arr, Instruction(ins["filename"],
+				ins["instruction"],
+				map(x->(x[1], x[2], x[3]), ins["cleanpath"]),
+				ins["map"]))
+		end
+	end
+	grid, jelly, l
 end
 
 function getinstructions(fname)

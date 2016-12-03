@@ -31,9 +31,9 @@ function parse_commandline()
 			nargs = '+'
 		"--testfiles"
 			help = "test file as regular instruction file(json)"
-			default = ["data/instructions/SingleSentenceZeroInitial.l.json",
-				"data/instructions/SingleSentenceZeroInitial.jelly.json",
-				"data/instructions/SingleSentenceZeroInitial.grid.json"]
+			default = ["l",
+				"jelly",
+				"grid"]
 			nargs = '+'
 		"--window"
 			help = "size of the filter"
@@ -69,8 +69,7 @@ args = parse_commandline()
 
 include(args["model"])
 
-function execute(trainfile, testfile, args)
-	println("Train: $trainfile , test: $testfile")
+function execute(trainfile, test_ins, args)
 	d = load(trainfile)
 	trn_data = minibatch(d["data"];bs=args["bs"])
 	vdims = size(trn_data[1][2][1])
@@ -89,7 +88,6 @@ function execute(trainfile, testfile, args)
 
 	prms = initparams(w; lr=args["lr"])
 	
-	test_ins = getinstructions(testfile)
 	test_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), test_ins)
 	#test_data = map(ins-> (ins, ins_char_arr(d["vocab"], ins.text)), test_ins)
 
@@ -98,7 +96,7 @@ function execute(trainfile, testfile, args)
 		@time lss = train(w, prms, trn_data; args=args)
 		@time tst_acc = test(w, test_data, d["maps"]; args=args)
 		
-		println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc), $testfile")
+		println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc), $(test_ins[1].map)")
 		flush(STDOUT)
 	end
 end
@@ -109,8 +107,11 @@ function main()
 	for k in keys(args); println("$k -> $(args[k])"); end
 	flush(STDOUT)
 
+	grid, jelly, l = getallinstructions()
+	testins = [l, jelly, grid]
+
 	for i=1:length(args["trainfiles"])
-		execute(args["trainfiles"][i], args["testfiles"][i], args)
+		execute(args["trainfiles"][i], testins[i], args)
 	end
 end
 

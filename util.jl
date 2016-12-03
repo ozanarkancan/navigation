@@ -447,7 +447,7 @@ function minibatch(data; bs=100)
 	return batches
 end
 
-function build_data(trainfiles, testfile, outfile; charenc=false, encoding="grid")
+function build_data(trn_ins, tst_ins, outfile; charenc=false, encoding="grid")
 	fname = "data/maps/map-grid.json"
 	grid = getmap(fname)
 
@@ -458,14 +458,12 @@ function build_data(trainfiles, testfile, outfile; charenc=false, encoding="grid
 	l = getmap(fname)
 
 	maps = Dict("Grid" => grid, "Jelly" => jelly, "L" => l)
-	
-	trn_ins = getinstructions(trainfiles[1])
-	append!(trn_ins, getinstructions(trainfiles[2]))
-	tst_ins = getinstructions(testfile)
-	append!(tst_ins, trn_ins)
+
+	voc_ins = copy(trn_ins)
+	append!(voc_ins, tst_ins)
 	
 	println("Building the vocab...")
-	vocab = !charenc ? build_dict(tst_ins) : build_char_dict(tst_ins)
+	vocab = !charenc ? build_dict(voc_ins) : build_char_dict(voc_ins)
 
 	println("Converting data...")
 	trn_data = map(x -> build_instance(x, maps[x.map], vocab; encoding=encoding), trn_ins)
