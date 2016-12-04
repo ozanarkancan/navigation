@@ -18,9 +18,9 @@ function lstm(weight,bias,hidden,cell,input)
 	return (hidden,cell)
 end
 
-function lstm2(weight,bias,hidden,cell,input, attention)
-	hc = hcat(input, hidden)
-	gates   = hcat(hc, attention) * weight .+ bias
+function lstm2(weight,bias,hidden,cell,input,att)
+	h = hcat(input, hcat(hidden, att))
+	gates   = h * weight .+ bias
 	hsize   = size(hidden,2)
 	forget  = sigm(gates[:,1:hsize])
 	ingate  = sigm(gates[:,1+hsize:2hsize])
@@ -32,7 +32,7 @@ function lstm2(weight,bias,hidden,cell,input, attention)
 end
 
 
-function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words, attention; dropout=false, pdrops=[0.5, 0.5])
+function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words; dropout=false, pdrops=[0.5, 0.5])
 	for i=1:length(words)
 		x = words[i] * emb
 
@@ -50,45 +50,65 @@ function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words, atten
 		end
 
 		state[3][i+1], state[4][i+1] = lstm(weight1_b, bias1_b, state[3][i], state[4][i], x)
-
-		c1 = hcat(words[i], state[1][i+1])
-		c2 = hcat(c1, state[3][i+1])
-		attention = attention + c2
 	end
-	return attention
 end
 
-function decode(weight1, bias1, soft_w1, soft_w2, soft_b, state, x, mask, attention; dropout=false, pdrops=[0.5, 0.5, 0.5])
+function attention(words, states, att, attention_w, attention_v)
+	h = hcat(words[1], hcat(states[1][2], states[3][2]))
+	hu = hcat(states[6], h)
+	for i=2:length(words)
+		hu = vcat(hu, hcat(hcat(states[6], words[i]), hcat(states[1][i+1], states[3][i+1])))
+	end
+	
+	states[5] = tanh(hu * attention_w) * attention_v
+
+	att_s = exp(states[5])
+	att_s = att_s ./ sum(att_s)
+
+	att = att_s .* h
+
+	return sum(att, 1)
+end
+
+function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x,
+	mask, att; dropout=false, pdrops=[0.5, 0.5, 0.5])
 	if dropout && pdrops[1] > 0.0
 		x = x .* (rand!(similar(AutoGrad.getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
 	end
 
-	state[1], state[2] = lstm2(weight1, bias1, state[1], state[2], x, attention)
-	state[1] = state[1] .* mask
-	state[2] = state[2] .* mask
+	state[6], state[7] = lstm2(weight1, bias1, state[6], state[7], x, att)
+	state[6] = state[6] .* mask
+	state[7] = state[7] .* mask
 
-	inp = state[1]
+	inp = state[6]
 	if dropout && pdrops[2] > 0.0
 		inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
-	return (inp * soft_w1 + x * soft_w2 .+ soft_b)
+	q = (inp * soft_w1) + x + (att * soft_w2)
+
+	return q * soft_w3 .+ soft_b
 end
 
-function loss(weights, state, words, views, ys, maskouts, attention;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
+function loss(weights, state, words, views, ys, maskouts, att_z;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
 	total = 0.0; count = 0
 
 	#encode
-	attention = encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"],
-		weights["emb_word"], state, words, attention)
+	encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"],
+		weights["emb_word"], state, words)
 
-	state[1] = hcat(state[1][end], state[3][end])
-	state[2] = hcat(state[2][end], state[4][end])
+	state[6] = hcat(state[1][end], state[3][end])
+	state[7] = hcat(state[2][end], state[4][end])
 	
 	#decode
 	for i=1:length(views)
 		x = spatial(weights["emb_world"], views[i])
-		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_b"], state, x, maskouts[i], attention; dropout=dropout, pdrops=pdrops)
+		
+		att = attention(words, state, att_z, weights["attention_w"], weights["attention_v"])
+		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
+			weights["soft_w3"], weights["soft_b"], state, x, maskouts[i], att;
+			dropout=dropout, pdrops=pdrops)
+
 		ynorm = logp(ypred,2) # ypred .- log(sum(exp(ypred),2))
 		total += sum((ys[i] .* ynorm) .* maskouts[i])
 		count += sum(maskouts[i])
@@ -109,7 +129,7 @@ function train(w, prms, data; args=nothing)
 	for (words, views, ys, maskouts) in data
 		bs = size(words[1], 1)
 		state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b1_f"],2)/4), bs, length(words))
-		attention = convert(KnetArray{Float32}, zeros(bs, convert(Int, size(words[1], 2) + 2*size(w["enc_b1_f"],2)/4)))
+		att = convert(KnetArray{Float32}, zeros(bs, convert(Int, size(words[1], 2) + 2*args["hidden"])))
 
 		#load data to gpu
 		words = map(t->convert(KnetArray{Float32}, t), words)
@@ -117,7 +137,7 @@ function train(w, prms, data; args=nothing)
 		ys = map(t->convert(KnetArray{Float32}, t), ys)
 		maskouts = map(t->convert(KnetArray{Float32}, t), maskouts)
 
-		g = lossgradient(w, state, words, views, ys, maskouts, attention; lss=nll, dropout=true, pdrops=args["pdrops"])
+		g = lossgradient(w, state, words, views, ys, maskouts, att; lss=nll, dropout=true, pdrops=args["pdrops"])
 
 		gnorm = 0
 
@@ -151,26 +171,31 @@ function test(weights, data, maps; args=nothing)
 	for (instruction, words) in data
 		words = map(v->convert(KnetArray{Float32},v), words)
 		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
-		attention = convert(KnetArray{Float32}, zeros(1, convert(Int, size(words[1], 2) + 2*size(weights["enc_b1_f"],2)/4)))
+		att_z = convert(KnetArray{Float32}, zeros(1, convert(Int, size(words[1], 2) + 2*size(weights["enc_b1_f"],2)/4)))
 		
-		attention = encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words, attention)
+		encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
 		
-		state[1] = hcat(state[1][end], state[3][end])
-		state[2] = hcat(state[2][end], state[4][end])
-
+		state[6] = hcat(state[1][end], state[3][end])
+		state[7] = hcat(state[2][end], state[4][end])
+	
 		current = instruction.path[1]
 		nactions = 0
 		stop = false
 
 		println("\n$(instruction.text)")
 		println("Path: $(instruction.path)")
+		println("Filename: $(instruction.fname)")
+
 		actions = Any[]
 
 		while !stop
 			view = state_agent_centric_multihot(maps[instruction.map], current)
 			view = convert(KnetArray{Float32}, view)
 			x = spatial(weights["emb_world"], view)
-			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_b"], state, x, mask, attention)
+
+			att = attention(words, state, att_z, weights["attention_w"], weights["attention_v"])
+			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
+			weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 			action = indmax(Array(ypred))
 			push!(actions, action)
 			current = getlocation(maps[instruction.map], current, action)
@@ -212,9 +237,13 @@ function initweights(atype, hidden, vocab, embed, onehotworld)
 
 	weights["emb_word"] = xavier(Float32, vocab, embed)
 	weights["emb_world"] = xavier(Float32, onehotworld, embed)
+
+	weights["attention_w"] = xavier(Float32, hidden*2+vocab+hidden*2, hidden)
+	weights["attention_v"] = xavier(Float32, hidden, 1)
 	
-	weights["soft_w1"] = xavier(Float32, hidden*2, 4)
-	weights["soft_w2"] = xavier(Float32, embed, 4)
+	weights["soft_w1"] = xavier(Float32, hidden*2, hidden)
+	weights["soft_w2"] = xavier(Float32, (vocab + hidden*2), hidden)
+	weights["soft_w3"] = xavier(Float32, hidden, 4)
 	weights["soft_b"] = zeros(Float32, 1,4)
 
 	for k in keys(weights); weights[k] = convert(atype, weights[k]); end
@@ -232,7 +261,7 @@ end
 
 # state[2k-1,2k]: hidden and cell for the k'th lstm layer
 function initstate(atype, hidden, batchsize, length)
-	state = Array(Any, 4)
+	state = Array(Any, 7)
 	#forward
 	state[1] = Array(Any, length+1)
 	for i=1:(length+1); state[1][i] = convert(atype, zeros(batchsize, hidden)); end
@@ -246,6 +275,11 @@ function initstate(atype, hidden, batchsize, length)
 	
 	state[4] = Array(Any, length+1)
 	for i=1:(length+1); state[4][i] = convert(atype, zeros(batchsize, hidden)); end
+
+	state[5] = convert(atype, zeros(1, length))
+	
+	state[6] = convert(atype, zeros(batchsize, 2*hidden))
+	state[7] = convert(atype, zeros(batchsize, 2*hidden))
 
 	return state
 end

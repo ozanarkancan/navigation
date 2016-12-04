@@ -74,7 +74,7 @@ function execute(trainfile, test_ins, args)
 	trn_data = minibatch(d["data"];bs=args["bs"])
 	vdims = size(trn_data[1][2][1])
 
-	println("Vocab: $(length(d["vocab"])), World: $(vdims)")
+	println("\nVocab: $(length(d["vocab"])), World: $(vdims)")
 	
 	w = nothing
 	if length(vdims) > 2
