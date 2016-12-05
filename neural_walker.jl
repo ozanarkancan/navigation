@@ -80,12 +80,13 @@ function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x,
 	state[6] = state[6] .* mask
 	state[7] = state[7] .* mask
 
-	inp = state[6]
+	#inp = state[6]
 	if dropout && pdrops[2] > 0.0
-		inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		#inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		state[6] = state[6] .* (rand!(similar(AutoGrad.getval(state[6]))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
-	q = (inp * soft_w1) + x + (att * soft_w2)
+	q = (state[6] * soft_w1) + x + (att * soft_w2)
 
 	return q * soft_w3 .+ soft_b
 end
@@ -139,17 +140,18 @@ function train(w, prms, data; args=nothing)
 
 		g = lossgradient(w, state, words, views, ys, maskouts, att; lss=nll, dropout=true, pdrops=args["pdrops"])
 
-		gnorm = 0
-
-		for k in keys(g); gnorm += sumabs2(g[k]); end
-		gnorm = sqrt(gnorm)
 		gclip = args["gclip"]
+		if gclip > 0
+			gnorm = 0
+			for k in keys(g); gnorm += sumabs2(g[k]); end
+			gnorm = sqrt(gnorm)
 
-		println("Gnorm: $gnorm")
+			println("Gnorm: $gnorm")
 
-		if gnorm > gclip
-			for k in keys(g)
-				g[k] = g[k] * gclip / gnorm
+			if gnorm > gclip
+				for k in keys(g)
+					g[k] = g[k] * gclip / gnorm
+				end
 			end
 		end
 
