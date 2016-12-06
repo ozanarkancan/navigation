@@ -23,31 +23,34 @@ function results(fname)
 	return mean(values(d)), d
 end
 
+function printlogs(logs)
+	for (r,d,f) in logs
+		println("File: $f , Results: $r")
+		for k in keys(d); println("$k : $(d[k])"); end
+		println("")
+	end
+end
+
 function main()
 	args = parse_commandline()
 
-	bestr = 0.0
-	bestf = ""
-	bestd = nothing
-
 	files = readdir(args["folder"])
+	logs = Any[]
 
 	for f in files
 		try
 			r, d = results(string(args["folder"], "/", f))
-			if r > bestr
-				bestr = r
-				bestf = f
-				bestd = d
-			end
+			push!(logs, (r, d, f))
+
 		catch e
 			println(e)
 			println("Error on $f")
 		end
 	end
+
+	sort!(logs, rev=true)
+	printlogs(logs)
 	
-	println("Best file: $bestf , Results: $bestr")
-	for k in keys(bestd); println("$k : $(bestd[k])"); end
 end
 
 function parse_commandline()

@@ -156,7 +156,6 @@ function state_agent_centric(map, loc; vdims = [39 39])
 				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
 			end
 
-
 			j = j + 1
 			view[i, j, map.nodes[(next[1], next[2])], 1] = 1.0
 			view[i,j, lfeatvec-2, 1] = 1.0
@@ -185,7 +184,6 @@ function state_agent_centric(map, loc; vdims = [39 39])
 				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
 			end
 
-
 			i = i + 1
 			view[i, j, map.nodes[(next[1], next[2])]] = 1.0
 			view[i,j, lfeatvec-2, 1] = 1.0
@@ -213,7 +211,6 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			for c in ColorMapping[floor]
 				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
 			end
-
 
 			j = j - 1
 			view[i, j, map.nodes[(next[1], next[2])]] = 1.0
