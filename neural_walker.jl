@@ -57,7 +57,9 @@ function attention(words, states, att, attention_w, attention_v)
 	h = hcat(words[1], hcat(states[1][2], states[3][2]))
 	hu = hcat(states[6], h)
 	for i=2:length(words)
-		hu = vcat(hu, hcat(hcat(states[6], words[i]), hcat(states[1][i+1], states[3][i+1])))
+		hp = hcat(words[i], hcat(states[1][i+1], states[3][i+1]))
+		h = vcat(h, hp)
+		hu = vcat(hu, hcat(states[6], hp))
 	end
 	
 	states[5] = tanh(hu * attention_w) * attention_v
