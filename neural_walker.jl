@@ -54,10 +54,10 @@ function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words; dropo
 end
 
 function attention(words, states, att, attention_w, attention_v)
-	h = hcat(words[1], hcat(states[1][2], states[3][2]))
+	h = hcat(words[1], hcat(states[1][2], states[3][end]))
 	hu = hcat(states[6], h)
 	for i=2:length(words)
-		hp = hcat(words[i], hcat(states[1][i+1], states[3][i+1]))
+		hp = hcat(words[i], hcat(states[1][i+1], states[3][end-i+1]))
 		h = vcat(h, hp)
 		hu = vcat(hu, hcat(states[6], hp))
 	end
@@ -69,7 +69,7 @@ function attention(words, states, att, attention_w, attention_v)
 
 	att = att_s .* h
 
-	return sum(att, 1)
+	return sum(att, 1), att_s
 end
 
 function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x,
@@ -107,7 +107,7 @@ function loss(weights, state, words, views, ys, maskouts, att_z;lss=nothing, dro
 	for i=1:length(views)
 		x = spatial(weights["emb_world"], views[i])
 		
-		att = attention(words, state, att_z, weights["attention_w"], weights["attention_v"])
+		att,_ = attention(words, state, att_z, weights["attention_w"], weights["attention_v"])
 		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
 			weights["soft_w3"], weights["soft_b"], state, x, maskouts[i], att;
 			dropout=dropout, pdrops=pdrops)
@@ -197,7 +197,8 @@ function test(weights, data, maps; args=nothing)
 			view = convert(KnetArray{Float32}, view)
 			x = spatial(weights["emb_world"], view)
 
-			att = attention(words, state, att_z, weights["attention_w"], weights["attention_v"])
+			att,att_s = attention(words, state, att_z, weights["attention_w"], weights["attention_v"])
+			println("Attention: $(Array(att_s))")
 			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
 			weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 			action = indmax(Array(ypred))
