@@ -95,6 +95,84 @@ function testget3()
 
 end
 
+function testparagraph()
+	grid, jelly, l = getallinstructions()
+
+	p1s = Set()
+	prev_p1 = ""
+	prev_p2 = ""
+	for ins in grid
+		p1, p2 = split(ins.id, "-")
+		if prev_p1 == ""
+			prev_p1 = p1
+			prev_p2 = p2
+			push!(p1s, p1)
+		else
+			if p1 != prev_p1
+				@test !(p1 in p1s)
+				prev_p2 = p2
+				prev_p1 = p1
+				push!(p1s, p1)
+			else
+				parse(Int, p2) > parse(Int, prev_p2)
+				prev_p2 = p2
+			end
+		end
+	end
+	
+	println(p1s)
+	
+	p1s = Set()
+	prev_p1 = ""
+	prev_p2 = ""
+	for ins in jelly
+		p1, p2 = split(ins.id, "-")
+		if prev_p1 == ""
+			prev_p1 = p1
+			prev_p2 = p2
+			push!(p1s, p1)
+		else
+			if p1 != prev_p1
+				@test !(p1 in p1s)
+				prev_p2 = p2
+				prev_p1 = p1
+				push!(p1s, p1)
+			else
+				parse(Int, p2) > parse(Int, prev_p2)
+				prev_p2 = p2
+			end
+		end
+	end
+
+	println(p1s)
+
+	p1s = Set()
+	prev_p1 = ""
+	prev_p2 = ""
+	for ins in l
+		p1, p2 = split(ins.id, "-")
+		if prev_p1 == ""
+			prev_p1 = p1
+			prev_p2 = p2
+			push!(p1s, p1)
+		else
+			if p1 != prev_p1
+				@test !(p1 in p1s)
+				prev_p2 = p2
+				prev_p1 = p1
+				push!(p1s, p1)
+			else
+				parse(Int, p2) > parse(Int, prev_p2)
+				prev_p2 = p2
+			end
+		end
+	end
+
+	println(p1s)
+
+end
+
 #teststate()
 #testmb()
-testget3()
+#testget3()
+testparagraph()
