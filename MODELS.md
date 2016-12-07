@@ -15,12 +15,10 @@ Implementation of neural walker
   * After embedding
   * Between lstm layers
   * Between final lstm layer and softmax (decoder)
-
 * Spatial
   * relu . conv
 
 # model03.jl
-
 * Encoder - Decoder (2 Layers)
 * Dropout
   * After embedding
@@ -36,7 +34,6 @@ Implementation of neural walker
   *  After embedding
   *  Between lstm layers
   *  Between final lstm layer and softmax (decoder)
-
 * Spatial
   1.  sigm . conv
   2.  sigm . conv
@@ -48,7 +45,6 @@ Implementation of neural walker
   * After embedding
   * Between lstm layers
   * Between final lstm layer and softmax (decoder)
-
 * Spatial
   1.  relu . conv
   2.  sigm . conv
@@ -61,7 +57,6 @@ Implementation of neural walker
   * After embedding
   * Between lstm layers
   * Between final lstm layer and softmax (decoder)
-
 * Spatial
   1. relu . conv
   2. sigm . conv
@@ -76,7 +71,6 @@ Implementation of neural walker
   * After embedding
   * Between lstm layers
   * Between final lstm layer and softmax (decoder)
-
 * Spatial
   1. relu . conv
   2. sigm . conv
@@ -89,8 +83,23 @@ Implementation of neural walker
   * After embedding
   * Between lstm layers
   * Between final lstm layer and softmax (decoder)
-
 * Spatial
   1. relu . conv
   2. relu . conv
+
+# model09.jl
+
+* Encoder - Decoder (2 Layers)
+  * Decoder takes the final hidden layer of the encoder in each step
+* Rich Softmax
+  * Takes the hidden and the perceptual input at time t
+* Dropout
+  * After embedding
+  * Between lstm layers
+  * Between final lstm layer and softmax (decoder)
+* Spatial
+  1. relu . conv
+  2. relu . conv
+  2. sigm . conv
+
 
