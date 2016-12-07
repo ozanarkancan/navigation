@@ -96,7 +96,7 @@ function loss(weights, state, words, views, ys, maskouts, att_z;lss=nothing, dro
 
 	#encode
 	encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"],
-		weights["emb_word"], state, words)
+		weights["emb_word"], state, words; dropout=dropout, pdrops=pdrops)
 
 	state[6] = hcat(state[1][end], state[3][end])
 	state[7] = hcat(state[2][end], state[4][end])
