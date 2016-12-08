@@ -12,12 +12,12 @@ function results(fname)
 		l = split(line)
 
 		v = parse(Float64, split(l[8], ",")[1])
-		if haskey(d, l[9])
-			if v > d[l[9]]
-				d[l[9]] = v
+		if haskey(d, l[end])
+			if v > d[l[end]]
+				d[l[end]] = v
 			end
 		else
-			d[l[9]] = v
+			d[l[end]] = v
 		end
 	end
 	return mean(values(d)), d
