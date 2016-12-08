@@ -172,7 +172,30 @@ function testparagraph()
 
 end
 
+function testmerging()
+	grid, jelly, l = getallinstructions()
+
+	function check_consecutive(t1, t2)
+		passed = true
+		passed = passed | (abs(t1[1] - t2[1]) == 1 && t1[2] == t2[2] && t1[3] == t2[3])
+		passed = passed | (abs(t1[2] - t2[2]) == 1 && t1[1] == t2[1] && t1[3] == t2[3])
+		passed = passed | ((t1[3] + 90) % 360 == t2[3] && t1[1] == t2[1] && t1[2] == t2[2])
+		passed = passed | ((t1[3] - 90) % 360 == t2[3] && t1[1] == t2[1] && t1[2] == t2[2])
+		return passed
+	end
+
+	for s in [grid, jelly, l]
+		merged = merge_singles(s)
+		for ins in merged
+			for i=2:length(ins.path)
+				@test check_consecutive(ins.path[i-1], ins.path[i])
+			end
+		end
+	end
+end
+
 #teststate()
 #testmb()
 #testget3()
-testparagraph()
+#testparagraph()
+testmerging()
