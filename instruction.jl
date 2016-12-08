@@ -51,6 +51,45 @@ function merge_singles(singles)
 				prev_p1 = p1
 				text = Any[]
 				path = Any[]
+				append!(text, ins.text)
+				append!(path, ins.path[1:end-1])
+				prev_ins = ins
+			else
+				prev_p1 = p1
+				prev_p2 = p2
+				append!(text, ins.text)
+				append!(path, ins.path[1:end-1])
+				prev_ins = ins
+			end
+		end
+	end
+	return prg
+end
+
+function group_singles(singles)
+	prev_p1 = ""
+	prev_p2 = ""
+	text = Any[]
+	path = Any[]
+	prg = Any[]
+	prev_ins = nothing
+
+	for ins in singles
+		p1, p2 = split(ins.id, "-")
+		if prev_p1 == ""
+			prev_p1 = p1
+			prev_p2 = p2
+			append!(text, ins.text)
+			append!(path, ins.path[1:end-1])
+			prev_ins = ins
+		else
+			if p1 != prev_p1
+				append!(path, [prev_ins.path[end]])
+				push!(prg, Instruction("", text, path, prev_ins.map, prev_p1))
+				prev_p2 = p2
+				prev_p1 = p1
+				text = Any[]
+				path = Any[]
 			else
 				prev_p1 = p1
 				prev_p2 = p2
