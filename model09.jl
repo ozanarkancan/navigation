@@ -35,7 +35,6 @@ function lstm2(weight,bias,hidden,cell,input, encoding)
 	return (hidden,cell)
 end
 
-
 function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words; dropout=false, pdrops=[0.5, 0.5])
 	for i=1:length(words)
 		x = words[i] * emb
@@ -194,6 +193,72 @@ function test(weights, data, maps; args=nothing)
 
 	return scss / length(data)
 end
+
+function test_paragraph(weights, groups, maps; args=nothing)
+	scss = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
+
+	for data in groups
+		println("\nNew paragraph")
+		current = data[1][1].path[1]
+		for i=1:length(data)
+			instruction, words = data[i]
+			words = map(v->convert(KnetArray{Float32},v), words)
+			state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1)
+			encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+
+			encoding = hcat(state[1], state[3])
+			state[1] = hcat(state[1], state[3])
+			state[2] = hcat(state[2], state[4])
+
+			nactions = 0
+			stop = false
+
+			println("$(instruction.text)")
+			println("Path: $(instruction.path)")
+			actions = Any[]
+			action = 0
+
+			while !stop
+				view = state_agent_centric(maps[instruction.map], current)
+				view = convert(KnetArray{Float32}, view)
+				x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"],
+				weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
+				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_b"], state, x, mask, encoding)
+				action = indmax(Array(ypred))
+				push!(actions, action)
+				current = getlocation(maps[instruction.map], current, action)
+				nactions += 1
+
+				stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+			end
+
+			println("Actions: $(reshape(collect(actions), 1, length(actions)))")
+			println("Current: $(current)")
+			
+			#world violation or exceeding the action limit
+			#do not execute the remeaning instructions
+			if action != 4
+				println("FAILURE")
+				break
+			end
+			
+			if i == length(data)
+				#no need to check the orientation
+				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
+					scss += 1
+					println("SUCCESS")
+				else
+					println("FAILURE")
+				end
+				flush(STDOUT)
+			end
+		end
+	end
+
+	return scss / length(groups)
+end
+
 function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39])
 	weights = Dict()
 	input = embed
