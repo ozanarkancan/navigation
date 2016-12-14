@@ -89,14 +89,16 @@ function execute(trainfile, test_ins, args)
 	prms = initparams(w; lr=args["lr"])
 	
 	test_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), test_ins)
-	#test_data = map(ins-> (ins, ins_char_arr(d["vocab"], ins.text)), test_ins)
+	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
+	test_data_grp = map(x->map(ins-> (ins, ins_arr(d["vocab"], ins.text)),x), group_singles(test_ins))
 
 	for i=1:args["epoch"]
 		shuffle!(trn_data)
 		@time lss = train(w, prms, trn_data; args=args)
 		@time tst_acc = test(w, test_data, d["maps"]; args=args)
-		
-		println("Epoch: $(i), trn loss: $(lss), tst acc: $(tst_acc), $(test_ins[1].map)")
+		@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
+
+		println("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
 		flush(STDOUT)
 	end
 end
