@@ -82,13 +82,14 @@ function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x,
 	state[6] = state[6] .* mask
 	state[7] = state[7] .* mask
 
-	#inp = state[6]
+	inp = state[6]
 	if dropout && pdrops[2] > 0.0
-		#inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
-		state[6] = state[6] .* (rand!(similar(AutoGrad.getval(state[6]))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		#state[6] = state[6] .* (rand!(similar(AutoGrad.getval(state[6]))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
-	q = (state[6] * soft_w1) + x + (att * soft_w2)
+	#q = (state[6] * soft_w1) + x + (att * soft_w2)
+	q = (inp * soft_w1) + x + (att * soft_w2)
 
 	return q * soft_w3 .+ soft_b
 end
@@ -100,8 +101,8 @@ function loss(weights, state, words, views, ys, maskouts, att_z;lss=nothing, dro
 	encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"],
 		weights["emb_word"], state, words; dropout=dropout, pdrops=pdrops)
 
-	state[6] = hcat(state[1][end], state[3][end])
-	state[7] = hcat(state[2][end], state[4][end])
+	#state[6] = hcat(state[1][end], state[3][end])
+	#state[7] = hcat(state[2][end], state[4][end])
 	
 	#decode
 	for i=1:length(views)
@@ -179,17 +180,13 @@ function test(weights, data, maps; args=nothing)
 		
 		encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
 		
-		state[6] = hcat(state[1][end], state[3][end])
-		state[7] = hcat(state[2][end], state[4][end])
+		#state[6] = hcat(state[1][end], state[3][end])
+		#state[7] = hcat(state[2][end], state[4][end])
 	
 		current = instruction.path[1]
 		nactions = 0
 		stop = false
-
-		println("\n$(instruction.text)")
-		println("Path: $(instruction.path)")
-		println("Filename: $(instruction.fname)")
-
+		
 		actions = Any[]
 
 		while !stop
@@ -208,14 +205,19 @@ function test(weights, data, maps; args=nothing)
 
 			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 		end
+		
+		println("$(instruction.text)")
+		println("Path: $(instruction.path)")
+		println("Filename: $(instruction.fname)")
+
 		println("Actions: $(reshape(collect(actions), 1, length(actions)))")
 		println("Current: $(current)")
 
 		if current == instruction.path[end]
 			scss += 1
-			println("SUCCESS")
+			println("SUCCESS\n")
 		else
-			println("FAILURE")
+			println("FAILURE\n")
 		end
 
 		flush(STDOUT)
@@ -223,6 +225,75 @@ function test(weights, data, maps; args=nothing)
 
 	return scss / length(data)
 end
+
+function test_paragraph(weights, groups, maps; args=nothing)
+	scss = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
+
+	for data in groups
+		println("\nNew paragraph")
+		current = data[1][1].path[1]
+		
+		for i=1:length(data)
+			instruction, words = data[i]
+			words = map(v->convert(KnetArray{Float32},v), words)
+			state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
+			att_z = convert(KnetArray{Float32}, zeros(1, convert(Int, size(words[1], 2) + 2*size(weights["enc_b1_f"],2)/4)))
+		
+			encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+		
+			nactions = 0
+			stop = false
+		
+			actions = Any[]
+			action = 0
+
+			while !stop
+				view = state_agent_centric_multihot(maps[instruction.map], current)
+				view = convert(KnetArray{Float32}, view)
+				x = spatial(weights["emb_world"], view)
+
+				att,att_s = attention(words, state, att_z, weights["attention_w"], weights["attention_v"])
+				println("Attention: $(Array(att_s))")
+				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
+				weights["soft_w3"], weights["soft_b"], state, x, mask, att)
+				action = indmax(Array(ypred))
+				push!(actions, action)
+				current = getlocation(maps[instruction.map], current, action)
+				nactions += 1
+
+				stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+			end
+		
+			println("$(instruction.text)")
+			println("Path: $(instruction.path)")
+			println("Filename: $(instruction.fname)")
+
+			println("Actions: $(reshape(collect(actions), 1, length(actions)))")
+			println("Current: $(current)")
+
+			if action != 4
+				println("FAILURE")
+				break
+			end
+
+			if i == length(data)
+				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
+					scss += 1
+					println("SUCCESS\n")
+				else
+					println("FAILURE\n")
+				end
+			end
+
+			flush(STDOUT)
+		end
+	end
+
+	return scss / length(groups)
+end
+
+
 function initweights(atype, hidden, vocab, embed, onehotworld)
 	weights = Dict()
 	input = embed
@@ -236,17 +307,17 @@ function initweights(atype, hidden, vocab, embed, onehotworld)
 	weights["enc_b1_b"] = zeros(Float32, 1, 4*hidden)
 	weights["enc_b1_b"][1:hidden] = 1 # forget gate bias
 
-	weights["dec_w1"] = xavier(Float32, input+(hidden*2) + (vocab + hidden*2), 4*hidden*2)
-	weights["dec_b1"] = zeros(Float32, 1, 4*hidden*2)
-	weights["dec_b1"][1:(hidden*2)] = 1 # forget gate bias
+	weights["dec_w1"] = xavier(Float32, input + hidden + (vocab + hidden*2), 4*hidden)
+	weights["dec_b1"] = zeros(Float32, 1, 4*hidden)
+	weights["dec_b1"][1:hidden] = 1 # forget gate bias
 
 	weights["emb_word"] = xavier(Float32, vocab, embed)
 	weights["emb_world"] = xavier(Float32, onehotworld, embed)
 
-	weights["attention_w"] = xavier(Float32, hidden*2+vocab+hidden*2, hidden)
+	weights["attention_w"] = xavier(Float32, hidden+vocab+hidden*2, hidden)
 	weights["attention_v"] = xavier(Float32, hidden, 1)
 	
-	weights["soft_w1"] = xavier(Float32, hidden*2, hidden)
+	weights["soft_w1"] = xavier(Float32, hidden, hidden)
 	weights["soft_w2"] = xavier(Float32, (vocab + hidden*2), hidden)
 	weights["soft_w3"] = xavier(Float32, hidden, 4)
 	weights["soft_b"] = zeros(Float32, 1,4)
@@ -283,8 +354,8 @@ function initstate(atype, hidden, batchsize, length)
 
 	state[5] = convert(atype, zeros(1, length))
 	
-	state[6] = convert(atype, zeros(batchsize, 2*hidden))
-	state[7] = convert(atype, zeros(batchsize, 2*hidden))
+	state[6] = convert(atype, zeros(batchsize, hidden))
+	state[7] = convert(atype, zeros(batchsize, hidden))
 
 	return state
 end
