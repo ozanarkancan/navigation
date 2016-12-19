@@ -95,7 +95,7 @@ function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x, mas
 	#return q * soft_w3 .+ soft_b
 end
 
-function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
+function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5], rewards=nothing)
 	total = 0.0; count = 0
 
 	#encode
@@ -113,7 +113,13 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 		ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"],
 			weights["soft_b"], state, x, maskouts[i], att; dropout=dropout, pdrops=pdrops)
 		ynorm = logp(ypred,2)
-		total += sum((ys[i] .* ynorm) .* maskouts[i])
+		
+		if rewards == nothing
+			total += sum((ys[i] .* ynorm) .* maskouts[i])
+		else
+			total += sum((ys[i] .* ynorm) .* maskouts[i]) * rewards[i]
+		end
+
 		count += sum(maskouts[i])
 	end
 
@@ -165,6 +171,118 @@ function train(w, prms, data; args=nothing)
 	end
 	return lss / cnt
 end
+
+function sample(linear)
+	linear = linear .- maximum(linear, 2)
+	probs = exp(linear) ./ sum(exp(linear), 2)
+	println("Probs: $probs")
+	c_probs = cumsum(probs, 2)
+	return indmax(c_probs .> rand())
+end
+
+function discount(rewards; γ=0.9)
+	discounted = zeros(Float64, length(rewards), 1)
+	discounted[end] = rewards[end]
+
+	for i=(length(rewards)-1):-1:1
+		discounted[i] = rewards[i] + γ * discounted[i+1]
+	end
+	return discounted
+end
+
+function train_pg(weights, prms, data, maps; args=nothing)
+	total = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
+	counter = 0
+	grads = Dict()
+	for (instruction, words) in data
+		counter += 1
+		words = map(v->convert(KnetArray{Float32},v), words)
+		views = Any[]
+		actions = Any[]
+		rewards = Any[]
+		masks = Any[]
+
+		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
+		encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+
+		state[5] = hcat(state[1][end], state[3][end])
+		state[6] = hcat(state[2][end], state[4][end])
+
+		current = instruction.path[1]
+		nactions = 0
+		stop = false
+
+		actions = Any[]
+		println("Path: $(instruction.path)")
+		
+		while !stop
+			view = state_agent_centric(maps[instruction.map], current)
+			view = convert(KnetArray{Float32}, view)
+			push!(views, view)
+
+			x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"],
+				weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
+			att,att_s = attention(state, weights["attention_w"], weights["attention_v"])
+			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
+
+			a = sample(Array(ypred))
+			println("Sampled: $a")
+			action = zeros(Float32, 1, 4)
+			action[1, a] = 1.0
+
+			push!(actions, convert(KnetArray, action))
+			current = getlocation(maps[instruction.map], current, a)
+			nactions += 1
+			
+			if nactions > args["limactions"] || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+				stop = true
+				push!(rewards, -1.0)
+			elseif a == 4
+				stop = true
+				if current == instruction.path[end]
+					push!(rewards, length(instruction.path)*1.0)
+				else
+					push!(rewards, -1.0)
+				end
+			else
+				push!(rewards, -1.0)
+			end
+			println("Reward: $(rewards[end])")
+		end
+
+		disc_rewards = discount(rewards)
+		total += disc_rewards[1]
+		rs = Any[]
+		#total += sum(rewards)
+		
+		#for r in rewards
+		for r=0:(length(disc_rewards)-1)
+			#push!(masks, convert(KnetArray, (0.9^r) * disc_rewards[r+1] * ones(Float32, 1,1)))
+			push!(masks, convert(KnetArray, ones(Float32, 1,1)))
+			push!(rs, (0.9^r) * disc_rewards[r+1])
+		end
+		
+		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
+		
+		nll = Float32[0, 0]
+		g = lossgradient(weights, state, words, views, actions, masks; lss=nll, dropout=false, pdrops=args["pdrops"], rewards=rs)
+		
+		for k in keys(g)
+			grads[k] = haskey(grads, k) ? grads[k] + g[k] : g[k]
+		end
+		
+		if counter % 10 == 0 || counter == length(data)
+			for k in keys(grads)
+				Knet.update!(weights[k], grads[k] / (counter % 10 == 0 ? 10 : counter), prms[k])
+			end
+			grads = Dict()
+		end
+	end
+
+	return total / length(data)
+end
+
 
 function test(weights, data, maps; args=nothing)
 	scss = 0.0
