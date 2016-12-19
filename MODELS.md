@@ -100,6 +100,7 @@ Implementation of neural walker
   1. relu . conv
   2. relu . conv
   3. sigm . conv
+* can be trainable with reinforce
 
 # model10.jl
 
@@ -131,6 +132,7 @@ Implementation of neural walker
   1. relu . conv
   2. relu . conv
   3. sigm . conv
+* can be trainable with reinforce
 
 # model12.jl
 
