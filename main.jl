@@ -61,6 +61,10 @@ function parse_commandline()
 			help = "gradient clip"
 			default = 10.0
 			arg_type = Float64
+		"--pg"
+			help = "allow policy gradient tuning"
+			default = 0
+			arg_type = Int
 	end
 	return parse_args(s)
 end		
@@ -69,7 +73,7 @@ args = parse_commandline()
 
 include(args["model"])
 
-function execute(trainfile, test_ins, args)
+function execute(trainfile, test_ins, args; train_ins=nothing)
 	d = load(trainfile)
 	trn_data = minibatch(d["data"];bs=args["bs"])
 	vdims = size(trn_data[1][2][1])
@@ -101,6 +105,21 @@ function execute(trainfile, test_ins, args)
 		println("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
 		flush(STDOUT)
 	end
+
+	if args["pg"] != 0
+		prms = initparams(w; lr=args["lr"])
+		train_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[1])
+		append!(train_data, map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[2]))
+	
+		for i=1:args["pg"]
+			@time lss = train_pg(w, prms, train_data, d["maps"]; args=args)
+			@time tst_acc = test(w, test_data, d["maps"]; args=args)
+			@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
+
+			println("PG Epoch: $(i), avg total rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+			flush(STDOUT)
+		end
+	end
 end
 
 function main()
@@ -112,8 +131,10 @@ function main()
 	grid, jelly, l = getallinstructions()
 	testins = [l, jelly, grid]
 
+	trainins = args["pg"] == 0 ? [nothing, nothing, nothing] : [(grid, jelly), (grid, l), (l, jelly)]
+
 	for i=1:length(args["trainfiles"])
-		execute(args["trainfiles"][i], testins[i], args)
+		execute(args["trainfiles"][i], testins[i], args; train_ins=trainins[i])
 	end
 end
 
