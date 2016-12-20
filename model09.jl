@@ -1,4 +1,4 @@
-using Knet, AutoGrad
+using Knet, AutoGrad, Logging
 
 include("inits.jl")
 
@@ -129,7 +129,7 @@ function train(w, prms, data; args=nothing)
 		gnorm = sqrt(gnorm)
 		gclip = args["gclip"]
 
-		println("Gnorm: $gnorm")
+		debug("Gnorm: $gnorm")
 
 		if gnorm > gclip
 			for k in keys(g)
@@ -151,7 +151,7 @@ end
 function sample(linear)
 	linear = linear .- maximum(linear, 2)
 	probs = exp(linear) ./ sum(exp(linear), 2)
-	println("Probs: $probs")
+	info("Probs: $probs")
 	c_probs = cumsum(probs, 2)
 	return indmax(c_probs .> rand())
 end
@@ -192,8 +192,8 @@ function train_pg(weights, prms, data, maps; args=nothing)
 		nactions = 0
 		stop = false
 
-		println("\n$(instruction.text)")
-		println("Path: $(instruction.path)")
+		info("\n$(instruction.text)")
+		info("Path: $(instruction.path)")
 		actions = Any[]
 
 		while !stop
@@ -206,7 +206,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_b"], state, x, mask, encoding)
 
 			a = sample(Array(ypred))
-			println("Sampled: $a")
+			info("Sampled: $a")
 			action = zeros(Float32, 1, 4)
 			action[1, a] = 1.0
 
@@ -227,7 +227,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			else
 				push!(rewards, -1.0)
 			end
-			println("Reward: $(rewards[end])")
+			info("Reward: $(rewards[end])")
 		end
 
 		disc_rewards = discount(rewards)
@@ -280,8 +280,8 @@ function test(weights, data, maps; args=nothing)
 		nactions = 0
 		stop = false
 
-		println("\n$(instruction.text)")
-		println("Path: $(instruction.path)")
+		info("\n$(instruction.text)")
+		info("Path: $(instruction.path)")
 		actions = Any[]
 
 		while !stop
@@ -297,17 +297,15 @@ function test(weights, data, maps; args=nothing)
 
 			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 		end
-		println("Actions: $(reshape(collect(actions), 1, length(actions)))")
-		println("Current: $(current)")
+		info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+		info("Current: $(current)")
 
 		if current == instruction.path[end]
 			scss += 1
-			println("SUCCESS")
+			info("SUCCESS")
 		else
-			println("FAILURE")
+			info("FAILURE")
 		end
-
-		flush(STDOUT)
 	end
 
 	return scss / length(data)
@@ -318,7 +316,7 @@ function test_paragraph(weights, groups, maps; args=nothing)
 	mask = convert(KnetArray, ones(Float32, 1,1))
 
 	for data in groups
-		println("\nNew paragraph")
+		info("\nNew paragraph")
 		current = data[1][1].path[1]
 		for i=1:length(data)
 			instruction, words = data[i]
@@ -333,8 +331,8 @@ function test_paragraph(weights, groups, maps; args=nothing)
 			nactions = 0
 			stop = false
 
-			println("$(instruction.text)")
-			println("Path: $(instruction.path)")
+			info("$(instruction.text)")
+			info("Path: $(instruction.path)")
 			actions = Any[]
 			action = 0
 
@@ -352,13 +350,13 @@ function test_paragraph(weights, groups, maps; args=nothing)
 				stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 			end
 
-			println("Actions: $(reshape(collect(actions), 1, length(actions)))")
-			println("Current: $(current)")
+			info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+			info("Current: $(current)")
 			
 			#world violation or exceeding the action limit
 			#do not execute the remeaning instructions
 			if action != 4
-				println("FAILURE")
+				info("FAILURE")
 				break
 			end
 			
@@ -366,11 +364,10 @@ function test_paragraph(weights, groups, maps; args=nothing)
 				#no need to check the orientation
 				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
 					scss += 1
-					println("SUCCESS")
+					info("SUCCESS")
 				else
-					println("FAILURE")
+					info("FAILURE")
 				end
-				flush(STDOUT)
 			end
 		end
 	end

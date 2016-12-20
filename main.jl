@@ -65,6 +65,9 @@ function parse_commandline()
 			help = "allow policy gradient tuning"
 			default = 0
 			arg_type = Int
+		"--log"
+			help = "name of the log file"
+			default = "test.log"
 	end
 	return parse_args(s)
 end		
@@ -78,7 +81,7 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 	trn_data = minibatch(d["data"];bs=args["bs"])
 	vdims = size(trn_data[1][2][1])
 
-	println("\nVocab: $(length(d["vocab"])), World: $(vdims)")
+	info("\nVocab: $(length(d["vocab"])), World: $(vdims)")
 	
 	w = nothing
 	if length(vdims) > 2
@@ -87,7 +90,7 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 		w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], vdims[2])
 	end
 
-	println("Model Prms:")
+	info("Model Prms:")
 	for k in keys(w); println("$k : $(size(w[k])) "); end
 
 	prms = initparams(w; lr=args["lr"])
@@ -102,8 +105,7 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 		@time tst_acc = test(w, test_data, d["maps"]; args=args)
 		@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
 
-		println("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
-		flush(STDOUT)
+		info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
 	end
 
 	if args["pg"] != 0
@@ -116,17 +118,17 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 			@time tst_acc = test(w, test_data, d["maps"]; args=args)
 			@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
 
-			println("PG Epoch: $(i), avg total rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
-			flush(STDOUT)
+			info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
 		end
 	end
 end
 
 function main()
+	Logging.configure(filename=args["log"])
+	Logging.configure(level=INFO)
 	srand(12345)
-	println("*** Parameters ***")
+	info("*** Parameters ***")
 	for k in keys(args); println("$k -> $(args[k])"); end
-	flush(STDOUT)
 
 	grid, jelly, l = getallinstructions()
 	testins = [l, jelly, grid]
