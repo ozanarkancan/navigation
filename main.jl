@@ -91,7 +91,7 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 	end
 
 	info("Model Prms:")
-	for k in keys(w); println("$k : $(size(w[k])) "); end
+	for k in keys(w); info("$k : $(size(w[k])) "); end
 
 	prms = initparams(w; lr=args["lr"])
 	
@@ -128,7 +128,7 @@ function main()
 	Logging.configure(level=INFO)
 	srand(12345)
 	info("*** Parameters ***")
-	for k in keys(args); println("$k -> $(args[k])"); end
+	for k in keys(args); info("$k -> $(args[k])"); end
 
 	grid, jelly, l = getallinstructions()
 	testins = [l, jelly, grid]
