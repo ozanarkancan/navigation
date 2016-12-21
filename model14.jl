@@ -1,4 +1,4 @@
-using Knet, AutoGrad
+using Knet, AutoGrad, Logging
 
 include("inits.jl")
 
@@ -147,7 +147,7 @@ function train(w, prms, data; args=nothing)
 		gnorm = sqrt(gnorm)
 		gclip = args["gclip"]
 
-		println("Gnorm: $gnorm")
+		info("Gnorm: $gnorm")
 
 		if gnorm > gclip
 			for k in keys(g)
@@ -193,7 +193,7 @@ function test(weights, data, maps; args=nothing)
 			att,att_s = attention(state, words, weights["attention_w"], weights["attention_v"])
 			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 
-			println("Attention: $(Array(att_s))")
+			info("Attention: $(Array(att_s))")
 			action = indmax(Array(ypred))
 			push!(actions, action)
 			current = getlocation(maps[instruction.map], current, action)
@@ -202,19 +202,17 @@ function test(weights, data, maps; args=nothing)
 			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 		end
 		
-		println("$(instruction.text)")
-		println("Path: $(instruction.path)")
-		println("Actions: $(reshape(collect(actions), 1, length(actions)))")
-		println("Current: $(current)")
+		info("$(instruction.text)")
+		info("Path: $(instruction.path)")
+		info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+		info("Current: $(current)")
 
 		if current == instruction.path[end]
 			scss += 1
-			println("SUCCESS\n")
+			info("SUCCESS\n")
 		else
-			println("FAILURE\n")
+			info("FAILURE\n")
 		end
-
-		flush(STDOUT)
 	end
 
 	return scss / length(data)
@@ -225,7 +223,7 @@ function test_paragraph(weights, groups, maps; args=nothing)
 	mask = convert(KnetArray, ones(Float32, 1,1))
 
 	for data in groups
-		println("\nNew paragraph")
+		info("\nNew paragraph")
 		current = data[1][1].path[1]
 		for i=1:length(data)
 			instruction, words = data[i]
@@ -251,7 +249,7 @@ function test_paragraph(weights, groups, maps; args=nothing)
 				att,att_s = attention(state, words, weights["attention_w"], weights["attention_v"])
 				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 
-				println("Attention: $(Array(att_s))")
+				info("Attention: $(Array(att_s))")
 				action = indmax(Array(ypred))
 				push!(actions, action)
 				current = getlocation(maps[instruction.map], current, action)
@@ -260,26 +258,24 @@ function test_paragraph(weights, groups, maps; args=nothing)
 				stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 			end
 
-			println("$(instruction.text)")
-			println("Path: $(instruction.path)")
-			println("Actions: $(reshape(collect(actions), 1, length(actions)))")
-			println("Current: $(current)")
+			info("$(instruction.text)")
+			info("Path: $(instruction.path)")
+			info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+			info("Current: $(current)")
 
 			if action != 4
-				println("FAILURE")
+				info("FAILURE")
 				break
 			end
 
 			if i == length(data)
 				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
 					scss += 1
-					println("SUCCESS\n")
+					info("SUCCESS\n")
 				else
-					println("FAILURE\n")
+					info("FAILURE\n")
 				end
 			end
-
-			flush(STDOUT)
 		end
 	end
 
