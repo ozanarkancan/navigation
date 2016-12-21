@@ -168,9 +168,9 @@ function train(w, prms, data; args=nothing)
 			grads[k] = haskey(grads, k) ? grads[k] + g[k] : g[k]
 		end
 
-		if counter % args["pgbatch"] == 0 || counter == length(data)
+		if counter % args["bs"] == 0 || counter == length(data)
 			for k in keys(grads)
-				Knet.update!(w[k], grads[k] / (counter % args["pgbatch"] == 0 ? args["pgbatch"] : counter), prms[k])
+				Knet.update!(w[k], grads[k] / (counter % args["bs"] == 0 ? args["bs"] : counter), prms[k])
 			end
 			grads = Dict()
 		end
@@ -260,7 +260,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			info("Reward: $(rewards[end])")
 		end
 
-		disc_rewards = discount(rewards)
+		disc_rewards = discount(rewards; γ=args["gamma"])
 		total += disc_rewards[1]
 		rs = Any[]
 		#total += sum(rewards)
@@ -269,7 +269,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 		for r=0:(length(disc_rewards)-1)
 			#push!(masks, convert(KnetArray, (0.9^r) * disc_rewards[r+1] * ones(Float32, 1,1)))
 			push!(masks, convert(KnetArray, ones(Float32, 1,1)))
-			push!(rs, (0.9^r) * disc_rewards[r+1])
+			push!(rs, (args["gamma"]^r) * disc_rewards[r+1])
 		end
 		
 		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))

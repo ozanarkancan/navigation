@@ -76,6 +76,10 @@ function parse_commandline()
 			help = "sp + pg"
 			default = 1
 			arg_type = Int
+		"--gamma"
+			help = "discount factor"
+			default = 0.9
+			arg_type = Float64
 	end
 	return parse_args(s)
 end		
