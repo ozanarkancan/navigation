@@ -65,9 +65,17 @@ function parse_commandline()
 			help = "allow policy gradient tuning"
 			default = 0
 			arg_type = Int
+		"--pgbatch"
+			help = "batch size for pg"
+			default = 10
+			arg_type = Int
 		"--log"
 			help = "name of the log file"
 			default = "test.log"
+		"--iterative"
+			help = "sp + pg"
+			default = 1
+			arg_type = Int
 	end
 	return parse_args(s)
 end		
@@ -93,32 +101,33 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 	info("Model Prms:")
 	for k in keys(w); info("$k : $(size(w[k])) "); end
 
-	prms = initparams(w; lr=args["lr"])
-	
 	test_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), test_ins)
 	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
 	test_data_grp = map(x->map(ins-> (ins, ins_arr(d["vocab"], ins.text)),x), group_singles(test_ins))
 
-	for i=1:args["epoch"]
-		shuffle!(trn_data)
-		@time lss = train(w, prms, trn_data; args=args)
-		@time tst_acc = test(w, test_data, d["maps"]; args=args)
-		@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
-
-		info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
-	end
-
-	if args["pg"] != 0
+	for it=1:args["iterative"]
 		prms = initparams(w; lr=args["lr"])
-		train_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[1])
-		append!(train_data, map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[2]))
-	
-		for i=1:args["pg"]
-			@time lss = train_pg(w, prms, train_data, d["maps"]; args=args)
+		for i=1:args["epoch"]
+			shuffle!(trn_data)
+			@time lss = train(w, prms, trn_data; args=args)
 			@time tst_acc = test(w, test_data, d["maps"]; args=args)
 			@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
 
-			info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+			info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+		end
+
+		if args["pg"] != 0
+			prms = initparams(w; lr=args["lr"])
+			train_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[1])
+			append!(train_data, map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[2]))
+	
+			for i=1:args["pg"]
+				@time lss = train_pg(w, prms, train_data, d["maps"]; args=args)
+				@time tst_acc = test(w, test_data, d["maps"]; args=args)
+				@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
+
+				info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+			end
 		end
 	end
 end

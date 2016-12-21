@@ -135,7 +135,10 @@ function train(w, prms, data; args=nothing)
 	lss = 0.0
 	cnt = 0.0
 	nll = Float32[0, 0]
+	counter = 0
+	grads = Dict()
 	for (words, views, ys, maskouts) in data
+		counter += 1
 		bs = size(words[1], 1)
 		state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b1_f"],2)/4), bs, length(words))
 
@@ -161,9 +164,15 @@ function train(w, prms, data; args=nothing)
 			end
 		end
 
-		#update weights
 		for k in keys(g)
-			Knet.update!(w[k], g[k], prms[k])
+			grads[k] = haskey(grads, k) ? grads[k] + g[k] : g[k]
+		end
+
+		if counter % args["pgbatch"] == 0 || counter == length(data)
+			for k in keys(grads)
+				Knet.update!(w[k], grads[k] / (counter % args["pgbatch"] == 0 ? args["pgbatch"] : counter), prms[k])
+			end
+			grads = Dict()
 		end
 
 		lss += nll[1] * nll[2]
@@ -246,7 +255,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 					push!(rewards, -1.0)
 				end
 			else
-				push!(rewards, -1.0)
+				push!(rewards, -1.0/length(instruction.path))
 			end
 			info("Reward: $(rewards[end])")
 		end

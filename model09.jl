@@ -111,7 +111,10 @@ function train(w, prms, data; args=nothing)
 	lss = 0.0
 	cnt = 0.0
 	nll = Float32[0, 0]
+	counter = 0
+	grads = Dict()
 	for (words, views, ys, maskouts) in data
+		counter += 1
 		bs = size(words[1], 1)
 		state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b1_f"],2)/4), bs)
 
@@ -123,23 +126,30 @@ function train(w, prms, data; args=nothing)
 
 		g = lossgradient(w, state, words, views, ys, maskouts; lss=nll, dropout=true, pdrops=args["pdrops"])
 
-		gnorm = 0
-
-		for k in keys(g); gnorm += sumabs2(g[k]); end
-		gnorm = sqrt(gnorm)
-		gclip = args["gclip"]
-
-		debug("Gnorm: $gnorm")
-
-		if gnorm > gclip
-			for k in keys(g)
-				g[k] = g[k] * gclip / gnorm
-			end
+		
+		for k in keys(g)
+			grads[k] = haskey(grads, k) ? grads[k] + g[k] : g[k]
 		end
 
-		#update weights
-		for k in keys(w)
-			Knet.update!(w[k], g[k], prms[k])
+		if counter % args["pgbatch"] == 0 || counter == length(data)
+			gnorm = 0
+
+			for k in keys(grads); gnorm += sumabs2(grads[k]); end
+			gnorm = sqrt(gnorm)
+			gclip = args["gclip"]
+
+			debug("Gnorm: $gnorm")
+
+			if gnorm > gclip
+				for k in keys(grads)
+					grads[k] = grads[k] * gclip / gnorm
+				end
+			end
+
+			for k in keys(grads)
+				Knet.update!(w[k], grads[k] / (counter % args["pgbatch"] == 0 ? args["pgbatch"] : counter), prms[k])
+			end
+			grads = Dict()
 		end
 
 		lss += nll[1] * nll[2]
@@ -225,7 +235,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 					push!(rewards, -1.0)
 				end
 			else
-				push!(rewards, -1.0)
+				push!(rewards, -1.0/length(instruction.path))
 			end
 			info("Reward: $(rewards[end])")
 		end
@@ -251,9 +261,9 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			grads[k] = haskey(grads, k) ? grads[k] + g[k] : g[k]
 		end
 
-		if counter % 10 == 0 || counter == length(data)
+		if counter % args["pgbatch"] == 0 || counter == length(data)
 			for k in keys(grads)
-				Knet.update!(weights[k], grads[k] / (counter % 10 == 0 ? 10 : counter), prms[k])
+				Knet.update!(weights[k], grads[k] / (counter % args["pgbatch"] == 0 ? args["pgbatch"] : counter), prms[k])
 			end
 			grads = Dict()
 		end
