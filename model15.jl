@@ -130,7 +130,14 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 	return nll
 end
 
+function predictV(X, V)
+	return X * V
+end
+
+mse(V, X, Y) = (sum(abs2(Y-predictV(X, V))) / size(X,1))
+
 lossgradient = grad(loss)
+lossgradientV = grad(mse)
 
 function train(w, prms, data; args=nothing)
 	lss = 0.0
@@ -191,7 +198,7 @@ function sample(linear)
 end
 
 function discount(rewards; γ=0.9)
-	discounted = zeros(Float64, length(rewards), 1)
+	discounted = zeros(Float32, length(rewards), 1)
 	discounted[end] = rewards[end]
 
 	for i=(length(rewards)-1):-1:1
@@ -220,6 +227,8 @@ function train_pg(weights, prms, data, maps; args=nothing)
 		state[5] = hcat(state[1][end], state[3][end])
 		state[6] = hcat(state[2][end], state[4][end])
 
+		Xs = nothing
+
 		current = instruction.path[1]
 		nactions = 0
 		stop = false
@@ -237,6 +246,8 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			att,att_s = attention(state, weights["attention_w"], weights["attention_v"])
 			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
 				weights["soft_w3"], weights["soft_b"], state, x, mask, att)
+
+			Xs = Xs == nothing ? state[5] : vcat(Xs, state[5])
 
 			a = sample(Array(ypred))
 			info("Sampled: $a")
@@ -263,6 +274,9 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			info("Reward: $(rewards[end])")
 		end
 
+		V = predictV(Xs, weights["V"])
+		v = Array(V)
+		info("PredV: $v")
 		disc_rewards = discount(rewards; γ=args["gamma"])
 		total += disc_rewards[1]
 		rs = Any[]
@@ -272,7 +286,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 		for r=0:(length(disc_rewards)-1)
 			#push!(masks, convert(KnetArray, (0.9^r) * disc_rewards[r+1] * ones(Float32, 1,1)))
 			push!(masks, convert(KnetArray, ones(Float32, 1,1)))
-			push!(rs, (args["gamma"]^r) * disc_rewards[r+1])
+			push!(rs, (args["gamma"]^r) * (disc_rewards[r+1]-v[r+1]))
 		end
 		
 		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
@@ -280,14 +294,20 @@ function train_pg(weights, prms, data, maps; args=nothing)
 		nll = Float32[0, 0]
 		g = lossgradient(weights, state, words, views, actions, masks; lss=nll, dropout=false, pdrops=args["pdrops"], rewards=rs)
 		
+		gV = lossgradientV(weights["V"], Xs, convert(KnetArray, disc_rewards))
+
 		for k in keys(g)
 			grads[k] = haskey(grads, k) ? grads[k] + g[k] : g[k]
 		end
+
+		grads["V"] = haskey(grads, "V") ? grads["V"] + gV : gV
 		
 		if counter % 10 == 0 || counter == length(data)
 			for k in keys(grads)
 				Knet.update!(weights[k], grads[k] / (counter % 10 == 0 ? 10 : counter), prms[k])
 			end
+			
+			Knet.update!(weights["V"], grads["V"] / (counter % 10 == 0 ? 10 : counter), prms["V"])
 			grads = Dict()
 		end
 	end
