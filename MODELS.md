@@ -186,7 +186,25 @@ Implementation of neural walker
 # model15.jl
 
 * Encoder - Decoder
-  * Decoder takes the final hidden layer of the encoder in each step
+  * Decoder takes the attention
+* Attention
+  * Based on encoder hiddens
+* Rich Softmax
+  * Takes the hidden and the perceptual input at time t
+* Dropout
+  * After embedding
+  * Between final lstm layer and softmax (decoder)
+* Spatial
+  1. relu . conv
+  2. relu . conv
+  3. sigm . conv
+* can be trainable with reinforce, uses baseline reward
+
+# model16.jl
+
+* Encoder - Decoder
+  * Decoder takes the attention
+  * Decoder has two layers
 * Attention
   * Based on encoder hiddens
 * Rich Softmax
