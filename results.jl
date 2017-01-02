@@ -11,7 +11,16 @@ function results(fname)
 		end
 		l = split(line)
 
-		v = parse(Float64, split(l[8], ",")[1])
+		i = 3
+		stop = false
+		while !stop
+			if startswith(l[i], "acc")
+				stop = true
+			end
+			i += 1
+		end
+
+		v = parse(Float64, split(l[i], ",")[1])
 		if haskey(d, l[end])
 			if v > d[l[end]]
 				d[l[end]] = v

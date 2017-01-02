@@ -61,6 +61,10 @@ function parse_commandline()
 			help = "gradient clip"
 			default = 10.0
 			arg_type = Float64
+		"--gclip2"
+			help = "gradient clip for reinforce"
+			default = 100.0
+			arg_type = Float64
 		"--pg"
 			help = "allow policy gradient tuning"
 			default = 0
@@ -80,6 +84,13 @@ function parse_commandline()
 			help = "discount factor"
 			default = 0.9
 			arg_type = Float64
+		"--mom"
+			help = "gamma for momentum"
+			default = 0.9
+			arg_type = Float64
+		"--opt"
+			help = "adam or momentum"
+			default = "adam"
 	end
 	return parse_args(s)
 end		
@@ -109,11 +120,14 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
 	test_data_grp = map(x->map(ins-> (ins, ins_arr(d["vocab"], ins.text)),x), group_singles(test_ins))
 
+	prms_sp = initparams(w; args=args)
+	prms_rl = initparams(w; args=args)
+
 	for it=1:args["iterative"]
-		prms = initparams(w; lr=args["lr"])
+		#prms = initparams(w; args=args)
 		for i=1:args["epoch"]
 			shuffle!(trn_data)
-			@time lss = train(w, prms, trn_data; args=args)
+			@time lss = train(w, prms_sp, trn_data; args=args)
 			@time tst_acc = test(w, test_data, d["maps"]; args=args)
 			@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
 
@@ -121,12 +135,12 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 		end
 
 		if args["pg"] != 0
-			prms = initparams(w; lr=args["lr"])
+			#prms = initparams(w; args=args)
 			train_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[1])
 			append!(train_data, map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[2]))
 	
 			for i=1:args["pg"]
-				@time lss = train_pg(w, prms, train_data, d["maps"]; args=args)
+				@time lss = train_pg(w, prms_rl, train_data, d["maps"]; args=args)
 				@time tst_acc = test(w, test_data, d["maps"]; args=args)
 				@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
 

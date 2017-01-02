@@ -38,11 +38,11 @@ end
 
 function attention(states, attention_w, attention_v)
 	h = hcat(states[1][2], states[3][end])
-	hu = hcat(states[6], h)
+	hu = hcat(states[5], h)
 	for i=2:(length(states[1])-1)
 		hp = hcat(states[1][i+1], states[3][end-i+1])
 		h = vcat(h, hp)
-		hu = vcat(hu, hcat(states[6], hp))
+		hu = vcat(hu, hcat(states[5], hp))
 	end
 
 	raw_att = tanh(hu * attention_w) * attention_v
@@ -130,11 +130,12 @@ function loss(weights, state, words, views, ys, maskouts;lss=nothing, dropout=fa
 	return nll
 end
 
-function predictV(X, V)
-	return X * V
+function predictV(X, V1, b1, V2, b2)
+	h = relu(X * V1 .+ b1)
+	return h * V2 .+ b2
 end
 
-mse(V, X, Y) = (sum(abs2(Y-predictV(X, V))) / size(X,1))
+mse(w, X, Y) = (sum(abs2(Y-predictV(X, w["V1"], w["V1b"], w["V2"], w["V2b"]))) / size(X,1))
 
 lossgradient = grad(loss)
 lossgradientV = grad(mse)
@@ -269,24 +270,32 @@ function train_pg(weights, prms, data, maps; args=nothing)
 					push!(rewards, -1.0)
 				end
 			else
-				push!(rewards, -1.0/length(instruction.path))
+				if current in instruction.path
+					#push!(rewards, -1.0/length(instruction.path))
+					push!(rewards, 1.0/length(instruction.path))
+				else
+					#push!(rewards, -1.0)
+					push!(rewards, -1.0/length(instruction.path))
+				end
 			end
 			info("Reward: $(rewards[end])")
 		end
 
-		V = predictV(Xs, weights["V"])
+		V = predictV(Xs, weights["V1"], weights["V1b"], weights["V2"], weights["V2b"])
 		v = Array(V)
 		info("PredV: $v")
 		disc_rewards = discount(rewards; γ=args["gamma"])
 		total += disc_rewards[1]
 		rs = Any[]
+		delta = zeros(Float32, length(rewards), 1)
 		#total += sum(rewards)
 		
 		#for r in rewards
 		for r=0:(length(disc_rewards)-1)
 			#push!(masks, convert(KnetArray, (0.9^r) * disc_rewards[r+1] * ones(Float32, 1,1)))
 			push!(masks, convert(KnetArray, ones(Float32, 1,1)))
-			push!(rs, (args["gamma"]^r) * (disc_rewards[r+1]-v[r+1]))
+			delta[r+1, 1] = disc_rewards[r+1] - v[r+1]
+			push!(rs, (args["gamma"]^r) * delta[r+1, 1])
 		end
 		
 		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
@@ -294,20 +303,35 @@ function train_pg(weights, prms, data, maps; args=nothing)
 		nll = Float32[0, 0]
 		g = lossgradient(weights, state, words, views, actions, masks; lss=nll, dropout=false, pdrops=args["pdrops"], rewards=rs)
 		
-		gV = lossgradientV(weights["V"], Xs, convert(KnetArray, disc_rewards))
+		gV = lossgradientV(weights, Xs, convert(KnetArray, disc_rewards))
 
 		for k in keys(g)
 			grads[k] = haskey(grads, k) ? grads[k] + g[k] : g[k]
 		end
 
-		grads["V"] = haskey(grads, "V") ? grads["V"] + gV : gV
-		
+		for k in keys(gV)
+			grads[k] = haskey(grads, k) ? grads[k] + gV[k] : gV[k]
+		end
+
 		if counter % 10 == 0 || counter == length(data)
+			gnorm = 0
+
+			for k in keys(grads); gnorm += sumabs2(grads[k]); end
+			gnorm = sqrt(gnorm)
+			gclip = args["gclip"]
+
+			debug("Gnorm: $gnorm")
+
+			if gnorm > gclip
+				for k in keys(grads)
+					grads[k] = grads[k] * gclip / gnorm
+				end
+			end
+
 			for k in keys(grads)
 				Knet.update!(weights[k], grads[k] / (counter % 10 == 0 ? 10 : counter), prms[k])
 			end
 			
-			Knet.update!(weights["V"], grads["V"] / (counter % 10 == 0 ? 10 : counter), prms["V"])
 			grads = Dict()
 		end
 	end
@@ -344,7 +368,8 @@ function test(weights, data, maps; args=nothing)
 			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 
 			info("Attention: $(Array(att_s))")
-			action = indmax(Array(ypred))
+			#action = indmax(Array(ypred))
+			action = sample(Array(ypred))
 			push!(actions, action)
 			current = getlocation(maps[instruction.map], current, action)
 			nactions += 1
@@ -400,7 +425,8 @@ function test_paragraph(weights, groups, maps; args=nothing)
 				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 
 				info("Attention: $(Array(att_s))")
-				action = indmax(Array(ypred))
+				#action = indmax(Array(ypred))
+				action = sample(Array(ypred))
 				push!(actions, action)
 				current = getlocation(maps[instruction.map], current, action)
 				nactions += 1
@@ -474,7 +500,10 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
 	weights["soft_w3"] = xavier(Float32, hidden, 4)
 	weights["soft_b"] = zeros(Float32, 1,4)
 
-	weights["V"] = xavier(Float32, 2*hidden, 1)
+	weights["V1"] = xavier(Float32, 2*hidden, hidden)
+	weights["V1b"] = xavier(Float32, 1, hidden)
+	weights["V2"] = xavier(Float32, hidden, 1)
+	weights["V2b"] = xavier(Float32, 1, 1)
 
 	for k in keys(weights); weights[k] = convert(atype, weights[k]); end
 	

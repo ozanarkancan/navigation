@@ -38,11 +38,11 @@ end
 
 function attention(states, attention_w, attention_v)
 	h = hcat(states[1][2], states[3][end])
-	hu = hcat(states[6], h)
+	hu = hcat(states[5], h)
 	for i=2:(length(states[1])-1)
 		hp = hcat(states[1][i+1], states[3][end-i+1])
 		h = vcat(h, hp)
-		hu = vcat(hu, hcat(states[6], hp))
+		hu = vcat(hu, hcat(states[5], hp))
 	end
 
 	raw_att = tanh(hu * attention_w) * attention_v
@@ -324,7 +324,8 @@ function test(weights, data, maps; args=nothing)
 			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 
 			info("Attention: $(Array(att_s))")
-			action = indmax(Array(ypred))
+			#action = indmax(Array(ypred))
+			action = sample(Array(ypred))
 			push!(actions, action)
 			current = getlocation(maps[instruction.map], current, action)
 			nactions += 1
@@ -380,7 +381,8 @@ function test_paragraph(weights, groups, maps; args=nothing)
 				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 
 				info("Attention: $(Array(att_s))")
-				action = indmax(Array(ypred))
+				#action = indmax(Array(ypred))
+				action = sample(Array(ypred))
 				push!(actions, action)
 				current = getlocation(maps[instruction.map], current, action)
 				nactions += 1

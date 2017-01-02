@@ -81,6 +81,7 @@ left hand side: left of the agent
 neighbors of a node are edges
 =#
 function state_agent_centric(map, loc; vdims = [39 39])
+	#lfeatvec = length(Items) + length(Floors) + length(Walls) + 3
 	lfeatvec = length(Items) + length(Floors) + length(Walls) + length(Colors) + 3
 	view = zeros(Float32, vdims[1], vdims[2], lfeatvec, 1)
 	mid = [vdims[1] round(Int, vdims[2]/2)]
