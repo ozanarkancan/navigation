@@ -271,11 +271,11 @@ function train_pg(weights, prms, data, maps; args=nothing)
 				end
 			else
 				if current in instruction.path
-					#push!(rewards, -1.0/length(instruction.path))
-					push!(rewards, 1.0/length(instruction.path))
-				else
-					#push!(rewards, -1.0)
 					push!(rewards, -1.0/length(instruction.path))
+					#push!(rewards, 1.0/length(instruction.path))
+				else
+					push!(rewards, -1.0)
+					#push!(rewards, -1.0/length(instruction.path))
 				end
 			end
 			info("Reward: $(rewards[end])")
