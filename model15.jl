@@ -267,7 +267,11 @@ function train_pg(weights, prms, data, maps; args=nothing)
 				if current == instruction.path[end]
 					push!(rewards, length(instruction.path)*1.0)
 				else
-					push!(rewards, -1.0)
+					#push!(rewards, -1.0)
+					x1,y1,z1 = instruction.path[end]
+					x2,y2,z2 = current
+					dist = norm([x1 y1] - [x2 y2])
+					push!(rewards, -1.0 * dist)
 				end
 			else
 				if current in instruction.path
