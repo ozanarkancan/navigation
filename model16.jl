@@ -84,11 +84,13 @@ function decode(weight1, bias1, weight2, bias2, soft_w1, soft_w2, soft_w3, soft_
 	state[5] = state[6] .* mask
 	state[5] = state[6] .* mask
 
+	inpn = state[5]
+
 	if dropout && pdrops[2] > 0.0
-		state[5] = state[5] .* (rand!(similar(AutoGrad.getval(state[5]))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		inpn = inpn .* (rand!(similar(AutoGrad.getval(inpn))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
-	state[7], state[8] = lstm(weight2, bias2, state[7], state[8], state[5])
+	state[7], state[8] = lstm(weight2, bias2, state[7], state[8], inpn)
 
 	inp = state[7]
 	if dropout && pdrops[3] > 0.0
