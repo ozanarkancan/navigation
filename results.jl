@@ -11,7 +11,7 @@ function results(fname)
 		end
 		l = split(line)
 
-		i = 3
+		i = 5
 		stop = false
 		while !stop
 			if startswith(l[i], "acc")
