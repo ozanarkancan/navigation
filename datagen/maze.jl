@@ -155,8 +155,8 @@ function astar_solver(maze, start, goal)
 	return reverse(path)
 end
 
-function test()
-	h,w=(4, 6)
+function testmazepath()
+	h,w=(10, 10)
 	maze = generate_maze(h, w)
 	print_maze(maze)
 
@@ -173,4 +173,4 @@ function test()
 	println(path[end])
 end
 
-test()
+#testmazepath()
