@@ -6,7 +6,7 @@ include("inits.jl")
 function spatial(filters1, bias1, filters2, bias2, filters3, bias3, emb, x)
 	c1 = relu(conv4(filters1, x; padding=0) .+ bias1)
 	c2 = relu(conv4(filters2, c1; padding=0) .+ bias2)
-	c3 = sigm(conv4(filters3, c2; padding=0) .+ bias3)
+	c3 = relu(conv4(filters3, c2; padding=0) .+ bias3)
 	h = transpose(mat(c3))
 	return h * emb
 end
