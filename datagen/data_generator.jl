@@ -1,159 +1,126 @@
 include("../util.jl")
-using Base.Collections
+include("maze.jl")
 
-#recursive backtracking algorithm
-function generate_maze(h = 4, w = 4)
-	maze = zeros(h, w, 4)
-	unvisited = ones(h, w)
-
-	function neighbours(r,c)
-		ns = Array{Tuple{Int, Int, Int}, 1}()
-		for i=1:4
-			if i == 1 && (r - 1) >= 1 && unvisited[r-1, c] == 1
-				push!(ns, (r-1, c, 1))
-			elseif i == 2 && (c + 1) <= w && unvisited[r, c+1] == 1
-				push!(ns, (r, c+1, 2))
-			elseif i == 3 && (r+1) <= h && unvisited[r+1, c] == 1
-				push!(ns, (r+1, c, 3))
-			elseif i == 4 && (c-1) >= 1 && unvisited[r, c-1] == 1
-				push!(ns, (r, c-1, 4))
-			end
-		end
-		return shuffle(ns)
-	end
-
-	start = rand(1:h*w)
-	r = div(start, h) + 1
-	r = r > h ? h : r
-	c = start % w
-	c = c == 0 ? w : c
-
-	stack = Array{Tuple{Int, Int}, 1}()
-	curr = (r, c)
-	unvisited[r,c] = 0
-	while countnz(unvisited) != 0
-		ns = neighbours(curr[1], curr[2])
-		if length(ns) > 0
-			r,c = curr
-			rn, cn, d = ns[1]
-			push!(stack, (r,c))
-			maze[r, c, d] = 1
-			dn = d - 2 <= 0 ? d + 2 : d - 2
-			maze[rn, cn, dn] = 1
-			curr = (rn, cn)
-			unvisited[rn, cn] = 0
-		elseif length(stack) != 0
-			curr = pop!(stack)
-		end
-
-	end
-	return maze
-end
-
-function print_maze(maze)
+function generate_path(maze)
 	h,w,_ = size(maze)
-	rows = 2*h + 1
-	cols = 2*w + 1
+	rp = randperm(h*w)
 
-	for i=1:rows
-		println("")
-		for j=1:cols
-			if i == 1 || i == rows || j == 1 || j == cols
-				print("#")
-			elseif i % 2 == 1 && j % 2 == 1
-				print("#")
-			elseif i % 2 == 1 && j % 2 == 0
-				r = div(i - 1, 2)
-				c = div(j, 2)
-				if maze[r, c, 3] == 1
-					print(" ")
-				else
-					print("#")
-				end
-			elseif i % 2 == 0 && j % 2 == 1
-				r = div(i, 2)
-				c = div(j - 1, 2)
-				if maze[r,c,2] == 1
-					print(" ")
-				else
-					print("#")
-				end
-			else
-				print(" ")
-			end
+	x1,y1 = ind2sub((h,w), rp[1])
+	z1 = rand(0:3) * 90
+	x2 = 0
+	y2 = 0
+	dist = 0
+	i=2
 
+	while dist < 6
+		x2,y2 = ind2sub((h,w), rp[i])
+		i += 1
+		dist = abs(x1-x2)+abs(y1-y2)
+	end
+
+	println("Start: $((y1, x1, z1))")
+	println("Goal: $((y2, x2))")
+	
+	path = astar_solver(maze, [x1, y1], [x2, y2])
+
+	start = (y1, x1, z1)
+	goal = (y2, x2, -1)
+
+	nodes = Any[]
+
+	current = start
+	next = 2
+	#println("Path: $path")
+
+	while !(current[1] == goal[1] && current[2] == goal[2])
+		#println("Current: $current")
+		y2, x2 = path[next]
+		nb = (x2, y2)
+		#println("NB: $nb")
+		ns = getnodes(current, nb)
+		#println("Nodes: $ns")
+		current = ns[end]
+		if length(nodes) == 0
+			append!(nodes, ns)
+		else
+			append!(nodes, ns[2:end])
+		end
+		next += 1
+	end
+
+	return nodes
+	#=
+	p = Any[]
+	println("NS: $nodes")
+	for n in nodes
+		t = map(x->round(Int, x), n)
+		if length(p) == 0 || p[end] != t
+			push!(p, t)
 		end
 	end
-	print("\n")
+	return p
+	=#
 end
 
-#start & goal must be an array with 2 elements
-function astar_solver(maze, start, goal)
-	function neighbours(r,c)
-		ns = Any[]
-		for i=1:4
-			if i == 1 && maze[r, c, 1] == 1
-				push!(ns, Float64[r-1, c])
-			elseif i == 2 && maze[r, c, 2] == 1
-				push!(ns, Float64[r, c+1])
-			elseif i == 3 && maze[r, c, 3] == 1
-				push!(ns, Float64[r+1, c])
-			elseif i == 4 && maze[r, c, 4] == 1
-				push!(ns, Float64[r, c-1])
-			end
-		end
-		return ns
-	end
-
-	closed = Set()
-	open = PriorityQueue{Array{Float64, 1}, Float64, Base.Order.ForwardOrdering}()
-
-	parent = Dict()
-	path_cost = Dict()
-	heuristic = Dict()
-
-	path_cost[start] = 0.0
-	heuristic[start] = norm(start - goal)
-	parent[start] = [0.0, 0.0]
-
-	Collections.enqueue!(open, start, path_cost[start] + heuristic[start])
-
-	current = nothing
-
-	while length(open) != 0
-		current = Collections.dequeue!(open)
-
-		if current == goal; break; end
-
-		push!(closed, current)
-
-		ns = neighbours(convert(Int, current[1]), convert(Int, current[2]))
-		for n in ns
-			if n in closed; continue; end
-			if n in keys(open)
-				if path_cost[n] > path_cost[current] + 1
-					path_cost[n] = path_cost[current] + 1
-					heuristic[n] = norm(n - goal)
-					open[n] = path_cost[n] + heuristic[n]
-					parent[n] = current
+function getnodes(n1, n2)
+	nodes = Any[]
+	if n1[1] == n2[1]
+		if n1[2] > n2[2]
+			if n1[3] != 270
+				c = n1[3]
+				while c != 0
+					push!(nodes, (n1[1], n1[2], c))
+					c -= 90
 				end
 			else
-				path_cost[n] = path_cost[current] + 1
-				heuristic[n] = norm(n- goal)
-				Collections.enqueue!(open, n, path_cost[n] + heuristic[n])
-				parent[n] = current
+				push!(nodes, n1)
 			end
+			push!(nodes, (n1[1], n1[2], 0))
+			push!(nodes, (n2[1], n2[2], 0))
+		else
+			if n1[3] != 270
+				c = n1[3]
+				while c != 180
+					push!(nodes, (n1[1], n1[2], c))
+					c += 90
+				end
+			else
+				push!(nodes, n1)
+
+			end
+			push!(nodes, (n1[1], n1[2], 180))
+			push!(nodes, (n2[1], n2[2], 180))
+
+		end
+	else
+		if n1[1] > n2[1]
+			if n1[3] != 0
+				c = n1[3]
+				while c != 270
+					push!(nodes, (n1[1], n1[2], c))
+					c += 90
+				end
+			else
+				push!(nodes, n1)
+			end
+			push!(nodes, (n1[1], n1[2], 270))
+			push!(nodes, (n2[1], n2[2], 270))
+		else
+			if n1[3] != 0
+				c = n1[3]
+				while c != 90
+					push!(nodes, (n1[1], n1[2], c))
+					c -= 90
+				end
+			else
+				push!(nodes, n1)
+
+			end
+			push!(nodes, (n1[1], n1[2], 90))
+			push!(nodes, (n2[1], n2[2], 90))
 		end
 	end
-
-	path = Any[]
-
-	while current != [0.0, 0.0]
-		push!(path, current)
-		current = parent[current]
-	end
-
-	return reverse(path)
+	return nodes
 end
 
 function segment_path(path)
@@ -161,25 +128,55 @@ function segment_path(path)
 	Segment the path into forward movements and turns
 	"""
 	segments = Any[]
+
+	c = 1
+	curr = Any[]
+	move = path[1][3] == path[2][3]
+
+	while c < length(path)
+		if path[c][3] == path[c+1][3]
+			if move
+				push!(curr, path[c])
+				c += 1
+			else
+				push!(curr, path[c])
+				push!(segments, curr)
+				curr = Any[]
+				move = true
+			end
+		else
+			if !move
+				push!(curr, path[c])
+				c += 1
+			else
+				push!(curr, path[c])
+				push!(segments, curr)
+				curr = Any[]
+				move = false
+			end
+		end
+	end
+	push!(curr, path[end])
+	push!(segments, curr)
 	return segments
 end
 
 function test()
-	h,w=(4, 6)
+	h,w = (6, 6)
 	maze = generate_maze(h, w)
 	print_maze(maze)
-
-	start = [1.0, 1.0]
-	goal = [4.0, 6.0]
-
-	path = astar_solver(maze, start, goal)
-
+	path = generate_path(maze)
+	
 	for i=1:length(path)-1
 		print(path[i])
 		print(" => ")
 	end
-
-	println(path[end])
+	 
+        println(path[end])
+	segments = segment_path(path)
+	for s in segments
+		println(s)
+	end
 end
 
 test()
