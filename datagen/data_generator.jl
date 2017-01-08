@@ -1,7 +1,7 @@
 include("../util.jl")
 include("maze.jl")
 
-function generate_path(maze)
+function generate_path(maze; distance=4)
 	h,w,_ = size(maze)
 	rp = randperm(h*w)
 
@@ -9,10 +9,10 @@ function generate_path(maze)
 	z1 = rand(0:3) * 90
 	x2 = 0
 	y2 = 0
-	dist = 0
+	dist = -1
 	i=2
 
-	while dist < 6
+	while dist < distance
 		x2,y2 = ind2sub((h,w), rp[i])
 		i += 1
 		dist = abs(x1-x2)+abs(y1-y2)
@@ -162,10 +162,10 @@ function segment_path(path)
 end
 
 function test()
-	h,w = (6, 6)
+	h,w = (4, 4)
 	maze = generate_maze(h, w)
 	print_maze(maze)
-	path = generate_path(maze)
+	path = generate_path(maze; distance=0)
 	
 	for i=1:length(path)-1
 		print(path[i])
@@ -176,6 +176,18 @@ function test()
 	segments = segment_path(path)
 	for s in segments
 		println(s)
+	end
+
+	map = generate_navi_map(maze, "123")
+
+	for k in keys(map.nodes)
+		println("Node: $k , item: $(map.nodes[k])")
+	end
+
+	for n1 in keys(map.edges)
+		for n2 in keys(map.edges[n1])
+			println("$n1 <-> $n2 : $(map.edges[n1][n2])")
+		end
 	end
 end
 

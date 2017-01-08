@@ -155,6 +155,98 @@ function astar_solver(maze, start, goal)
 	return reverse(path)
 end
 
+function sample(probs)
+	c_probs = cumsum(probs, 2)
+	return indmax(c_probs .> rand())
+end
+
+function generate_navi_map(maze, name; itemcountprobs=[0.1 0.7 0.2], iprob=0.2)
+	h,w,_ = size(maze)
+	nodes = Dict()
+	edges = Dict()
+
+	#wall pattern boundaries
+	b1 = rand(2:w-1)
+	b2 = rand(2:h) 
+	b3 = rand(2:h)
+
+	items = Any[]
+	for k in keys(Items)
+		if k != ""
+			c = sample(itemcountprobs)-1
+			for i=1:c; push!(items, k); end;
+		end
+	end
+	shuffle!(items)
+
+	walls = shuffle(collect(values(Walls)))
+	floor = rand(collect(values(Floors)))
+	
+	#set nodes and horizontal edges
+	for i=1:h
+		for j=1:w
+			n1 = (j, i)
+			n2 = (j+1, i)
+			item = ""
+			
+			if rand() < iprob && length(items) > 0
+				item = pop!(items)
+			end
+			
+			get!(nodes, n1, Items[item])
+			wall = 0
+
+			if j <= b1 && i <= b2
+				wall = walls[1]
+			elseif j > b2 && i <= b3
+				wall = walls[2]
+			else
+				wall = walls[3]
+			end
+			
+			if maze[i, j, 2] == 1
+				d = get!(edges, n1, Dict(n2 => (wall, floor)))
+				get!(d, n2, (wall, floor))
+				d = get!(edges, n2, Dict(n1 => (wall, floor)))
+				get!(d, n1, (wall, floor))
+			else
+				floor = rand(collect(values(Floors)))
+			end
+		end
+	end
+
+	floor = rand(collect(values(Floors)))
+	
+	#set vertical horizontal edges
+	for j=1:w
+		for i=1:h
+			n1 = (j, i)
+			n2 = (j, i+1)
+			
+			wall = 0
+
+			if j <= b1 && i <= b2
+				wall = walls[1]
+			elseif j > b2 && i <= b3
+				wall = walls[2]
+			else
+				wall = walls[3]
+			end
+			
+			if maze[i, j, 3] == 1
+				d = get!(edges, n1, Dict(n2 => (wall, floor)))
+				get!(d, n2, (wall, floor))
+				d = get!(edges, n2, Dict(n1 => (wall, floor)))
+				get!(d, n1, (wall, floor))
+			else
+				floor = rand(collect(values(Floors)))
+			end
+		end
+	end
+
+	return Map(name, nodes, edges)
+end
+
 function testmazepath()
 	h,w=(10, 10)
 	maze = generate_maze(h, w)
