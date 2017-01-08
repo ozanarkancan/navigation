@@ -121,6 +121,10 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 	test_data_grp = map(x->map(ins-> (ins, ins_arr(d["vocab"], ins.text)),x), group_singles(test_ins))
 
 	prms_sp = initparams(w; args=args)
+
+	args["lr"] = 0.05
+	args["opt"] = "momentum"
+
 	prms_rl = initparams(w; args=args)
 
 	for it=1:args["iterative"]
