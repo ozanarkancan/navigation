@@ -15,7 +15,7 @@ Walls = Dict("butterfly" => 1, "fish" => 2, "tower" => 3)
 Floors = Dict("blue" => 1, "brick" => 2, "concrete" => 3, "flower" => 4, 
 	"grass" => 5, "gravel" => 6, "wood" => 7, "yellow" => 8)
 
-Colors = Dict("black" => 1, "blue" => 2, "brown" => 3,
+MapColors = Dict("black" => 1, "blue" => 2, "brown" => 3,
 	"green" => 4, "grey" => 5, "pink" => 6, "red" => 7, "yellow" => 8)
 
 ColorMapping = Dict(1 => ["blue"], 2 => ["red", "brown"], 3 => ["grey"],
@@ -74,6 +74,7 @@ function getlocation(map::Map, current, action)
 	return next
 end
 
+#=
 function main()
 	fname = "data/maps/map-grid.json"
 	grid = getmap(fname)
@@ -83,5 +84,5 @@ function main()
 	println("")
 	println(grid.edges)
 end
-
+=#
 #main()

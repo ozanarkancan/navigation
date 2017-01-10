@@ -1,4 +1,5 @@
 using Base.Collections
+include("../util.jl")
 
 #recursive backtracking algorithm
 function generate_maze(h = 4, w = 4)
@@ -170,6 +171,8 @@ function generate_navi_map(maze, name; itemcountprobs=[0.1 0.7 0.2], iprob=0.2)
 	b2 = rand(2:h) 
 	b3 = rand(2:h)
 
+	println("Boundaries b1: $b1 , b2: $b2 , b3: $b3")
+
 	items = Any[]
 	for k in keys(Items)
 		if k != ""
@@ -196,9 +199,9 @@ function generate_navi_map(maze, name; itemcountprobs=[0.1 0.7 0.2], iprob=0.2)
 			get!(nodes, n1, Items[item])
 			wall = 0
 
-			if j <= b1 && i <= b2
+			if j+1 <= b1 && i <= b2
 				wall = walls[1]
-			elseif j > b2 && i <= b3
+			elseif j+1 > b1 && i <= b3
 				wall = walls[2]
 			else
 				wall = walls[3]
@@ -217,7 +220,7 @@ function generate_navi_map(maze, name; itemcountprobs=[0.1 0.7 0.2], iprob=0.2)
 
 	floor = rand(collect(values(Floors)))
 	
-	#set vertical horizontal edges
+	#set vertical edges
 	for j=1:w
 		for i=1:h
 			n1 = (j, i)
@@ -225,9 +228,9 @@ function generate_navi_map(maze, name; itemcountprobs=[0.1 0.7 0.2], iprob=0.2)
 			
 			wall = 0
 
-			if j <= b1 && i <= b2
+			if j <= b1 && i+1 <= b2
 				wall = walls[1]
-			elseif j > b2 && i <= b3
+			elseif j > b1 && i+1 <= b3
 				wall = walls[2]
 			else
 				wall = walls[3]

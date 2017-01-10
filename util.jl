@@ -82,7 +82,7 @@ neighbors of a node are edges
 =#
 function state_agent_centric(map, loc; vdims = [39 39])
 	#lfeatvec = length(Items) + length(Floors) + length(Walls) + 3
-	lfeatvec = length(Items) + length(Floors) + length(Walls) + length(Colors) + 3
+	lfeatvec = length(Items) + length(Floors) + length(Walls) + length(MapColors) + 3
 	view = zeros(Float32, vdims[1], vdims[2], lfeatvec, 1)
 	mid = [vdims[1] round(Int, vdims[2]/2)]
 	
@@ -125,7 +125,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			view[i, j, length(Items) + length(Floors) + wall, 1] = 1.0
 
 			for c in ColorMapping[floor]
-				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+				view[i, j, length(Items) + length(Floors) + length(Walls) + MapColors[c], 1] = 1.0
 			end
 
 			view[i,j, lfeatvec-1, 1] = 1.0
@@ -154,7 +154,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			view[i,j, lfeatvec-1, 1] = 1.0
 
 			for c in ColorMapping[floor]
-				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+				view[i, j, length(Items) + length(Floors) + length(Walls) + MapColors[c], 1] = 1.0
 			end
 
 			j = j + 1
@@ -182,7 +182,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			view[i,j, lfeatvec-1, 1] = 1.0
 
 			for c in ColorMapping[floor]
-				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+				view[i, j, length(Items) + length(Floors) + length(Walls) + MapColors[c], 1] = 1.0
 			end
 
 			i = i + 1
@@ -210,7 +210,7 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			view[i,j, lfeatvec-1, 1] = 1.0
 
 			for c in ColorMapping[floor]
-				view[i, j, length(Items) + length(Floors) + length(Walls) + Colors[c], 1] = 1.0
+				view[i, j, length(Items) + length(Floors) + length(Walls) + MapColors[c], 1] = 1.0
 			end
 
 			j = j - 1
