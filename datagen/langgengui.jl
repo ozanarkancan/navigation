@@ -1,4 +1,5 @@
 include("maze.jl")
+include("path_generator.jl")
 
 using ThreeJS
 using Compat
@@ -9,18 +10,17 @@ FloorColors= Dict(1=>"navy", 2=>"firebrick", 3=>"lavender",
 ItemInitials = Dict(1=>"B", 2=>"C", 3=>"E", 4=>"H", 5=>"L", 6=>"S", 7=>"")
 
 function get_node_mesh(i, j, ht, wt, item)
-	println("i,j,item: $((i,j,item))")
 	ms = Any[]
 	m = mesh(-270+wt*(j-1)+(wt/2), 270-ht*(i-1)-(ht/2), 0.0) << [ThreeJS.plane(wt*0.6, ht*0.6),material(Dict(:kind=>"basic", :color=>"teal"))]
 	push!(ms, m)
 
-	d = min(ht, wt)*0.6*0.25
+	ratio = 0.25
+	d = min(ht, wt)*0.6*ratio
 	dist = 60.0/d
 
-	println("Dist: $dist")
-
 	if item != ""
-		m = ThreeJS.text(dist*(-270+wt*(j-1)+(wt/2))/800.0, dist*(270-ht*(i-1)-(ht/2))/800.0, (800.0-dist), item)
+		m = ThreeJS.text(dist*(-270+wt*(j-1)+(wt/2)+wt*0.6*0.5*ratio)/800.0,
+			dist*(270-ht*(i-1)-(ht/2)+ht*0.6*0.5*ratio)/800.0, (800.0-dist), item)
 		push!(ms, m)
 	end
 	return ms
@@ -75,6 +75,24 @@ function draw_map(map, maze, h, w)
 	return meshes
 end
 
+function draw_path(path, h, w)
+	ht = 540.0 / h
+	wt = 540.0 / w
+
+	ms = Any[]
+	ratio = 0.2
+	cs = ["crimson", "cyan", "lime"]
+
+	println(path)
+	for ind=1:length(path)
+		i, j = path[ind]
+		cname = ind == 1 ? cs[1] : ind == length(path) ? cs[3] : cs[2]
+		m = mesh(-270+wt*(j-1)+(wt/2), 270-ht*(i-1)-(ht/2), 0.0) << [ThreeJS.plane(wt*0.6*ratio, ht*0.6*ratio),material(Dict(:kind=>"basic", :color=>cname))]
+		push!(ms, m)
+	end
+	return ms
+end
+
 function draw_frame()
 	meshes = Any[]
 	m = mesh(0.0, 272.5, 0.0) << [ThreeJS.box(550.0, 5.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
@@ -92,35 +110,55 @@ function main(window)
 	push!(window.assets,("ThreeJS","threejs"))
 	push!(window.assets, "widgets")
 
+	state = Dict()
+	state[:maze] = nothing
+	state[:navimap] = nothing
+	state[:path] = nothing
+	state[:nodes] = nothing
+	state[:maze_meshes] = Any[]
+	state[:path_meshes] = Any[]
+
 	inp = Signal(Dict())
+	inp2 = Signal(state)
 	s = Escher.sampler()
 	
 	form = 	hbox(
 		watch!(s, :h, textinput("3"; label="Height")),
 		hskip(1em),
 		watch!(s, :w, textinput("3"; label="Width")),
-		trigger!(s, :submit, button("Generate maze")))
+		trigger!(s, :mazebut, button("Generate maze")),
+		trigger!(s, :pathbut, button("Generate path")))
 		
 	
-	map(inp) do dict
+	map(inp, inp2) do dict, dict2
 		txt = "No text."
-		cam = 800.0
-		meshes = draw_frame()
-		push!(meshes, ambientlight())
-		push!(meshes, camera(0.0, 0.0, cam))
-		#push!(meshes, mesh(0.0, 0.0, 0.0) << [ThreeJS.box(60.0, 60.0, 0.0),material(Dict(:kind=>"lambert", :color=>"teal"))])
-		#push!(meshes, ThreeJS.text(270/800.0, 0.0, 799.0, "E"))
-		if haskey(dict, :h)
+		meshes = Any[]
+		println(keys(dict))
+		
+		if haskey(dict, :mazebut)
+			cam = 800.0
+			dict2[:maze_meshes] = Any[]
+			dict2[:maze_meshes] = draw_frame()
+			push!(dict2[:maze_meshes], ambientlight())
+			push!(dict2[:maze_meshes], camera(0.0, 0.0, cam))
 			txt = string(dict[:h], " x ", dict[:w])
 			h = parse(Int, dict[:h])
 			w = parse(Int, dict[:w])
-			maze = generate_maze(h, w)
-			navimap = generate_navi_map(maze, "langen")
-			print_maze(maze)
-			ms = draw_map(navimap, maze, h, w)
-			append!(meshes, ms)
+			dict2[:maze] = generate_maze(h, w)
+			dict2[:navimap] = generate_navi_map(dict2[:maze], "langen")
+			print_maze(dict2[:maze])
+			ms = draw_map(dict2[:navimap], dict2[:maze], h, w)
+			append!(dict2[:maze_meshes], ms)
 		end
-
+		append!(meshes, dict2[:maze_meshes])
+		
+		if haskey(dict, :pathbut) && dict2[:maze] != nothing
+			dict2[:nodes], dict2[:path] = generate_path(dict2[:maze]; distance=0)
+			h,w,_ = size(dict2[:maze])
+			dict2[:path_meshes] = draw_path(dict2[:path], h, w)
+			append!(meshes, dict2[:path_meshes])
+		end
+		
 		vbox(
 		intent(s, form) >>> inp,
 		hbox(

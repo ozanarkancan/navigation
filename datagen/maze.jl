@@ -171,8 +171,6 @@ function generate_navi_map(maze, name; itemcountprobs=[0.1 0.7 0.2], iprob=0.2)
 	b2 = rand(2:h) 
 	b3 = rand(2:h)
 
-	println("Boundaries b1: $b1 , b2: $b2 , b3: $b3")
-
 	items = Any[]
 	for k in keys(Items)
 		if k != ""

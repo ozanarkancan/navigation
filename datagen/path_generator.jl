@@ -15,9 +15,6 @@ function generate_path(maze; distance=4)
 		dist = abs(x1-x2)+abs(y1-y2)
 	end
 
-	println("Start: $((y1, x1, z1))")
-	println("Goal: $((y2, x2))")
-	
 	path = astar_solver(maze, [x1, y1], [x2, y2])
 
 	start = (y1, x1, z1)
@@ -41,7 +38,7 @@ function generate_path(maze; distance=4)
 		next += 1
 	end
 
-	return nodes
+	return nodes, path
 end
 
 function getnodes(n1, n2)
