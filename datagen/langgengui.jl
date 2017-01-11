@@ -1,5 +1,6 @@
 include("maze.jl")
 include("path_generator.jl")
+include("lang_generator.jl")
 
 using ThreeJS
 using Compat
@@ -83,7 +84,6 @@ function draw_path(path, h, w)
 	ratio = 0.2
 	cs = ["crimson", "cyan", "lime"]
 
-	println(path)
 	for ind=1:length(path)
 		i, j = path[ind]
 		cname = ind == 1 ? cs[1] : ind == length(path) ? cs[3] : cs[2]
@@ -123,21 +123,22 @@ function main(window)
 	s = Escher.sampler()
 	
 	form = 	hbox(
-		watch!(s, :h, textinput("3"; label="Height")),
+		watch!(s, :h, textinput("5"; label="Height")),
 		hskip(1em),
-		watch!(s, :w, textinput("3"; label="Width")),
+		watch!(s, :w, textinput("5"; label="Width")),
 		trigger!(s, :mazebut, button("Generate maze")),
-		trigger!(s, :pathbut, button("Generate path")))
+		trigger!(s, :pathbut, button("Generate path")),
+		trigger!(s, :insbut, button("Generate instruction")))
 		
 	
 	map(inp, inp2) do dict, dict2
 		txt = "No text."
 		meshes = Any[]
-		println(keys(dict))
 		
 		if haskey(dict, :mazebut)
 			cam = 800.0
 			dict2[:maze_meshes] = Any[]
+			dict2[:path_meshes] = Any[]
 			dict2[:maze_meshes] = draw_frame()
 			push!(dict2[:maze_meshes], ambientlight())
 			push!(dict2[:maze_meshes], camera(0.0, 0.0, cam))
@@ -146,27 +147,31 @@ function main(window)
 			w = parse(Int, dict[:w])
 			dict2[:maze] = generate_maze(h, w)
 			dict2[:navimap] = generate_navi_map(dict2[:maze], "langen")
-			print_maze(dict2[:maze])
 			ms = draw_map(dict2[:navimap], dict2[:maze], h, w)
 			append!(dict2[:maze_meshes], ms)
 		end
 		append!(meshes, dict2[:maze_meshes])
 		
 		if haskey(dict, :pathbut) && dict2[:maze] != nothing
+			dict2[:path_meshes] = Any[]
 			dict2[:nodes], dict2[:path] = generate_path(dict2[:maze]; distance=0)
 			h,w,_ = size(dict2[:maze])
 			dict2[:path_meshes] = draw_path(dict2[:path], h, w)
-			append!(meshes, dict2[:path_meshes])
+		end
+		append!(meshes, dict2[:path_meshes])
+		
+		if haskey(dict, :insbut) && dict2[:nodes] != nothing
+			txt = "Generated instruction!! $(rand()*1000)"
 		end
 		
 		vbox(
-		intent(s, form) >>> inp,
 		hbox(
+		intent(s, form) >>> inp,
+		plaintext(txt)),
 		ThreeJS.outerdiv() <<
 		(
 		ThreeJS.initscene() << meshes
-		),
-		plaintext(txt))
+		)
 		)
 	end
 end

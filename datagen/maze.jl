@@ -47,6 +47,28 @@ function generate_maze(h = 4, w = 4)
 		end
 
 	end
+
+	#delete some walls
+	lim = round(Int, h*w*4*0.2)
+	for ind=1:lim
+		r = rand(1:h)
+		c = rand(1:w)
+		d = rand(1:4)
+		if d==1 && r != 1
+			maze[r,c,d] = 1
+			maze[r-1,c,3] = 1
+		elseif d==2 && c !=w
+			maze[r,c,d] = 1
+			maze[r,c+1,4] = 1
+		elseif d==3 && r !=h
+			maze[r,c,d] = 1
+			maze[r+1,c,1] = 1
+		elseif d==4 && c != 1
+			maze[r,c,d] = 1
+			maze[r,c-1,2] = 1
+		end
+	end
+
 	return maze
 end
 
