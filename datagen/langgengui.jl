@@ -106,6 +106,32 @@ function draw_frame()
 	return meshes
 end
 
+function to_string_html(generation)
+	i = 0
+	hs = Any[]
+	l = Any[]
+	for (s, ins) in generation
+		i += 1
+		push!(l, plaintext(string(s)))
+		push!(l, plaintext(string(ins)))
+
+		if i > 1 && i % 5 == 0
+			push!(hs, vbox(l))
+			push!(hs, hskip(1em))
+			push!(hs, vline())
+			push!(hs, hskip(1em))
+			l = Any[]
+		end
+	end
+	if i % 5 != 0
+		push!(hs, vbox(l))
+		push!(hs, hskip(1em))
+		push!(hs, vline())
+		push!(hs, hskip(1em))
+	end
+	return hbox(hs)
+end
+
 function main(window)
 	push!(window.assets,("ThreeJS","threejs"))
 	push!(window.assets, "widgets")
@@ -123,16 +149,16 @@ function main(window)
 	s = Escher.sampler()
 	
 	form = 	hbox(
-		watch!(s, :h, textinput("5"; label="Height")),
+		watch!(s, :h, textinput("8"; label="Height")),
 		hskip(1em),
-		watch!(s, :w, textinput("5"; label="Width")),
+		watch!(s, :w, textinput("8"; label="Width")),
 		trigger!(s, :mazebut, button("Generate maze")),
 		trigger!(s, :pathbut, button("Generate path")),
 		trigger!(s, :insbut, button("Generate instruction")))
 		
 	
 	map(inp, inp2) do dict, dict2
-		txt = "No text."
+		txt = plaintext("")
 		meshes = Any[]
 		
 		if haskey(dict, :mazebut)
@@ -142,7 +168,6 @@ function main(window)
 			dict2[:maze_meshes] = draw_frame()
 			push!(dict2[:maze_meshes], ambientlight())
 			push!(dict2[:maze_meshes], camera(0.0, 0.0, cam))
-			txt = string(dict[:h], " x ", dict[:w])
 			h = parse(Int, dict[:h])
 			w = parse(Int, dict[:w])
 			dict2[:maze] = generate_maze(h, w)
@@ -154,24 +179,26 @@ function main(window)
 		
 		if haskey(dict, :pathbut) && dict2[:maze] != nothing
 			dict2[:path_meshes] = Any[]
-			dict2[:nodes], dict2[:path] = generate_path(dict2[:maze]; distance=0)
+			dict2[:nodes], dict2[:path] = generate_path(dict2[:maze]; distance=3)
 			h,w,_ = size(dict2[:maze])
 			dict2[:path_meshes] = draw_path(dict2[:path], h, w)
 		end
 		append!(meshes, dict2[:path_meshes])
 		
 		if haskey(dict, :insbut) && dict2[:nodes] != nothing
-			txt = "Generated instruction!! $(rand()*1000)"
+			segments = segment_path(dict2[:nodes])
+			generation = generate_lang(dict2[:navimap], dict2[:maze], segments)
+			txt = to_string_html(generation)
 		end
 		
 		vbox(
-		hbox(
 		intent(s, form) >>> inp,
-		plaintext(txt)),
 		ThreeJS.outerdiv() <<
 		(
 		ThreeJS.initscene() << meshes
-		)
+		),
+		hline(),
+		txt
 		)
 	end
 end

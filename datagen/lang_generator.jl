@@ -11,9 +11,9 @@ function action(curr, next)
 	a = 0
 	if curr[1] != next[1] || curr[2] != next[2]#move
 		a = 1
-	elseif next[3] > curr[3] || (next[3] == 0 && curr[3] == 270)#right
+	elseif !(next[3] == 270 && curr[3] == 0) && (next[3] > curr[3] || (next[3] == 0 && curr[3] == 270))#right
 		a = 2
-	elseif next[3] < curr[3] || (next[3] == 270 && curr[3] == 0)#left
+	elseif !(next[3] == 0 && curr[3] == 270) && (next[3] < curr[3] || (next[3] == 270 && curr[3] == 0))#left
 		a = 3
 	else
 		a = 4
@@ -29,7 +29,7 @@ function generate_lang(navimap, maze, segments)
 	end
 
 	ind = 2
-	while ind < length(segments)-1
+	while ind < length(segments)
 		g = (segments[ind][1] == "turn" ? turnins : moveins)(navimap, maze, segments[ind], segments[ind+1])
 		append!(generation, g)
 		ind += 1
@@ -41,7 +41,7 @@ end
 function to_string(generation)
 	txt = ""
 	for (s, ins) in generation
-		txt = string(txt, "\n", s, "\n", ins, "\n\n")
+		txt = string(txt, "\n", s, "\n", ins, "\n")
 	end
 	return txt
 end
@@ -103,6 +103,7 @@ function turnins(navimap, maze, curr, next)
 	curr_t, curr_s = curr
 	cands = Any[]
 	a = action(curr_s[1], curr_s[2])
+	println("A: $a $(curr_s[1]) -> $(curr_s[2])")
 	d = a == 2 ? "right" : "left"
 	push!(cands, string("turn ", d))
 	push!(cands, string("turn to the ", d))
@@ -123,15 +124,17 @@ function finalins(navimap, maze, curr)
 	lasts, lasti = insl[end]
 
 	if rand() < 0.5
+		num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
 		push!(cands, string(lasti, " and that is the ", rand(["target ", "final "]), "position"))
-		push!(cands, string(lasti, " and that is the position ", rand(numbers[rand(2:10)])))
-		push!(cands, string(lasti, " and there should be the position ", rand(numbers[rand(2:10)])))
+		push!(cands, string(lasti, " and that is the position ", num))
+		push!(cands, string(lasti, " and there should be the position ", num))
 		insl[end] = (lasts, rand(cands))
 		return insl
 	else
+		num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
 		push!(cands, string("that is the ", rand(["target ", "final "]), "position"))
-		push!(cands, string("that is the position ", rand(numbers[rand(2:10)])))
-		push!(cands, string("there should be the position ", rand(numbers[rand(2:10)])))
+		push!(cands, string("that is the position ", num))
+		push!(cands, string("there should be the position ", num))
 
 		push!(insl, ([curr_s[end]], rand(cands)))
 		return insl
