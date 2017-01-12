@@ -120,15 +120,11 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
 	test_data_grp = map(x->map(ins-> (ins, ins_arr(d["vocab"], ins.text)),x), group_singles(test_ins))
 
-	prms_sp = initparams(w; args=args)
-
-	args["lr"] = 0.05
-	args["opt"] = "momentum"
-
-	prms_rl = initparams(w; args=args)
+	#prms_sp = initparams(w; args=args)
+	#prms_rl = initparams(w; args=args)
 
 	for it=1:args["iterative"]
-		#prms = initparams(w; args=args)
+		prms_sp = initparams(w; args=args)
 		for i=1:args["epoch"]
 			shuffle!(trn_data)
 			@time lss = train(w, prms_sp, trn_data; args=args)
@@ -139,7 +135,7 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 		end
 
 		if args["pg"] != 0
-			#prms = initparams(w; args=args)
+			prms_rl = initparams(w; args=args)
 			train_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[1])
 			append!(train_data, map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[2]))
 	
