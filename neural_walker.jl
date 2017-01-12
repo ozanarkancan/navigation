@@ -323,10 +323,10 @@ function initweights(atype, hidden, vocab, embed, onehotworld)
 	return weights
 end
 
-function initparams(ws; lr=0.001)
+function initparams(ws; args=nothing)
 	prms = Dict()
 	
-	for k in keys(ws); prms[k] = Adam(ws[k];lr=lr) end;
+	for k in keys(ws); prms[k] = Adam(ws[k];lr=args["lr"]) end;
 
 	return prms
 end
