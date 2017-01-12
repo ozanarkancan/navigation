@@ -348,21 +348,18 @@ function state_agent_centric_multihot(map, loc)
 	return view
 end
 
-
 function action(curr, next)
-	ygold = zeros(Float32, 4, 1)
-	
+	a = 0
 	if curr[1] != next[1] || curr[2] != next[2]#move
-		ygold[1] = 1.0
-	elseif next[3] > curr[3] || (next[3] == 0 && curr[3] == 270)#right
-		ygold[2] = 1.0
-	elseif next[3] < curr[3] || (next[3] == 270 && curr[3] == 0)#left
-		ygold[3] = 1.0
+		a = 1
+	elseif !(next[3] == 270 && curr[3] == 0) && (next[3] > curr[3] || (next[3] == 0 && curr[3] == 270))#right
+		a = 2
+	elseif !(next[3] == 0 && curr[3] == 270) && (next[3] < curr[3] || (next[3] == 270 && curr[3] == 0))#left
+		a = 3
 	else
-		ygold[4] = 1.0
+		a = 4
 	end
-
-	return ygold
+	return a
 end
 
 function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false, encoding="grid")
