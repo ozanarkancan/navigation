@@ -371,7 +371,7 @@ function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false, enc
 	for i=1:length(instance.path)
 		curr = instance.path[i]
 		next = i == length(instance.path) ? curr : instance.path[i+1]
-		Y[i, :] = action(curr, next)
+		Y[i, action(curr, next)] = 1.0
 		push!(states, encoding == "grid" ? state_agent_centric(map, curr) : state_agent_centric_multihot(map, curr))
 	end
 
