@@ -49,7 +49,8 @@ function generate_maze(h = 4, w = 4)
 	end
 
 	#delete some walls
-	lim = round(Int, h*w*4*0.2)
+	ratio = 0.2
+	lim = round(Int, h*w*4*ratio)
 	for ind=1:lim
 		r = rand(1:h)
 		c = rand(1:w)
@@ -183,7 +184,7 @@ function sample(probs)
 	return indmax(c_probs .> rand())
 end
 
-function generate_navi_map(maze, name; itemcountprobs=[0.1 0.7 0.2], iprob=0.2)
+function generate_navi_map(maze, name; itemcountprobs=[0.05 0.6 0.35], iprob=0.15)
 	h,w,_ = size(maze)
 	nodes = Dict()
 	edges = Dict()

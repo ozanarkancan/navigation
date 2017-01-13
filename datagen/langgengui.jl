@@ -162,6 +162,7 @@ function main(window)
 		meshes = Any[]
 		
 		if haskey(dict, :mazebut)
+			txt = plaintext("")
 			cam = 800.0
 			dict2[:maze_meshes] = Any[]
 			dict2[:path_meshes] = Any[]
@@ -178,6 +179,7 @@ function main(window)
 		append!(meshes, dict2[:maze_meshes])
 		
 		if haskey(dict, :pathbut) && dict2[:maze] != nothing
+			txt = plaintext("")
 			dict2[:path_meshes] = Any[]
 			dict2[:nodes], dict2[:path] = generate_path(dict2[:maze]; distance=3)
 			h,w,_ = size(dict2[:maze])
@@ -186,6 +188,7 @@ function main(window)
 		append!(meshes, dict2[:path_meshes])
 		
 		if haskey(dict, :insbut) && dict2[:nodes] != nothing
+			txt = plaintext("")
 			segments = segment_path(dict2[:nodes])
 			generation = generate_lang(dict2[:navimap], dict2[:maze], segments)
 			txt = to_string_html(generation)

@@ -15,7 +15,7 @@ function generate_path(maze; distance=4)
 		dist = abs(x1-x2)+abs(y1-y2)
 	end
 
-	path = astar_solver(maze, [x1, y1], [x2, y2])
+	path = astar_solver(maze, Int[x1, y1], Int[x2, y2])
 
 	start = (y1, x1, z1)
 	goal = (y2, x2, -1)
@@ -42,6 +42,8 @@ function generate_path(maze; distance=4)
 end
 
 function getnodes(n1, n2)
+	n1 = map(x->round(Int, x), n1)
+	n2 = map(x->round(Int, x), n2)
 	nodes = Any[]
 	if n1[1] == n2[1]
 		if n1[2] > n2[2]
@@ -119,7 +121,7 @@ function segment_path(path)
 				c += 1
 			else
 				push!(curr, path[c])
-				push!(segments, curr)
+				push!(segments, ("turn", curr))
 				curr = Any[]
 				move = true
 			end
@@ -129,13 +131,13 @@ function segment_path(path)
 				c += 1
 			else
 				push!(curr, path[c])
-				push!(segments, curr)
+				push!(segments, ("move", curr))
 				curr = Any[]
 				move = false
 			end
 		end
 	end
 	push!(curr, path[end])
-	push!(segments, curr)
+	move ? push!(segments, ("move", curr)) : push!(segments, ("turn", curr))
 	return segments
 end
