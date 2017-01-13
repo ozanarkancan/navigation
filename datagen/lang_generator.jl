@@ -1,3 +1,5 @@
+include("navimap_utils.jl")
+
 opposites = Dict(0=>"south", 90=>"west", 180=>"north", 270=>"east")
 rights = Dict(0=>"east", 90=>"south", 180=>"west", 270=>"north")
 lefts = Dict(0=>"west", 90=>"north", 180=>"east", 270=>"south")
@@ -6,6 +8,9 @@ ordinals = Dict(1=>"first", 2=>"second", 3=>"third", 4=>"fourth", 5=>"fifth",
 times = Dict(1=>"once", 2=>"twice")
 numbers = Dict(1=>["one", "a"],2=>["two"],3=>["three"],4=>["four"],5=>["five"],
 	6=>["six"],7=>["seven"],8=>["eight"],9=>["nine"],10=>["ten"])
+wall_names = Dict(1=>"butterflies",2=>"fish",3=>"towers")
+floor_names = Dict(1=>["octagon"],2=>["brick"],3=>["concrete"],4=>["flower"],
+	5=>["grass"],6=>["gravel"],7=>["wood"],8=>["yellow"])
 
 function action(curr, next)
 	a = 0
@@ -71,8 +76,29 @@ function startins(navimap, maze, curr, next)
 		push!(cands, string("turn to the ", dir))
 		push!(cands, string("orient yourself to the ", dir))
 		push!(cands, string("turn to face the ", dir))
+
+		diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
+		wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
+		
+		if diff_w
+			 push!(cands, string("turn your face to the corridor with the ", wall_names[wpatrn]))
+			 push!(cands, string("turn to the corridor with the ", wall_names[wpatrn]))
+		end
+
+		if diff_f
+			push!(cands, string("turn your face to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+				rand([" path", " hall", " hallway", " alley", " corridor"])))
+			push!(cands, string("turn until you see the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+				rand([" path", " hall", " hallway", " alley", " corridor"])))
+			push!(cands, string("turn to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+				rand([" path", " hall", " hallway", " alley", " corridor"])))
+			push!(cands, string("you should be ", rand(["facing ", "seeing"]),
+				rand([rand(floor_names[fpatrn]), ColorMapping[fpatrn]]), rand([" path", " hall", " hallway", " alley", " corridor"])))
+		end
+
 		return  [(curr_s, rand(cands))]
 	else
+		#Add you should be facing with stop action
 		return moveins(navimap, maze, curr, next)
 	end
 end
@@ -90,10 +116,17 @@ function moveins(navimap, maze, curr, next)
 	push!(cands, string("take ", rand(numbers[steps]),
 		(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"]))))
 
-	faceWall = maze[endpoint[2], endpoint[1], d] == 0
-	if faceWall
+	if facing_wall(maze, (endpoint[2], endpoint[1], d))
 		push!(cands, string(rand(["move ", "go "]), rand(["forward ", "straight ", ""]),
 			"until the wall"))
+	end
+
+	p1 = (curr_s[1][2], curr_s[1][1], -1)
+	p2 = (curr_s[end][2], curr_s[end][1], -1)
+	if (is_corner(maze, p1) || is_deadend(maze, p1)) && (is_corner(maze, p2) || is_deadend(maze, p2))
+		push!(cands, string(rand(["move", "go"]), " to the other end", rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
+	elseif (is_corner(maze, p2) || is_deadend(maze, p2))
+		push!(cands, string(rand(["move", "go"]), " to the end", rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
 	end
 
 	return [(curr_s, rand(cands))]
@@ -103,10 +136,14 @@ function turnins(navimap, maze, curr, next)
 	curr_t, curr_s = curr
 	cands = Any[]
 	a = action(curr_s[1], curr_s[2])
-	println("A: $a $(curr_s[1]) -> $(curr_s[2])")
 	d = a == 2 ? "right" : "left"
 	push!(cands, string("turn ", d))
 	push!(cands, string("turn to the ", d))
+
+	if is_corner(maze, (curr_s[1][2], curr_s[1][1], round(Int, curr_s[1][3]/90 + 1)))
+		push!(cands, string("at the corner turn ", d))
+	end
+
 	return [(curr_s, rand(cands))]
 end
 

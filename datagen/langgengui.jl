@@ -186,6 +186,7 @@ function main(window)
 		append!(meshes, dict2[:path_meshes])
 		
 		if haskey(dict, :insbut) && dict2[:nodes] != nothing
+			txt = plaintext("")
 			segments = segment_path(dict2[:nodes])
 			generation = generate_lang(dict2[:navimap], dict2[:maze], segments)
 			txt = to_string_html(generation)
