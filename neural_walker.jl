@@ -84,7 +84,7 @@ function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x,
 
 	inp = state[6]
 	if dropout && pdrops[2] > 0.0
-		inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
+		inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2])
 		#state[6] = state[6] .* (rand!(similar(AutoGrad.getval(state[6]))) .> pdrops[2]) * (1/(1-pdrops[2]))
 	end
 
