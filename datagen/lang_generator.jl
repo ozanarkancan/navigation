@@ -81,8 +81,8 @@ function startins(navimap, maze, curr, next)
 		wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 		
 		if diff_w
-			 push!(cands, string("turn your face to the corridor with the ", wall_names[wpatrn]))
-			 push!(cands, string("turn to the corridor with the ", wall_names[wpatrn]))
+			 push!(cands, string("turn your face to the corridor with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+			 push!(cands, string("turn to the corridor with the ", wall_names[wpatrn], rand(["", " on the wall"])))
 		end
 
 		if diff_f
@@ -98,8 +98,17 @@ function startins(navimap, maze, curr, next)
 
 		return  [(curr_s, rand(cands))]
 	else
-		#Add you should be facing with stop action
-		return moveins(navimap, maze, curr, next)
+		diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
+		l = Any[]
+		
+		p1 = (curr_s[1][2], curr_s[1][1], -1)
+		if diff_f && is_corner(maze, p1)
+			push!(l, ([curr_s[1]], string("you should be ", rand(["facing ", "seeing"]),
+				rand([rand(floor_names[fpatrn]), ColorMapping[fpatrn]]), rand([" path", " hall", " hallway", " alley", " corridor"]))))
+		end
+		
+		append!(l, moveins(navimap, maze, curr, next))
+		return l
 	end
 end
 
