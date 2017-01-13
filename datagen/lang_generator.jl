@@ -93,22 +93,23 @@ function startins(navimap, maze, curr, next)
 				rand([" path", " hall", " hallway", " alley", " corridor"])))
 			push!(cands, string("turn to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
 				rand([" path", " hall", " hallway", " alley", " corridor"])))
-			push!(cands, string("you should be ", rand(["facing ", "seeing"]),
-				rand([rand(floor_names[fpatrn]), ColorMapping[fpatrn]]), rand([" path", " hall", " hallway", " alley", " corridor"])))
+			push!(cands, string("you should be ", rand(["facing ", "seeing "]),
+				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), rand([" path", " hall", " hallway", " alley", " corridor"])))
 		end
 
 		if is_deadend(maze, p1)
-			push!(cands, "you should leave the deadend")
+			push!(cands, "you should leave the dead end")
 		end
 
 		return  [(curr_s, rand(cands))]
 	else
 		diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
+		wpatrn, fpatrn = navimap.edges[(curr_s[1][1], curr_s[1][2])][(curr_s[2][1], curr_s[2][2])]
 		l = Any[]
 		
 		if diff_f && is_corner(maze, p1)
-			push!(l, ([curr_s[1]], string("you should be ", rand(["facing ", "seeing"]),
-				rand([rand(floor_names[fpatrn]), ColorMapping[fpatrn]]), rand([" path", " hall", " hallway", " alley", " corridor"]))))
+			push!(l, ([curr_s[1]], string("you should be ", rand(["facing the ", "seeing the "]),
+				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), rand([" path", " hall", " hallway", " alley", " corridor"]))))
 		end
 		
 		append!(l, moveins(navimap, maze, curr, next))
@@ -161,6 +162,10 @@ function turnins(navimap, maze, curr, next)
 end
 
 function finalins(navimap, maze, curr)
+	"""
+	TODO
+	dead end
+	"""
 	curr_t, curr_s = curr
 	cands = Any[]
 

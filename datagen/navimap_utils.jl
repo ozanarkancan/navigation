@@ -9,7 +9,7 @@ function is_corner(maze, p)
 			if i == 4
 				conds = conds || (maze[p[1], p[2], 4] == 1 && maze[p[1], p[2], 1] == 1)
 			else
-				conds = conds || (maze[p[1], p[2], i] == 1 && maze[p[1], p[2], i] == 1)
+				conds = conds || (maze[p[1], p[2], i] == 1 && maze[p[1], p[2], i+1] == 1)
 			end
 		end
 		return conds
