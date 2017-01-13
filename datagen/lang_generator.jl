@@ -10,7 +10,7 @@ numbers = Dict(1=>["one", "a"],2=>["two"],3=>["three"],4=>["four"],5=>["five"],
 	6=>["six"],7=>["seven"],8=>["eight"],9=>["nine"],10=>["ten"])
 wall_names = Dict(1=>"butterflies",2=>"fish",3=>"towers")
 floor_names = Dict(1=>["octagon"],2=>["brick"],3=>["concrete"],4=>["flower"],
-	5=>["grass"],6=>["gravel"],7=>["wood"],8=>["yellow"])
+	5=>["grass"],6=>["gravel", "stone"],7=>["wood"],8=>["yellow"])
 
 function action(curr, next)
 	a = 0
@@ -56,7 +56,8 @@ function startins(navimap, maze, curr, next)
 	next_t, next_s = next
 
 	a = action(curr_s[1], curr_s[2])
-
+	p1 = (curr_s[1][2], curr_s[1][1], -1)
+	
 	if curr_t == "turn"
 		cands = Any[]
 		dir = ""
@@ -96,12 +97,15 @@ function startins(navimap, maze, curr, next)
 				rand([rand(floor_names[fpatrn]), ColorMapping[fpatrn]]), rand([" path", " hall", " hallway", " alley", " corridor"])))
 		end
 
+		if is_deadend(maze, p1)
+			push!(cands, "you should leave the deadend")
+		end
+
 		return  [(curr_s, rand(cands))]
 	else
 		diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
 		l = Any[]
 		
-		p1 = (curr_s[1][2], curr_s[1][1], -1)
 		if diff_f && is_corner(maze, p1)
 			push!(l, ([curr_s[1]], string("you should be ", rand(["facing ", "seeing"]),
 				rand([rand(floor_names[fpatrn]), ColorMapping[fpatrn]]), rand([" path", " hall", " hallway", " alley", " corridor"]))))
@@ -120,7 +124,7 @@ function moveins(navimap, maze, curr, next)
 
 	cands = Any[]
 	steps = length(curr_s)-1
-	push!(cands, string(rand(["go ", "move "]), rand(["forward ", "straight "]),
+	push!(cands, string(rand(["go ", "move "]), rand(["forward ", "straight ", " "]),
 		rand(numbers[steps]), (steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"]))))
 	push!(cands, string("take ", rand(numbers[steps]),
 		(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"]))))
