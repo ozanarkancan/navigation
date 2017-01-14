@@ -91,7 +91,8 @@ function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x,
 	#q = (state[6] * soft_w1) + x + (att * soft_w2)
 	q = (inp * soft_w1) + x + (att * soft_w2)
 
-	return q * soft_w3 .+ soft_b
+	#return q * soft_w3 .+ soft_b
+	return q * soft_w3
 end
 
 function loss(weights, state, words, views, ys, maskouts, att_z;lss=nothing, dropout=false, pdrops=[0.5, 0.5, 0.5])
@@ -159,7 +160,7 @@ function train(w, prms, data; args=nothing)
 		end
 
 		#update weights
-		for k in keys(w)
+		for k in keys(g)
 			Knet.update!(w[k], g[k], prms[k])
 		end
 
