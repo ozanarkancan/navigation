@@ -138,9 +138,18 @@ function moveins(navimap, maze, curr, next)
 	p1 = (curr_s[1][2], curr_s[1][1], -1)
 	p2 = (curr_s[end][2], curr_s[end][1], -1)
 	if (is_corner(maze, p1) || is_deadend(maze, p1)) && (is_corner(maze, p2) || is_deadend(maze, p2))
-		push!(cands, string(rand(["move", "go"]), " to the other end", rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
+		push!(cands, string(rand(["move", "go"]), " to the other end", 
+			rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
 	elseif (is_corner(maze, p2) || is_deadend(maze, p2))
-		push!(cands, string(rand(["move", "go"]), " to the end", rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
+		push!(cands, string(rand(["move", "go"]), " to the end", 
+			rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
+	end
+
+	if is_intersection(maze, p2)
+		alleycnt = count_alleys(maze, curr_s)
+		if alleycnt > 0
+			push!(cands, string(rand(["move", "go"]), rand([" until the ", " to the "]), ordinals[alleycnt], " alley"))
+		end
 	end
 
 	return [(curr_s, rand(cands))]

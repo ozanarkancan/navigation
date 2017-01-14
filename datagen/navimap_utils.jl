@@ -28,3 +28,13 @@ function around_different_walls_floor(navimap, node)
 	end
 	return (length(ws) == length(keys(navimap.edges[node])), length(fs) == length(keys(navimap.edges[node])))
 end
+
+function count_alleys(maze, segment)
+	count = 0
+	for i=2:length(segment)
+		p = (segment[i][2], segment[i][1], -1)
+		count += is_intersection(maze, p) ? 1 : 0
+	end
+
+	return count
+end
