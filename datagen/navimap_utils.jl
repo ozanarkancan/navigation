@@ -1,6 +1,16 @@
+#=
+TODO
+
+check floor pattern with the turn direction
+floor pattern intersection
+=#
+
 facing_wall(maze, p) = maze[p[1], p[2], p[3]] == 0
 is_intersection(maze, p) = sum(maze[p[1], p[2], :]) >= 3
 is_deadend(maze, p) = sum(maze[p[1], p[2], :]) == 1
+rightof(d) = ((d+1) % 4) == 0 ? 4 : ((d+1) % 4)
+leftof(d) = (((d-1)+4) % 4) == 0 ? 4 : (((d-1)+4) % 4)
+backof(d) = ((d+2) % 4) == 0 ? 4 : ((d+2) % 4)
 
 function is_corner(maze, p)
 	if sum(maze[p[1], p[2], :]) == 2
@@ -48,41 +58,4 @@ function item_single_on_this_segment(navimap, segment)
 	end
 
 	return cnt == 1
-end
-
-function one_wall_dir(maze, p)
-	#println("One wall: $p $(maze[p[1], p[2], :])")
-	if p[3] == 1
-		if maze[p[1], p[2], 2] == 0
-			return 1
-		elseif maze[p[1], p[2], 4] == 0
-			return 2
-		else
-			return 3
-		end
-	elseif p[3] == 2
-		if maze[p[1], p[2], 3] == 0
-			return 1
-		elseif maze[p[1], p[2], 1] == 0
-			return 2
-		else
-			return 3
-		end
-	elseif p[3] == 3
-		if maze[p[1], p[2], 4] == 0
-			return 1
-		elseif maze[p[1], p[2], 2] == 0
-			return 2
-		else
-			return 3
-		end
-	else
-		if maze[p[1], p[2], 1] == 0
-			return 1
-		elseif maze[p[1], p[2], 3] == 0
-			return 2
-		else
-			return 3
-		end
-	end
 end
