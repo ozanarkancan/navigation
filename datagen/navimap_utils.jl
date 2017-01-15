@@ -38,3 +38,14 @@ function count_alleys(maze, segment)
 
 	return count
 end
+
+function item_single_on_this_segment(navimap, segment)
+	cnt = 0
+	item = navimap.nodes[(segment[end][1], segment[end][2])]
+	for s in segment
+		it = navimap.nodes[(s[1], s[2])]
+		cnt += it == item ? 1 : 0
+	end
+
+	return cnt == 1
+end

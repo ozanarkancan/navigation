@@ -11,7 +11,8 @@ numbers = Dict(1=>["one", "a"],2=>["two"],3=>["three"],4=>["four"],5=>["five"],
 wall_names = Dict(1=>"butterflies",2=>"fish",3=>"towers")
 floor_names = Dict(1=>["octagon"],2=>["brick"],3=>["concrete"],4=>["flower"],
 	5=>["grass"],6=>["gravel", "stone"],7=>["wood"],8=>["yellow"])
-
+item_names = Dict(1=>"barstool", 2=>"chair", 3=>"easel", 4=>"hatrack",
+	5=>"lamp", 6=>"sofa")
 function action(curr, next)
 	a = 0
 	if curr[1] != next[1] || curr[2] != next[2]#move
@@ -82,19 +83,25 @@ function startins(navimap, maze, curr, next)
 		wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 		
 		if diff_w
-			 push!(cands, string("turn your face to the corridor with the ", wall_names[wpatrn], rand(["", " on the wall"])))
-			 push!(cands, string("turn to the corridor with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+			 push!(cands, string("face the ", rand(["corridor ", "hall ", "alley "]), wall_names[wpatrn], rand(["", " on the wall"])))
+			 push!(cands, string("turn your face to the ", rand(["corridor ", "hall ", "alley "]),
+			 	" with the", wall_names[wpatrn], rand(["", " on the wall"])))
+			 push!(cands, string("turn to the ", rand(["corridor ", "hall ", "alley "]),
+			 	" with the ", wall_names[wpatrn], rand(["", " on the wall"])))
 		end
 
 		if diff_f
+			push!(cands, string("face the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+				rand([" path", " hall", " hallway", " alley", " corridor"])))
 			push!(cands, string("turn your face to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
 				rand([" path", " hall", " hallway", " alley", " corridor"])))
 			push!(cands, string("turn until you see the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
 				rand([" path", " hall", " hallway", " alley", " corridor"])))
 			push!(cands, string("turn to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
 				rand([" path", " hall", " hallway", " alley", " corridor"])))
-			push!(cands, string("you should be ", rand(["facing ", "seeing "]),
-				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), rand([" path", " hall", " hallway", " alley", " corridor"])))
+			push!(cands, string("you should be ", rand(["facing the ", "seeing the "]),
+				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+				rand([" path", " hall", " hallway", " alley", " corridor"])))
 		end
 
 		if is_deadend(maze, p1)
@@ -109,7 +116,8 @@ function startins(navimap, maze, curr, next)
 		
 		if diff_f && is_corner(maze, p1)
 			push!(l, ([curr_s[1]], string("you should be ", rand(["facing the ", "seeing the "]),
-				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), rand([" path", " hall", " hallway", " alley", " corridor"]))))
+				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+				rand([" path", " hall", " hallway", " alley", " corridor"]))))
 		end
 		
 		append!(l, moveins(navimap, maze, curr, next))
@@ -125,6 +133,7 @@ function moveins(navimap, maze, curr, next)
 
 	cands = Any[]
 	steps = length(curr_s)-1
+
 	push!(cands, string(rand(["go ", "move "]), rand(["forward ", "straight ", " "]),
 		rand(numbers[steps]), (steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"]))))
 	push!(cands, string("take ", rand(numbers[steps]),
@@ -137,6 +146,7 @@ function moveins(navimap, maze, curr, next)
 
 	p1 = (curr_s[1][2], curr_s[1][1], -1)
 	p2 = (curr_s[end][2], curr_s[end][1], -1)
+	
 	if (is_corner(maze, p1) || is_deadend(maze, p1)) && (is_corner(maze, p2) || is_deadend(maze, p2))
 		push!(cands, string(rand(["move", "go"]), " to the other end", 
 			rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
@@ -150,6 +160,11 @@ function moveins(navimap, maze, curr, next)
 		if alleycnt > 0
 			push!(cands, string(rand(["move", "go"]), rand([" until the ", " to the "]), ordinals[alleycnt], " alley"))
 		end
+	end
+
+	if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_on_this_segment(navimap, curr_s)
+		push!(cands, string(rand(["move ", "go "]), rand(["forward ", "straight ", ""]),
+			"until the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
 	end
 
 	return [(curr_s, rand(cands))]

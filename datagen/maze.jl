@@ -184,7 +184,7 @@ function sample(probs)
 	return indmax(c_probs .> rand())
 end
 
-function generate_navi_map(maze, name; itemcountprobs=[0.05 0.6 0.35], iprob=0.15)
+function generate_navi_map(maze, name; itemcountprobs=[0.05 0.6 0.35], iprob=0.2)
 	h,w,_ = size(maze)
 	nodes = Dict()
 	edges = Dict()
