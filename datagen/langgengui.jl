@@ -106,6 +106,42 @@ function draw_frame()
 	return meshes
 end
 
+function draw_legend()
+	meshes = Any[]
+
+	ht = 40.0
+	i = 1
+	
+	dist = 60.0/12.0
+	
+	for w in keys(Walls)
+		cname = WallColors[Walls[w]]
+		m = mesh(350.0, 270-(ht*(i-1)), 0.0) << [ThreeJS.plane(20, 20),material(Dict(:kind=>"basic", :color=>cname))]
+		push!(meshes, m)
+
+		m = ThreeJS.text(dist*410/800.0,
+			dist*(270-ht*(i-1)-6)/800.0, (800.0-dist), w)
+
+		i += 1
+		push!(meshes, m)
+	end
+
+	for f in keys(Floors)
+		cname = FloorColors[Floors[f]]
+		m = mesh(350.0, 270-(ht*(i-1)), 0.0) << [ThreeJS.plane(20, 20),material(Dict(:kind=>"basic", :color=>cname))]
+		push!(meshes, m)
+
+		m = ThreeJS.text(dist*420/800.0,
+			dist*(270-ht*(i-1)-10)/800.0, (800.0-dist), f)
+
+		i += 1
+		push!(meshes, m)
+	end
+
+
+	return meshes
+end
+
 function to_string_html(generation)
 	i = 0
 	hs = Any[]
@@ -175,6 +211,7 @@ function main(window)
 			dict2[:navimap] = generate_navi_map(dict2[:maze], "langen")
 			ms = draw_map(dict2[:navimap], dict2[:maze], h, w)
 			append!(dict2[:maze_meshes], ms)
+			append!(dict2[:maze_meshes], draw_legend())
 		end
 		append!(meshes, dict2[:maze_meshes])
 		
