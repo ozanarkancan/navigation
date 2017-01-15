@@ -49,3 +49,40 @@ function item_single_on_this_segment(navimap, segment)
 
 	return cnt == 1
 end
+
+function one_wall_dir(maze, p)
+	#println("One wall: $p $(maze[p[1], p[2], :])")
+	if p[3] == 1
+		if maze[p[1], p[2], 2] == 0
+			return 1
+		elseif maze[p[1], p[2], 4] == 0
+			return 2
+		else
+			return 3
+		end
+	elseif p[3] == 2
+		if maze[p[1], p[2], 3] == 0
+			return 1
+		elseif maze[p[1], p[2], 1] == 0
+			return 2
+		else
+			return 3
+		end
+	elseif p[3] == 3
+		if maze[p[1], p[2], 4] == 0
+			return 1
+		elseif maze[p[1], p[2], 2] == 0
+			return 2
+		else
+			return 3
+		end
+	else
+		if maze[p[1], p[2], 1] == 0
+			return 1
+		elseif maze[p[1], p[2], 3] == 0
+			return 2
+		else
+			return 3
+		end
+	end
+end

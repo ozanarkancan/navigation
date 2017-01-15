@@ -1,3 +1,6 @@
+#=
+Convert rand choices to different candidates
+=#
 include("navimap_utils.jl")
 
 opposites = Dict(0=>"south", 90=>"west", 180=>"north", 270=>"east")
@@ -13,6 +16,7 @@ floor_names = Dict(1=>["octagon"],2=>["brick"],3=>["concrete"],4=>["flower"],
 	5=>["grass"],6=>["gravel", "stone"],7=>["wood"],8=>["yellow"])
 item_names = Dict(1=>"barstool", 2=>"chair", 3=>"easel", 4=>"hatrack",
 	5=>"lamp", 6=>"sofa")
+
 function action(curr, next)
 	a = 0
 	if curr[1] != next[1] || curr[2] != next[2]#move
@@ -53,6 +57,10 @@ function to_string(generation)
 end
 
 function startins(navimap, maze, curr, next)
+	"""
+	TODO
+	["to", "towards"]
+	"""
 	curr_t, curr_s = curr
 	next_t, next_s = next
 
@@ -108,6 +116,20 @@ function startins(navimap, maze, curr, next)
 			push!(cands, "you should leave the dead end")
 		end
 
+		if sum(maze[p1[1], p1[2], :]) == 3
+			#1: right
+			#2: left
+			#3: back
+			d = one_wall_dir(maze, (curr_s[end][2], curr_s[end][1], round(Int, 1+curr_s[end][3] / 90)))
+			if d == 1
+				push!(cands, "turn so the wall is on your right")
+			elseif d == 2
+				push!(cands, "turn so the wall is on your left")
+			else
+				push!(cands, "turn so that your back is to the wall")
+			end
+		end
+
 		return  [(curr_s, rand(cands))]
 	else
 		diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
@@ -135,7 +157,7 @@ function moveins(navimap, maze, curr, next)
 	steps = length(curr_s)-1
 
 	push!(cands, string(rand(["go ", "move "]), rand(["forward ", "straight ", " "]),
-		rand(numbers[steps]), (steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"]))))
+		rand(numbers[steps]), (steps > 1 ? rand([" steps", " blocks", " segments", " times"]) : rand([" step", " block", " segment"]))))
 	push!(cands, string("take ", rand(numbers[steps]),
 		(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"]))))
 
@@ -165,6 +187,17 @@ function moveins(navimap, maze, curr, next)
 	if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_on_this_segment(navimap, curr_s)
 		push!(cands, string(rand(["move ", "go "]), rand(["forward ", "straight ", ""]),
 			"until the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+		push!(cands, string(rand(["move ", "go "]), "towards the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+
+		wpatrn, fpatrn = navimap.edges[(curr_s[1][1], curr_s[1][2])][(curr_s[2][1], curr_s[2][2])]
+		push!(cands, string("follow the ",
+			rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+			rand([" path", " hall", " hallway", " alley", " corridor"]), " to the", 
+			item_names[navimap.nodes[curr_s[end][1:2]]]))
+	elseif navimap.nodes[curr_s[end][1:2]] == 7 && navimap.nodes[curr_s[end-1][1:2]] != 7 && 
+			length(curr_s) > 2 && item_single_on_this_segment(navimap, curr_s[1:end-1])
+		push!(cands, string(rand(["move ", "go "]), rand(["a", "one"]), rand([" step", " block", " segment"]),
+			" beyond the ", item_names[navimap.nodes[curr_s[end-1][1:2]]]))
 	end
 
 	return [(curr_s, rand(cands))]
@@ -177,6 +210,7 @@ function turnins(navimap, maze, curr, next)
 	d = a == 2 ? "right" : "left"
 	push!(cands, string("turn ", d))
 	push!(cands, string("turn to the ", d))
+	push!(cands, string("make a ", d))
 
 	if is_corner(maze, (curr_s[1][2], curr_s[1][1], round(Int, curr_s[1][3]/90 + 1)))
 		push!(cands, string("at the corner turn ", d))
