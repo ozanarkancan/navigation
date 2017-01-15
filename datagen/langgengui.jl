@@ -12,7 +12,7 @@ ItemInitials = Dict(1=>"B", 2=>"C", 3=>"E", 4=>"H", 5=>"L", 6=>"S", 7=>"")
 
 function get_node_mesh(i, j, ht, wt, item)
 	ms = Any[]
-	m = mesh(-270+wt*(j-1)+(wt/2), 270-ht*(i-1)-(ht/2), 0.0) << [ThreeJS.plane(wt*0.6, ht*0.6),material(Dict(:kind=>"basic", :color=>"teal"))]
+	m = mesh(-420+wt*(j-1)+(wt/2), 270-ht*(i-1)-(ht/2), 0.0) << [ThreeJS.plane(wt*0.6, ht*0.6),material(Dict(:kind=>"basic", :color=>"teal"))]
 	push!(ms, m)
 
 	ratio = 0.25
@@ -20,7 +20,7 @@ function get_node_mesh(i, j, ht, wt, item)
 	dist = 60.0/d
 
 	if item != ""
-		m = ThreeJS.text(dist*(-270+wt*(j-1)+(wt/2)+wt*0.6*0.5*ratio)/800.0,
+		m = ThreeJS.text(dist*(-420+wt*(j-1)+(wt/2)+wt*0.6*0.5*ratio)/800.0,
 			dist*(270-ht*(i-1)-(ht/2)+ht*0.6*0.5*ratio)/800.0, (800.0-dist), item)
 		push!(ms, m)
 	end
@@ -30,11 +30,11 @@ end
 #horizontal edge
 function hedge_mesh(i, j, ht, wt, wall, floor)
 	ms = Any[]
-	m = mesh(-270+wt*(j), 270-ht*(i-1)-(ht)*0.25, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.1),material(Dict(:kind=>"basic", :color=>wall))]
+	m = mesh(-420+wt*(j), 270-ht*(i-1)-(ht)*0.25, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.1),material(Dict(:kind=>"basic", :color=>wall))]
 	push!(ms, m)
-	m = mesh(-270+wt*(j), 270-ht*(i)+ht*0.25, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.1),material(Dict(:kind=>"basic", :color=>wall))]
+	m = mesh(-420+wt*(j), 270-ht*(i)+ht*0.25, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.1),material(Dict(:kind=>"basic", :color=>wall))]
 	push!(ms, m)
-	m = mesh(-270+wt*(j), 270-ht*(i)+ht*0.5, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.4),material(Dict(:kind=>"basic", :color=>floor))]
+	m = mesh(-420+wt*(j), 270-ht*(i)+ht*0.5, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.4),material(Dict(:kind=>"basic", :color=>floor))]
 	push!(ms, m)
 	return ms
 end
@@ -42,11 +42,11 @@ end
 #vertical edge
 function vedge_mesh(i, j, ht, wt, wall, floor)
 	ms = Any[]
-	m = mesh(-270+wt*(j-1)+wt*0.25, 270-ht*i, 0.0) << [ThreeJS.plane(wt*0.1, ht*0.4),material(Dict(:kind=>"basic", :color=>wall))]
+	m = mesh(-420+wt*(j-1)+wt*0.25, 270-ht*i, 0.0) << [ThreeJS.plane(wt*0.1, ht*0.4),material(Dict(:kind=>"basic", :color=>wall))]
 	push!(ms, m)
-	m = mesh(-270+wt*(j)-wt*0.25, 270-ht*i, 0.0) << [ThreeJS.plane(wt*0.1, ht*0.4),material(Dict(:kind=>"basic", :color=>wall))]
+	m = mesh(-420+wt*(j)-wt*0.25, 270-ht*i, 0.0) << [ThreeJS.plane(wt*0.1, ht*0.4),material(Dict(:kind=>"basic", :color=>wall))]
 	push!(ms, m)
-	m = mesh(-270+wt*(j)-wt*0.5, 270-ht*i, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.4),material(Dict(:kind=>"basic", :color=>floor))]
+	m = mesh(-420+wt*(j)-wt*0.5, 270-ht*i, 0.0) << [ThreeJS.plane(wt*0.4, ht*0.4),material(Dict(:kind=>"basic", :color=>floor))]
 	push!(ms, m)
 	return ms
 end
@@ -87,7 +87,7 @@ function draw_path(path, h, w)
 	for ind=1:length(path)
 		i, j = path[ind]
 		cname = ind == 1 ? cs[1] : ind == length(path) ? cs[3] : cs[2]
-		m = mesh(-270+wt*(j-1)+(wt/2), 270-ht*(i-1)-(ht/2), 0.0) << [ThreeJS.plane(wt*0.6*ratio, ht*0.6*ratio),material(Dict(:kind=>"basic", :color=>cname))]
+		m = mesh(-420+wt*(j-1)+(wt/2), 270-ht*(i-1)-(ht/2), 0.0) << [ThreeJS.plane(wt*0.6*ratio, ht*0.6*ratio),material(Dict(:kind=>"basic", :color=>cname))]
 		push!(ms, m)
 	end
 	return ms
@@ -95,13 +95,13 @@ end
 
 function draw_frame()
 	meshes = Any[]
-	m = mesh(0.0, 272.5, 0.0) << [ThreeJS.box(550.0, 5.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
+	m = mesh(-150.0, 272.5, 0.0) << [ThreeJS.box(550.0, 5.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
 	push!(meshes, m)
-	m = mesh(0.0, -272.5, 0.0) << [ThreeJS.box(550.0, 5.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
+	m = mesh(-150.0, -272.5, 0.0) << [ThreeJS.box(550.0, 5.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
 	push!(meshes, m)
-	m = mesh(272.5, 0.0, 0.0) << [ThreeJS.box(5.0, 550.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
+	m = mesh(122.5, 0.0, 0.0) << [ThreeJS.box(5.0, 550.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
 	push!(meshes, m)
-	m = mesh(-272.5, 0.0, 0.0) << [ThreeJS.box(5.0, 550.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
+	m = mesh(-422.5, 0.0, 0.0) << [ThreeJS.box(5.0, 550.0, 0.0),material(Dict(:kind=>"lambert", :color=>"black"))]
 	push!(meshes, m)
 	return meshes
 end
@@ -111,33 +111,58 @@ function draw_legend()
 
 	ht = 40.0
 	i = 1
-	
 	dist = 60.0/12.0
+
+	m = ThreeJS.text(dist*210/800.0,
+		dist*(270+ht-10)/800.0, (800.0-dist), "Floor Patterns")
 	
-	for w in keys(Walls)
-		cname = WallColors[Walls[w]]
-		m = mesh(350.0, 270-(ht*(i-1)), 0.0) << [ThreeJS.plane(20, 20),material(Dict(:kind=>"basic", :color=>cname))]
-		push!(meshes, m)
-
-		m = ThreeJS.text(dist*410/800.0,
-			dist*(270-ht*(i-1)-6)/800.0, (800.0-dist), w)
-
-		i += 1
-		push!(meshes, m)
-	end
+	push!(meshes, m)				
 
 	for f in keys(Floors)
 		cname = FloorColors[Floors[f]]
-		m = mesh(350.0, 270-(ht*(i-1)), 0.0) << [ThreeJS.plane(20, 20),material(Dict(:kind=>"basic", :color=>cname))]
+		m = mesh(150.0, 270-(ht*(i-1)), 0.0) << [ThreeJS.plane(20, 20),material(Dict(:kind=>"basic", :color=>cname))]
 		push!(meshes, m)
 
-		m = ThreeJS.text(dist*420/800.0,
+		m = ThreeJS.text(dist*210/800.0,
 			dist*(270-ht*(i-1)-10)/800.0, (800.0-dist), f)
 
 		i += 1
 		push!(meshes, m)
 	end
 
+	i = 1
+
+	m = ThreeJS.text(dist*350/800.0,
+		dist*(270+ht-10)/800.0, (800.0-dist), "Wall Paintings")
+	
+	push!(meshes, m)				
+
+	for w in keys(Walls)
+		cname = WallColors[Walls[w]]
+		m = mesh(290.0, 270-(ht*(i-1)), 0.0) << [ThreeJS.plane(20, 20),material(Dict(:kind=>"basic", :color=>cname))]
+		push!(meshes, m)
+
+		m = ThreeJS.text(dist*350/800.0,
+			dist*(270-ht*(i-1)-6)/800.0, (800.0-dist), w)
+
+		i += 1
+		push!(meshes, m)
+	end
+	
+	m = ThreeJS.text(dist*350/800.0,
+		dist*(270-ht*(i-1)-10)/800.0, (800.0-dist), "Items")
+	
+	push!(meshes, m)
+	i += 1
+
+	for item in sort(collect(keys(Items)))
+		if item != ""
+			m = ThreeJS.text(dist*350/800.0,
+				dist*(270-ht*(i-1)-10)/800.0, (800.0-dist), item)
+			i += 1
+		end
+		push!(meshes, m)
+	end
 
 	return meshes
 end
