@@ -140,6 +140,7 @@ function startins(navimap, maze, curr, next)
 				push!(cands, "turn so that the wall is on your back and left")
 			elseif !rightwall && backwall && !leftwall
 				push!(cands, "turn so that your back is to the wall")
+				push!(cands, "turn so that your back faces the wall")
 				push!(cands, string("place your back", rand([" to", " against"]), " the wall"))
 			end
 		end
