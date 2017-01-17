@@ -153,7 +153,7 @@ function startins(navimap, maze, curr, next)
 		
 		if diff_f && is_corner(maze, p1)
 			push!(l, ([curr_s[1]], string("you should be ", rand(["facing the ", "seeing the "]),
-				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
 				rand([" path", " hall", " hallway", " alley", " corridor"]))))
 		end
 		
@@ -209,8 +209,24 @@ function moveins(navimap, maze, curr, next)
 	if is_intersection(maze, p2)
 		alleycnt = count_alleys(maze, curr_s)
 		if alleycnt > 0
+			if alleycnt == 1
+				push!(cands, string(rand(["move", "go", "walk"]), rand([" until the ", " to the "]), " next alley"))
+			end
 			push!(cands, string(rand(["move", "go", "walk"]), rand([" until the ", " to the "]), ordinals[alleycnt], " alley"))
 		end
+	end
+
+	if navimap.nodes[curr_s[end][1:2]] != 7
+		push!(cands, string(rand(["go ", "move ", "walk "]), rand(["forward ", "straight ", " "]),
+			rand(numbers[steps]), (steps > 1 ? rand([" steps", " blocks", " segments", " times"]) : rand([" step", " block", " segment"])),
+			rand([" to", " towards"]), " the intersection containing the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+		push!(cands, string("take ", rand(numbers[steps]),
+			(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"])),
+			rand([" to", " towards"]), " the intersection containing the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+	
+		push!(cands, string(rand(numbers[steps]),
+			(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment", " space"])), " forward",
+			rand([" to", " towards"]), " the intersection containing the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
 	end
 
 	if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_on_this_segment(navimap, curr_s)
@@ -282,6 +298,11 @@ function finalins(navimap, maze, curr)
 		push!(cands, string("that is the position ", num))
 		push!(cands, string("there should be the position ", num))
 		push!(cands, string("position ", num, " should be there"))
+
+		if navimap.nodes[curr_s[end][1:2]] != 7
+			push!(cands, string(rand(["this intersection contains a", "there is a ", "there should be a "]),
+				item_names[navimap.nodes[curr_s[end][1:2]]]))
+		end
 
 		push!(insl, ([curr_s[end]], rand(cands)))
 		return insl
