@@ -91,6 +91,11 @@ function parse_commandline()
 		"--opt"
 			help = "adam or momentum"
 			default = "adam"
+		"--order"
+			help = "map orders"
+			nargs = '+'
+			default = [1, 2, 3]
+			arg_type = Int
 	end
 	return parse_args(s)
 end		
@@ -162,7 +167,7 @@ function main()
 
 	trainins = args["pg"] == 0 ? [nothing, nothing, nothing] : [(grid, jelly), (grid, l), (l, jelly)]
 
-	for i=1:length(args["trainfiles"])
+	for i in args["order"]
 		execute(args["trainfiles"][i], testins[i], args; train_ins=trainins[i])
 	end
 end

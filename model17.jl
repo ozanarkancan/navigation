@@ -261,7 +261,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			
 			if nactions > args["limactions"] || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
 				stop = true
-				push!(rewards, -1.0)
+				push!(rewards, -1.0*(2*args["limactions"]-nactions))
 			elseif a == 4
 				stop = true
 				if current == instruction.path[end]
@@ -275,17 +275,18 @@ function train_pg(weights, prms, data, maps; args=nothing)
 					push!(rewards, -1.0 * dist)=#
 				end
 			else
-				push!(rewards, -1.0)
-				#=
+				#push!(rewards, -1.0)
+				
 				if current in instruction.path
-					push!(rewards, -1.0)
+					#push!(rewards, -1.0)
 					#push!(rewards, -1.0/length(instruction.path))
 					#push!(rewards, 1.0/length(instruction.path))
+					push!(rewards, 0.0)
 				else
-					push!(rewards, -1.0)
-					#push!(rewards, -1.0/length(instruction.path))
+					#push!(rewards, -1.0)
+					push!(rewards, -1.0/length(instruction.path))
 				end
-				=#
+				
 			end
 			info("Reward: $(rewards[end])")
 		end
