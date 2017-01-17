@@ -120,6 +120,7 @@ function main()
 	end
 	sort!(overview, rev=true, cols = [:singlebest])
 	println(overview)
+	writetable("overview.csv", overview)
 end
 
 function parse_commandline()
