@@ -1,7 +1,32 @@
 include("util.jl")
-using ArgParse
+using ArgParse, DataFrames, Query
 
-function results(fname)
+MapSize = Dict("Grid"=>874, "Jelly"=>1293, "L"=>1070, "Total"=>3237)
+
+function log2csv(fname)
+	df = DataFrame(epochtype = [], epoch = [], loss_reward = [], single = [], paragraph = [], map = [])
+	s = readstring(pipeline(`less $fname`, `grep Epoch`))
+	lns = split(s, "\n")
+
+	for line in lns
+		if line == ""
+			continue
+		end
+		l = split(line)
+
+		et = split(l[2], ":")[end-1]
+		ep = parse(Int, split(l[3], ",")[1])
+		ls = parse(Float32, split(l[6], ",")[1])
+		sacc = parse(Float32, split(l[9], ",")[1])
+		pacc = parse(Float32, split(l[12], ",")[1])
+
+		push!(df, (et, ep, ls, sacc, pacc, l[end]))
+	end
+	return df
+end
+
+
+function results(fname, sortby)
 	d = Dict()
 	s = readstring(pipeline(`less $fname`, `grep Epoch`))
 	lns = split(s, "\n")
@@ -14,10 +39,12 @@ function results(fname)
 		i = 5
 		stop = false
 		while !stop
-			if startswith(l[i], "acc")
+			if startswith(l[i], sortby)
 				stop = true
+				i += 2
+			else
+				i += 1
 			end
-			i += 1
 		end
 
 		v = parse(Float64, split(l[i], ",")[1])
@@ -29,7 +56,12 @@ function results(fname)
 			d[l[end]] = v
 		end
 	end
-	return mean(values(d)), d
+
+	avg = 0.0
+	for k in keys(d)
+		avg += (d[k]*MapSize[k])/MapSize["Total"]
+	end
+	return avg, d
 end
 
 function printlogs(logs)
@@ -46,20 +78,48 @@ function main()
 	files = readdir(args["folder"])
 	logs = Any[]
 
+	overview = DataFrame(fname=[], singlebest=[], paragraph=[], single=[], paragraphbest=[], scores=[])
+
 	for f in files
 		try
-			r, d = results(string(args["folder"], "/", f))
-			push!(logs, (r, d, f))
+			df = log2csv(string(args["folder"], "/", f))
+			writetable(string("experiments/", f, ".csv"), df)
+			
+			scores = Any[]
 
+			for m in ["Grid", "Jelly", "L"]
+				q1 = @from i in df begin
+					@where i.map == m
+					@orderby descending(i.single)
+					@select i
+					@collect DataFrame
+				end
+
+				q2 = @from i in df begin
+					@where i.map == m
+					@orderby descending(i.paragraph)
+					@select i
+					@collect DataFrame
+				end
+
+				push!(scores, (q1[1, 4], q1[1, 5], q2[1, 4], q2[1, 5]))
+			end
+
+			weighted = map(tup->map(x->x*MapSize[tup[2]]/MapSize["Total"], tup[1]), zip(scores, ["Grid", "Jelly", "L"]))
+			push!(overview, (f,
+			sum(map(x->x[1], weighted)),
+			sum(map(x->x[2], weighted)),
+			sum(map(x->x[3], weighted)),
+			sum(map(x->x[4], weighted)),
+			scores
+			))
 		catch e
 			println(e)
 			println("Error on $f")
 		end
 	end
-
-	sort!(logs, rev=true)
-	printlogs(logs)
-	
+	sort!(overview, rev=true, cols = [:singlebest])
+	println(overview)
 end
 
 function parse_commandline()
@@ -69,6 +129,9 @@ function parse_commandline()
 		"--folder"
 			help = "folder contains the log files"
 			default = "logs"
+		"--sortby"
+			help = "single or paragraph"
+			default = "single"
 	end
 	return parse_args(s)
 end		
