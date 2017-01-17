@@ -70,8 +70,9 @@ function is_floor_unique(navimap, maze, segment, target)
 
 	res = 3
 	wall, floor = navimap.edges[segment[end][1:2]][target[1:2]]
-	if navimap.edges[segment[end-1][1:2]][segment[end][1:2]][2] == floor
-		return 0
+	wp, fp = navimap.edges[segment[end-1][1:2]][segment[end][1:2]]
+	if fp == floor
+		return 0,0
 	end
 
 	for i=2:length(segment)-1

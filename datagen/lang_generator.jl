@@ -98,6 +98,9 @@ function startins(navimap, maze, curr, next)
 		wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 		
 		if diff_w
+			push!(cands, string("look for the ", rand(["corridor ", "hall ", "alley "]), 
+			 	"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+
 			 push!(cands, string("face the ", rand(["corridor ", "hall ", "alley "]), 
 			 	"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
 			 push!(cands, string("turn your face to the ", rand(["corridor ", "hall ", "alley "]),
@@ -107,6 +110,9 @@ function startins(navimap, maze, curr, next)
 		end
 
 		if diff_f
+			push!(cands, string("look for the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+				rand([" path", " hall", " hallway", " alley", " corridor"])))
+
 			push!(cands, string("face the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
 				rand([" path", " hall", " hallway", " alley", " corridor"])))
 			push!(cands, string("turn your face to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
@@ -252,6 +258,7 @@ function moveins(navimap, maze, curr, next)
 			length(curr_s) > 2 && item_single_on_this_segment(navimap, curr_s[1:end-1])
 		push!(cands, string(rand(["move ", "go "]), rand(["a", "one"]), rand([" step", " block", " segment"]),
 			" beyond the ", item_names[navimap.nodes[curr_s[end-1][1:2]]]))
+		push!(cands, string("one block pass the ", item_names[navimap.nodes[curr_s[end-1][1:2]]]))
 	end
 
 	if steps >= 3 && next != nothing
@@ -288,16 +295,16 @@ function moveins(navimap, maze, curr, next)
 			rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])])
 			))
 			
-			push!(cands, string("follow the ", 
+			push!(cands, string(rand(["take the ", "follow the "]), 
 			rand([rand(floor_names[fp]), rand(ColorMapping[fp])]),
 			rand([" path", " hall", " hallway", " alley", " corridor"]),
-			" to the intersection with the ",
+			rand([" to the intersection with the ", " until it crosses the ", " you end up on the "]),
 			rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
 			rand([" path", " hall", " hallway", " alley", " corridor"])
 			))
 
 			push!(cands, string("follow this", rand([" path", " hall", " hallway", " alley", " corridor"]),
-			" until you reach the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+			rand([" until you reach the ", " end up on the "]), rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
 			rand([" path", " hall", " hallway", " alley", " corridor"])
 			))
 		end
@@ -308,10 +315,13 @@ end
 
 function turnins(navimap, maze, curr, next)
 	curr_t, curr_s = curr
+	next_t, next_s = next
+
 	cands = Any[]
 	a = action(curr_s[1], curr_s[2])
 	d = a == 2 ? "right" : "left"
 	push!(cands, string("turn ", d))
+	push!(cands, string("go ", d))
 	push!(cands, string("turn to the ", d))
 	push!(cands, string("make a ", d))
 	push!(cands, string("take a ", d))
@@ -319,6 +329,39 @@ function turnins(navimap, maze, curr, next)
 	if is_corner(maze, (curr_s[1][2], curr_s[1][1], round(Int, curr_s[1][3]/90 + 1)))
 		push!(cands, string("at the corner turn ", d))
 	end
+
+	diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
+	wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
+
+	if diff_w
+		push!(cands, string(rand(["at this intersection ", ""]), "look for the ", rand(["corridor ", "hall ", "alley "]), 
+		"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+
+		push!(cands, string(rand(["at this intersection ", ""]), "face the ", rand(["corridor ", "hall ", "alley "]), 
+		"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+		push!(cands, string(rand(["at this intersection ", ""]), "turn your face to the ", rand(["corridor ", "hall ", "alley "]),
+		" with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+		push!(cands, string(rand(["at this intersection ", ""]), "turn to the ", rand(["corridor ", "hall ", "alley "]),
+		" with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+	end
+
+	if diff_f
+		push!(cands, string(rand(["at this intersection ", ""]), "look for the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+		rand([" path", " hall", " hallway", " alley", " corridor"])))
+
+		push!(cands, string(rand(["at this intersection ", ""]), "face the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+		rand([" path", " hall", " hallway", " alley", " corridor"])))
+		push!(cands, string(rand(["at this intersection ", ""]), "turn your face to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
+		rand([" path", " hall", " hallway", " alley", " corridor"])))
+		push!(cands, string(rand(["at this intersection ", ""]), "turn until you see the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+		rand([" path", " hall", " hallway", " alley", " corridor"])))
+		push!(cands, string(rand(["at this intersection ", ""]), "turn to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+		rand([" path", " hall", " hallway", " alley", " corridor"])))
+		push!(cands, string(rand(["at this intersection ", ""]), "you should be ", rand(["facing the ", "seeing the "]),
+		rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
+		rand([" path", " hall", " hallway", " alley", " corridor"])))
+	end
+
 
 	return [(curr_s, rand(cands))]
 end
@@ -335,7 +378,7 @@ function moveturnins(navimap, maze, curr, next, next2)
 		ms, mi = mins[1]
 
 		append!(ms, ts[2:end])
-		newins = string(mi, rand([" and ", " then ", " here ", " and then "]), ti)
+		newins = string(mi, rand([" and ", " then ", " and then "]), ti)
 		return [(ms, newins)]
 	end
 end
@@ -359,7 +402,7 @@ function turnmoveins(navimap, maze, curr, next, next2)
 		wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 		push!(cands, string(rand(["turn and follow the ", "along the "]),
 			rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"]), " to the", 
+			rand([" path", " hall", " hallway", " alley", " corridor"]), " to the ", 
 			item_names[navimap.nodes[next_s[end][1:2]]]))
 	end
 
@@ -371,7 +414,7 @@ function turnmoveins(navimap, maze, curr, next, next2)
 		ms, mi = mins[1]
 
 		append!(ts, ms[2:end])
-		newins = string(ti, rand([" and ", " then ", " here ", " and then "]), mi)
+		newins = string(ti, rand([" and ", " then ", " and then "]), mi)
 		return [(ts, newins)]
 	end
 
@@ -413,11 +456,13 @@ function finalins(navimap, maze, curr)
 		push!(cands, string("position ", num, " should be there"))
 
 		if navimap.nodes[curr_s[end][1:2]] != 7
-			push!(cands, string(rand(["this intersection contains a", "there is a ", "there should be a "]),
+			push!(cands, string(rand(["this intersection contains a ", "there is a ", "there should be a "]),
 				item_names[navimap.nodes[curr_s[end][1:2]]]))
 			push!(cands, "that's it")
 			push!(cands, "and stop")
 		end
+
+
 
 		push!(insl, ([curr_s[end]], rand(cands)))
 		return insl
