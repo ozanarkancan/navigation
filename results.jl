@@ -78,7 +78,7 @@ function main()
 	files = readdir(args["folder"])
 	logs = Any[]
 
-	overview = DataFrame(fname=[], singlebest=[], paragraph=[], single=[], paragraphbest=[])
+	overview = DataFrame(fname=[], singlebest=[], paragraph=[], single=[], paragraphbest=[], scores=[])
 
 	for f in files
 		try
@@ -111,6 +111,7 @@ function main()
 			sum(map(x->x[2], weighted)),
 			sum(map(x->x[3], weighted)),
 			sum(map(x->x[4], weighted)),
+			scores
 			))
 		catch e
 			println(e)
