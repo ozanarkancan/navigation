@@ -167,6 +167,33 @@ function draw_legend()
 	return meshes
 end
 
+function draw_compass()
+	meshes = Any[]
+
+	ht = 40.0
+	i = 1
+	dist = 60.0/10.0
+
+	m = ThreeJS.text(dist*-510/800.0,
+		dist*(270+ht-20)/800.0, (800.0-dist), "North, 0")
+	push!(meshes, m)
+
+	m = ThreeJS.text(dist*-510/800.0,
+		dist*(270+ht-60)/800.0, (800.0-dist), "South, 180")
+	push!(meshes, m)
+
+	m = ThreeJS.text(dist*-560/800.0,
+		dist*(270+ht-40)/800.0, (800.0-dist), "West, 270")
+	push!(meshes, m)
+	
+	m = ThreeJS.text(dist*-460/800.0,
+		dist*(270+ht-40)/800.0, (800.0-dist), "East, 90")
+	push!(meshes, m)
+
+
+	return meshes
+end
+
 function to_string_html(generation)
 	i = 0
 	hs = Any[]
@@ -237,6 +264,7 @@ function main(window)
 			ms = draw_map(dict2[:navimap], dict2[:maze], h, w)
 			append!(dict2[:maze_meshes], ms)
 			append!(dict2[:maze_meshes], draw_legend())
+			append!(dict2[:maze_meshes], draw_compass())
 		end
 		append!(meshes, dict2[:maze_meshes])
 		
