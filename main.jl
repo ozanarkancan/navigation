@@ -1,6 +1,7 @@
 using ArgParse
 
 include("util.jl")
+include("io.jl")
 
 function parse_commandline()
 	s = ArgParseSettings()
@@ -130,6 +131,8 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 
 	for it=1:args["iterative"]
 		prms_sp = initparams(w; args=args)
+		patience = 0
+		sofarbest = 0.0
 		for i=1:args["epoch"]
 			shuffle!(trn_data)
 			@time lss = train(w, prms_sp, trn_data; args=args)
@@ -138,7 +141,8 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 
 			info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
 		end
-
+		
+		sofarbest = 0.0
 		if args["pg"] != 0
 			prms_rl = initparams(w; args=args)
 			train_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[1])
@@ -174,41 +178,3 @@ end
 
 main()
 
-#=
-MODELS
-
-** model 01 **
-- Encoder-Decoder
-- 2 layers (both encoder & decoder)
-- 0.2 dropout after the word embeddings (there is no dropout after the embedding of the perception input)
-- 0.5 dropout between lstm layers
-- embedding of the perception input: conv
-
-** model 02 **
-- Encoder-Decoder
-- 2 layers (both encoder & decoder)
-- 0.2 dropout after the word embeddings & the embedding of the perception input
-- 0.5 dropout between lstm layers
-
-** model 03 **
-- Same as model01 except
-- embedding of the perception input: relu . conv
-
-** model 04 **
-- Same as model01 except
-- Final output is produced by using embedding of the perception input and the hidden of the final layer
-
-** model 05 **
-- Use embeddings in the internal layers
-
-** model 06 **
-- Same as model01 except
-- Lstm uses both t-1 and t-2 hiddens
-
-** model 07 **
-- Bidirectional encoder
-- Decoder takes the transformation of the concatenated f-b last hiddens as input
-
-** model 08 **
-- sigmoid is used after the conv
-=#
