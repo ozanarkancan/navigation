@@ -97,6 +97,30 @@ function parse_commandline()
 			nargs = '+'
 			default = [1, 2, 3]
 			arg_type = Int
+		"--save"
+			help = "model path"
+			default = "modelbank/modelacl"
+		"--patience1"
+			help = "patience param"
+			default = 20
+			arg_type = Int
+		"--patience2"
+			help = "patience param"
+			default = 50
+			arg_type = Int
+		"--tunefor"
+			help = "tune for (single or paragraph)"
+			default = "single"
+		"--load"
+			help = "model path"
+			default = ""
+		"--vDev"
+			help = "vDev or vTest"
+			action = :store_true
+		"--pretrain"
+			help = "number of additional paragraphs"
+			arg_type = Int
+			default = 0
 	end
 	return parse_args(s)
 end		
@@ -139,7 +163,20 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 			@time tst_acc = test(w, test_data, d["maps"]; args=args)
 			@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
 
+			tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
+			if tunefor > sofarbest
+				sofarbest = tunefor
+				patience = 0
+				info("Saving the model...")
+				savemodel(w, args["save"])
+			else
+				patience += 1
+			end
+
 			info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+			if patience >= args["patience1"]
+				break
+			end
 		end
 		
 		sofarbest = 0.0
@@ -152,8 +189,26 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 				@time lss = train_pg(w, prms_rl, train_data, d["maps"]; args=args)
 				@time tst_acc = test(w, test_data, d["maps"]; args=args)
 				@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
+				@time trnloss = train_loss(w, train_data; args=args)
 
 				info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+				info("PGEp: $(i), trn loss: $(trnloss)")
+
+				tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
+				if tunefor > sofarbest
+					sofarbest = tunefor
+					patience = 0
+					info("Saving the model...")
+					savemodel(w, args["save"])
+				else
+					patience += 1
+				end
+
+				info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+				if patience >= args["patience2"]
+					break
+				end
+
 			end
 		end
 	end
@@ -172,6 +227,10 @@ function main()
 	trainins = args["pg"] == 0 ? [nothing, nothing, nothing] : [(grid, jelly), (grid, l), (l, jelly)]
 
 	for i in args["order"]
+		args["save"] = string(args["save"], "_", args["trainfiles"][i])
+		if args["load"] != ""
+			args["load"] = string(args["load"], "_", args["trainfiles"][i])
+		end
 		execute(args["trainfiles"][i], testins[i], args; train_ins=trainins[i])
 	end
 end
