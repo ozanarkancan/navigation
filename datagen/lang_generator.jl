@@ -65,7 +65,6 @@ end
 function startins(navimap, maze, curr, next)
 	"""
 	TODO
-	["to", "towards"]
 	"""
 	curr_t, curr_s = curr
 	next_t, next_s = next
@@ -98,40 +97,50 @@ function startins(navimap, maze, curr, next)
 		wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 		
 		if diff_w
-			push!(cands, string("look for the ", rand(["corridor ", "hall ", "alley "]), 
-			 	"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+			for prefx in ["look for the ", "face the ", "turn your face to the ", "turn to the "]
+				for cor in ["corridor ", "hall ", "alley ", "hallway "]
+					for sufx in ["", " on the wall"]
+						push!(cands, string(prefx, cor, "with the ", 
+							wall_names[wpatrn], sufx))
 
-			 push!(cands, string("face the ", rand(["corridor ", "hall ", "alley "]), 
-			 	"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
-			 push!(cands, string("turn your face to the ", rand(["corridor ", "hall ", "alley "]),
-			 	" with the ", wall_names[wpatrn], rand(["", " on the wall"])))
-			 push!(cands, string("turn to the ", rand(["corridor ", "hall ", "alley "]),
-			 	" with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+					end
+				end
+			end
 		end
 
 		if diff_f
-			push!(cands, string("look for the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-				rand([" path", " hall", " hallway", " alley", " corridor"])))
+			for prefx in ["look for the ", "face the ", "turn your face to the ", "turn until you see the ", "turn to the "]
+				for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+					cors = [" path", " hall", " hallway", " alley", " corridor"]
+					if flr == "flower" || flr == "octagon"
+						push!(cors, " carpet")
+					end
+					for cor in cors
+						push!(cands, string(prefx, flr, cor))
+					end
+				end
+			end
 
-			push!(cands, string("face the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-				rand([" path", " hall", " hallway", " alley", " corridor"])))
-			push!(cands, string("turn your face to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-				rand([" path", " hall", " hallway", " alley", " corridor"])))
-			push!(cands, string("turn until you see the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
-				rand([" path", " hall", " hallway", " alley", " corridor"])))
-			push!(cands, string("turn to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
-				rand([" path", " hall", " hallway", " alley", " corridor"])))
-			push!(cands, string("you should be ", rand(["facing the ", "seeing the "]),
-				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
-				rand([" path", " hall", " hallway", " alley", " corridor"])))
+			for verb in ["facing the ", "seeing the "]
+				for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+					cors = [" path", " hall", " hallway", " alley", " corridor"]
+					if flr == "flower" || flr == "octagon"
+						push!(cors, " carpet")
+					end
+					for cor in cors
+						push!(cands, string("you should be ", verb, flr, cor))
+					end
+				end
+			end
 		end
 
 		if is_deadend(maze, p1)
 			push!(cands, "you should leave the dead end")
-			push!(cands, string("only one ", 
-				rand(["way ", "direction "]), 
-				"to ", 
-				rand(["go", "move", "travel"])))
+			for w in ["way ", "direction "]
+				for g in ["go", "move", "travel"]
+					push!(cands, string("only one ", w, "to ", g))
+				end
+			end
 		end
 
 		if sum(maze[p1[1], p1[2], :]) == 3 || sum(maze[p1[1], p1[2], :]) == 2
@@ -153,7 +162,9 @@ function startins(navimap, maze, curr, next)
 			elseif !rightwall && backwall && !leftwall
 				push!(cands, "turn so that your back is to the wall")
 				push!(cands, "turn so that your back faces the wall")
-				push!(cands, string("place your back", rand([" to", " against"]), " the wall"))
+				for r in [" to", " against"]
+					push!(cands, string("place your back", r, " the wall"))
+				end
 			end
 		end
 
@@ -164,9 +175,18 @@ function startins(navimap, maze, curr, next)
 		l = Any[]
 		
 		if diff_f && is_corner(maze, p1)
-			push!(l, ([curr_s[1]], string("you should be ", rand(["facing the ", "seeing the "]),
-				rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-				rand([" path", " hall", " hallway", " alley", " corridor"]))))
+			cnds = Any[]
+			for verb in ["facing the ", "seeing the "]
+				for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+					cors = [" path", " hall", " hallway", " alley", " corridor"]
+					if flr == "flower" || flr == "octagon"
+						push!(cors, " carpet")
+					end
+					for cor in cors
+						push!(cnds, string("you should be ", verb, flr, cor))
+					end
+				end
+			end
 		end
 		
 		append!(l, moveins(navimap, maze, curr, next))
@@ -185,79 +205,159 @@ function moveins(navimap, maze, curr, next)
 	cands = Any[]
 	steps = length(curr_s)-1
 
-	push!(cands, string(rand(["go ", "move ", "walk "]), rand(["forward ", "straight ", " "]),
-		rand(numbers[steps]), (steps > 1 ? rand([" steps", " blocks", " segments", " times"]) : rand([" step", " block", " segment"]))))
-	push!(cands, string("take ", rand(numbers[steps]),
-		(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"]))))
-	
-	push!(cands, string(rand(numbers[steps]),
-		(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment", " space"])), " forward"))
+	sts = steps > 1 ? [" steps", " blocks", " segments", " times"] : [" step", " block", " segment"]
+	for g in ["go ", "move ", "walk "]
+		for m in ["forward ", "straight ", " "]
+			for st in sts
+				for num in numbers[steps]
+					push!(cands, string(g, m, num, st))
+				end
+			end
+		end
+	end
+
+	for v in ["take ", ""]
+		for num in numbers[steps]
+			for st in sts
+				push!(cands, string(v, num, st))
+			end
+		end
+	end
 
 	if facing_wall(maze, (endpoint[2], endpoint[1], d))
-		push!(cands, string(rand(["move ", "go ", "walk "]), rand(["forward ", "straight ", ""]),
-			"until the wall"))
+		for cor in [" path", " hall", " hallway", " alley", " corridor"]
+			push!(cands, string("take the ", cor, " until the wall"))
+		end
+
+		for m in ["move ", "go ", "walk "]
+			for adv in ["forwards ", "straight ", ""]
+				push!(cands, string(m, adv, "until the wall"))
+			end
+		end
 	end
 
 	p1 = (curr_s[1][2], curr_s[1][1], -1)
 	p2 = (curr_s[end][2], curr_s[end][1], -1)
 	
 	if is_corner(maze, p2)
-		push!(cands, string(rand(["move", "go", "walk"]),
-			rand(["", " forward", " straight"]), " into the corner"))
+		for m in ["move ", "go ", "walk "]
+			for adv in [" forward", " straight", ""]
+				push!(cands, string(m, adv, " into the corner"))
+			end
+		end
 	end
 
 	if is_deadend(maze, p2)
-		push!(cands, string(rand(["move", "go", "walk"]),
-			rand(["", " forward", " straight"]), " into the dead end"))
+		for m in ["move ", "go ", "walk "]
+			for adv in [" forward", " straight", ""]
+				push!(cands, string(m, adv, " into the dead end"))
+			end
+		end
 	end
 
-
 	if (is_corner(maze, p1) || is_deadend(maze, p1)) && (is_corner(maze, p2) || is_deadend(maze, p2))
-		push!(cands, string(rand(["move", "go", "walk"]), " to the other end", 
-			rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
+		for m in ["move", "go", "walk"]
+			for cor in ["hall", "hallway", "path", "corridor", "alley"]
+				for sufx in ["hall", "hallway", "path", "corridor", "alley", ""]
+					if sufx != ""
+						push!(cands, string(m, " to the other end of the ", sufx))
+					else
+						push!(cands, string(m, " to the other end"))
+					end
+				end
+			end
+		end
 	elseif (is_corner(maze, p2) || is_deadend(maze, p2))
-		push!(cands, string(rand(["move", "go", "walk"]), " to the end", 
-			rand(["", string(" of the ", rand(["hall", "hallway", "path", "corridor", "alley"]))])))
+		for m in ["move", "go", "walk"]
+			for cor in ["hall", "hallway", "path", "corridor", "alley"]
+				for sufx in ["hall", "hallway", "path", "corridor", "alley", ""]
+					if sufx != ""
+						push!(cands, string(m, " to the end of the ", sufx))
+					else
+						push!(cands, string(m, " to the end"))
+					end
+				end
+			end
+		end
 	end
 
 	if is_intersection(maze, p2)
 		alleycnt = count_alleys(maze, curr_s)
 		if alleycnt > 0
-			if alleycnt == 1
-				push!(cands, string(rand(["move", "go", "walk"]), rand([" until the ", " to the "]), " next alley"))
+			for m in ["move", "go", "walk"]
+				for cond in [" until the ", " to the "]
+					if alleycnt == 1
+						push!(cands, string(m, cond, "next alley"))
+					else
+						push!(cands, string(m, cond, ordinals[alleycnt], " alley"))
+					end
+				end
 			end
-			push!(cands, string(rand(["move", "go", "walk"]), rand([" until the ", " to the "]), ordinals[alleycnt], " alley"))
 		end
 	end
 
 	if navimap.nodes[curr_s[end][1:2]] != 7
-		push!(cands, string(rand(["go ", "move ", "walk "]), rand(["forward ", "straight ", " "]),
-			rand(numbers[steps]), (steps > 1 ? rand([" steps", " blocks", " segments", " times"]) : rand([" step", " block", " segment"])),
-			rand([" to", " towards"]), " the intersection containing the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
-		push!(cands, string("take ", rand(numbers[steps]),
-			(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment"])),
-			rand([" to", " towards"]), " the intersection containing the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
-	
-		push!(cands, string(rand(numbers[steps]),
-			(steps > 1 ? rand([" steps", " blocks", " segments"]) : rand([" step", " block", " segment", " space"])), " forward",
-			rand([" to", " towards"]), " the intersection containing the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+		for m in ["go ", "move ", "walk "]
+			for adv in ["forward ", "straight ", " "]
+				for num in numbers[steps]
+					for st in sts
+						for tow in [" to", " towards"]
+							push!(cands, string(m, adv, num, st, tow, " the intersection containing the ",
+								item_names[navimap.nodes[curr_s[end][1:2]]]))
+						end
+					end
+				end
+			end
+		end
+
+		for v in ["take", ""]
+			for num in numbers[steps]
+				for st in sts
+					for tow in [" to", " towards"]
+						push!(cands, string(v, num, st, tow, " the intersection containing the ",
+						item_names[navimap.nodes[curr_s[end][1:2]]]))
+					end
+				end
+			end
+		end
 	end
 
 	if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_on_this_segment(navimap, curr_s)
-		push!(cands, string(rand(["move ", "go ", "walk "]), rand(["forward ", "straight ", ""]),
-			"until the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
-		push!(cands, string(rand(["move ", "go ", "walk "]), "towards the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
-		push!(cands, string("take the ", rand(["path", "hall"])," towards the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+		for m in ["go ", "move ", "walk "]
+			for adv in ["forward ", "straight ", " "]
+				for cond in ["until the ", "towards the "]
+					push!(cands, string(m, adv, cond, item_names[navimap.nodes[curr_s[end][1:2]]]))
+				end
+			end
+		end
+
+		for cor in ["path", "hall", "hallway"]
+			push!(cands, string("take the ", cor, " towards the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+		end
 
 		wpatrn, fpatrn = navimap.edges[(curr_s[1][1], curr_s[1][2])][(curr_s[2][1], curr_s[2][2])]
-		push!(cands, string(rand(["follow the ", "along the "]),
-			rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"]), " to the ", 
-			item_names[navimap.nodes[curr_s[end][1:2]]]))
+		for v in ["follow the ", "along the "]
+			for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+				cors = [" path", " hall", " hallway", " alley", " corridor"]
+				if flr == "flower" || flr == "octagon"
+					push!(cors, " carpet")
+				end
+				for cor in cors
+					push!(cands, string(v, flr, cor, " to the ", item_names[navimap.nodes[curr_s[end][1:2]]]))
+				end
+			end
+		end
 	elseif navimap.nodes[curr_s[end][1:2]] == 7 && navimap.nodes[curr_s[end-1][1:2]] != 7 && 
 			length(curr_s) > 2 && item_single_on_this_segment(navimap, curr_s[1:end-1])
-		push!(cands, string(rand(["move ", "go "]), rand(["a", "one"]), rand([" step", " block", " segment"]),
-			" beyond the ", item_names[navimap.nodes[curr_s[end-1][1:2]]]))
+		for m in ["move ", "go ", "walk "]
+			for one in ["a", "one"]
+				for step in [" step", " block", " segment"]
+					push!(cands, string(m, one, step, " beyond the ",
+						item_names[navimap.nodes[curr_s[end-1][1:2]]]))
+				end
+			end
+		end
+
 		push!(cands, string("one block pass the ", item_names[navimap.nodes[curr_s[end-1][1:2]]]))
 	end
 
@@ -268,45 +368,93 @@ function moveins(navimap, maze, curr, next)
 
 		res, fpatrn = is_floor_unique(navimap, maze, curr_s, target)
 		if res == 1
-			push!(cands, string(rand(["move ", "go ", "walk "]), rand(["forward ", "straight ", ""]),
-			"until you see the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"]),
-			rand([" to your right", " on your right"])
-			))
+			for m in ["move ", "go ", "walk "]
+				for adv in ["forward ", "straight ", ""]
+					for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						cors = [" path", " hall", " hallway", " alley", " corridor"]
+						if flr == "flower" || flr == "octagon"
+							push!(cors, " carpet")
+						end
+						for cor in cors
+							for d in [" to your right", " on your right"]
+								push!(cands, string(m, adv, "until you see the ",
+									flr, cor, d))
+							end
+						end
+					end
+				end
+			end
 		elseif res == 2
-			push!(cands, string(rand(["move ", "go ", "walk "]), rand(["forward ", "straight ", ""]),
-			"until you see the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"]),
-			rand([" to your left", " on your left"])
-			))
-
+			for m in ["move ", "go ", "walk "]
+				for adv in ["forward ", "straight ", ""]
+					for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						cors = [" path", " hall", " hallway", " alley", " corridor"]
+						if flr == "flower" || flr == "octagon"
+							push!(cors, " carpet")
+						end
+						for cor in cors
+							for d in [" to your left", " on your left"]
+								push!(cands, string(m, adv, "until you see the ",
+									flr, cor, d))
+							end
+						end
+					end
+				end
+			end
 		elseif res == 3
-			push!(cands, string(rand(["move ", "go ", "walk "]), rand(["forward ", "straight ", ""]),
-			"until you reach the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"]),
-			))
+			for m in ["move ", "go ", "walk "]
+				for adv in ["forward ", "straight ", ""]
+					for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						cors = [" path", " hall", " hallway", " alley", " corridor"]
+						if flr == "flower" || flr == "octagon"
+							push!(cors, " carpet")
+						end
+						for cor in cors
+							push!(cands, string(m, adv, "until you reach the ",
+								flr, cor))
+						end
+					end
+				end
+			end
 
-			push!(cands, string(rand(["move ", "go ", "walk "]), "until you reach the ",
-			rand(ColorMapping[fpatrn]), " intersection"))
+			for m in ["move ", "go ", "walk "]
+				for c in ColorMapping[fpatrn]
+					push!(cands, string(m, "until you reach the ", c, " intersection"))
+				end
+			end
 
-			push!(cands, string("move until you reach an intersection with ", 
-			rand([rand(floor_names[fp]), rand(ColorMapping[fp])]),
-			" and ",
-			rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])])
-			))
-			
-			push!(cands, string(rand(["take the ", "follow the "]), 
-			rand([rand(floor_names[fp]), rand(ColorMapping[fp])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"]),
-			rand([" to the intersection with the ", " until it crosses the ", " you end up on the "]),
-			rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"])
-			))
+			for m in ["move ", "go ", "walk "]
+				for flr1 in vcat(floor_names[fp], ColorMapping[fp])
+					for flr2 in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						push!(cands, string(m, "until you reach an intersection with ",
+							flr1, " and ", flr2))
+					end
+				end
+			end
 
-			push!(cands, string("follow this", rand([" path", " hall", " hallway", " alley", " corridor"]),
-			rand([" until you reach the ", " end up on the "]), rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-			rand([" path", " hall", " hallway", " alley", " corridor"])
-			))
+			for v in ["take the ", "follow the "]
+				for flr1 in vcat(floor_names[fp], ColorMapping[fp])
+					for flr2 in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						for cor1 in [" path", " hall", " hallway", " alley", " corridor"]
+							for cond in [" to the intersection with the ", " until it crosses the ", " until you end up on the "]
+								for cor2 in [" path", " hall", " hallway", " alley", " corridor"]
+									push!(cands, string(v, flr1, cor1, cond, flr2, cor2))
+								end
+							end
+						end
+					end
+				end
+			end
+
+			for cor1 in [" path", " hall", " hallway", " alley", " corridor"]
+				for cond in [" until you reach the ", " end up on the "]
+					for flr2 in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						for cor2 in [" path", " hall", " hallway", " alley", " corridor"]
+							push!(cands, string("follow this", cor1, cond, flr2, cor2))
+						end
+					end
+				end
+			end
 		end
 	end
 
@@ -320,12 +468,11 @@ function turnins(navimap, maze, curr, next)
 	cands = Any[]
 	a = action(curr_s[1], curr_s[2])
 	d = a == 2 ? "right" : "left"
-	push!(cands, string("turn ", d))
-	push!(cands, string("go ", d))
-	push!(cands, string("turn to the ", d))
-	push!(cands, string("make a ", d))
-	push!(cands, string("take a ", d))
 
+	for v in ["turn ", "go ", "turn to the ", "make a ", "take a "]
+		push!(cands, string(v, d))
+	end
+	
 	if is_corner(maze, (curr_s[1][2], curr_s[1][1], round(Int, curr_s[1][3]/90 + 1)))
 		push!(cands, string("at the corner turn ", d))
 	end
@@ -334,35 +481,38 @@ function turnins(navimap, maze, curr, next)
 	wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 
 	if diff_w
-		push!(cands, string(rand(["at this intersection ", ""]), "look for the ", rand(["corridor ", "hall ", "alley "]), 
-		"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
-
-		push!(cands, string(rand(["at this intersection ", ""]), "face the ", rand(["corridor ", "hall ", "alley "]), 
-		"with the ", wall_names[wpatrn], rand(["", " on the wall"])))
-		push!(cands, string(rand(["at this intersection ", ""]), "turn your face to the ", rand(["corridor ", "hall ", "alley "]),
-		" with the ", wall_names[wpatrn], rand(["", " on the wall"])))
-		push!(cands, string(rand(["at this intersection ", ""]), "turn to the ", rand(["corridor ", "hall ", "alley "]),
-		" with the ", wall_names[wpatrn], rand(["", " on the wall"])))
+		for prefx in ["at this intersection ", ""]
+			for cor in ["corridor ", "hall ", "alley "]
+				for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the "]
+					for sufx in ["", " on the wall"]
+						push!(cands, string(prefx, v, cor, "with the ", wall_names[wpatrn], sufx))
+					end
+				end
+			end
+		end
 	end
 
 	if diff_f
-		push!(cands, string(rand(["at this intersection ", ""]), "look for the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-		rand([" path", " hall", " hallway", " alley", " corridor"])))
+		for prefx in ["at this intersection ", ""]
+			for cor in ["corridor ", "hall ", "alley ", "hallway ", "path "]
+				for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the "]
+					for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						push!(cands, string(prefx, v, flr, cor))
+					end
+				end
+			end
+		end
 
-		push!(cands, string(rand(["at this intersection ", ""]), "face the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-		rand([" path", " hall", " hallway", " alley", " corridor"])))
-		push!(cands, string(rand(["at this intersection ", ""]), "turn your face to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]),
-		rand([" path", " hall", " hallway", " alley", " corridor"])))
-		push!(cands, string(rand(["at this intersection ", ""]), "turn until you see the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
-		rand([" path", " hall", " hallway", " alley", " corridor"])))
-		push!(cands, string(rand(["at this intersection ", ""]), "turn to the ", rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
-		rand([" path", " hall", " hallway", " alley", " corridor"])))
-		push!(cands, string(rand(["at this intersection ", ""]), "you should be ", rand(["facing the ", "seeing the "]),
-		rand([rand(floor_names[fpatrn]), rand(ColorMapping[fpatrn])]), 
-		rand([" path", " hall", " hallway", " alley", " corridor"])))
+		for prefx in ["at this intersection ", ""]
+			for cor in ["corridor ", "hall ", "alley ", "hallway ", "path "]
+				for v in ["facing the ", "seeing the "]
+					for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+						push!(conds, string(prefx, "you should be ", v, flr, cor))
+					end
+				end
+			end
+		end
 	end
-
-
 	return [(curr_s, rand(cands))]
 end
 
