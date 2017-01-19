@@ -2,6 +2,7 @@ include("util.jl")
 using ArgParse, DataFrames, Query
 
 MapSize = Dict("Grid"=>874, "Jelly"=>1293, "L"=>1070, "Total"=>3237)
+MapSizeP = Dict("Grid"=>223, "Jelly"=>241, "L"=>235, "Total"=>699)
 
 function log2csv(fname)
 	df = DataFrame(epochtype = [], epoch = [], loss_reward = [], single = [], paragraph = [], map = [])
@@ -105,12 +106,13 @@ function main()
 				push!(scores, (q1[1, 4], q1[1, 5], q2[1, 4], q2[1, 5]))
 			end
 
-			weighted = map(tup->map(x->x*MapSize[tup[2]]/MapSize["Total"], tup[1]), zip(scores, ["Grid", "Jelly", "L"]))
+			weighteds = map(tup->map(x->x*MapSize[tup[2]]/MapSize["Total"], tup[1][1:2:4]), collect(zip(scores, ["Grid", "Jelly", "L"])))
+			weightedp = map(tup->map(x->x*MapSizeP[tup[2]]/MapSizeP["Total"], tup[1][2:2:4]), collect(zip(scores, ["Grid", "Jelly", "L"])))
 			push!(overview, (f,
-			sum(map(x->x[1], weighted)),
-			sum(map(x->x[2], weighted)),
-			sum(map(x->x[3], weighted)),
-			sum(map(x->x[4], weighted)),
+			sum(map(x->x[1], weighteds)),
+			sum(map(x->x[1], weightedp)),
+			sum(map(x->x[2], weighteds)),
+			sum(map(x->x[2], weightedp)),
 			scores
 			))
 		catch e
