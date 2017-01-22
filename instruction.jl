@@ -92,5 +92,6 @@ function group_singles(singles)
 			end
 		end
 	end
+	if length(prg) != 0; push!(groups, prg); end
 	return groups
 end
