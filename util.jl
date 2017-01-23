@@ -135,8 +135,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			i = i - 1
 		else
-			view[i,j, lfeatvec-1, 1] = 1.0
-			#view[i, j, lfeatvec, 1] = 1.0
+			#view[i,j, lfeatvec-1, 1] = 1.0
+			view[i, j, lfeatvec, 1] = 1.0
 			break
 		end
 	end
@@ -163,8 +163,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			j = j + 1
 		else
-			view[i,j, lfeatvec-1, 1] = 1.0
-			#view[i, j, lfeatvec, 1] = 1.0
+			#view[i,j, lfeatvec-1, 1] = 1.0
+			view[i, j, lfeatvec, 1] = 1.0
 			break
 		end
 	end
@@ -191,8 +191,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			i = i + 1
 		else
-			view[i,j, lfeatvec-1, 1] = 1.0
-			#view[i, j, lfeatvec] = 1.0
+			#view[i,j, lfeatvec-1, 1] = 1.0
+			view[i, j, lfeatvec] = 1.0
 			break
 		end
 	end
@@ -219,8 +219,8 @@ function state_agent_centric(map, loc; vdims = [39 39])
 			current = next
 			j = j - 1
 		else
-			view[i,j, lfeatvec-1, 1] = 1.0
-			#view[i, j, lfeatvec] = 1.0
+			#view[i,j, lfeatvec-1, 1] = 1.0
+			view[i, j, lfeatvec] = 1.0
 			break
 		end
 	end

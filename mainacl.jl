@@ -121,6 +121,12 @@ function parse_commandline()
 			help = "number of additional paragraphs"
 			arg_type = Int
 			default = 0
+		"--charenc"
+			help = "charecter embedding"
+			action = :store_true
+		"--encoding"
+			help = "grid or multihot"
+			default = "grid"
 	end
 	return parse_args(s)
 end		
@@ -129,26 +135,30 @@ args = parse_commandline()
 
 include(args["model"])
 
-function execute(trainfile, test_ins, args; train_ins=nothing)
-	d = load(trainfile)
-	trn_data = minibatch(d["data"];bs=args["bs"])
-	vdims = size(trn_data[1][2][1])
+function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
+	data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"]), vcat(train_ins[1], train_ins[2]))
+	trn_data = minibatch(data;bs=args["bs"])
 
-	info("\nVocab: $(length(d["vocab"])), World: $(vdims)")
+	vdims = size(trn_data[1][2][1])
 	
+	info("\nWorld: $(vdims)")
+
 	w = nothing
 	if length(vdims) > 2
-		w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], args["window"], vdims[3], args["filters"])
+		w = initweights(KnetArray, args["hidden"], length(vocab)+1, args["embed"], args["window"], vdims[3], args["filters"])
 	else
-		w = initweights(KnetArray, args["hidden"], length(d["vocab"])+1, args["embed"], vdims[2])
+		w = initweights(KnetArray, args["hidden"], length(vocab)+1, args["embed"], vdims[2])
 	end
 
 	info("Model Prms:")
 	for k in keys(w); info("$k : $(size(w[k])) "); end
 
-	test_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), test_ins)
+	dev_data = dev_ins != nothing ? map(ins -> (ins, ins_arr(vocab, ins.text)), dev_ins) : nothing
+	dev_data_grp = dev_ins != nothing ? map(x -> map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(dev_ins)) : nothing
+
+	test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
 	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
-	test_data_grp = map(x->map(ins-> (ins, ins_arr(d["vocab"], ins.text)),x), group_singles(test_ins))
+	test_data_grp = map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
 
 	#prms_sp = initparams(w; args=args)
 	#prms_rl = initparams(w; args=args)
@@ -160,10 +170,22 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 		for i=1:args["epoch"]
 			shuffle!(trn_data)
 			@time lss = train(w, prms_sp, trn_data; args=args)
-			@time tst_acc = test(w, test_data, d["maps"]; args=args)
-			@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
+			@time tst_acc = test(w, test_data, maps; args=args)
+			@time tst_prg_acc = test_paragraph(w, test_data_grp, maps; args=args)
+			@time trnloss = train_loss(w, trn_data; args=args)
+			
+			dev_acc = 0
+			dev_prg_acc = 0
 
+			if args["vDev"]
+				@time dev_acc = test(w, dev_data, maps; args=args)
+				@time dev_prg_acc = test_paragraph(w, dev_data_grp, maps; args=args)
+			end
+			
 			tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
+			tunefordev = args["tunefor"] == "single" ? dev_acc : dev_prg_acc
+			tunefor = args["vDev"] ? tunefordev : tunefor
+
 			if tunefor > sofarbest
 				sofarbest = tunefor
 				patience = 0
@@ -172,8 +194,16 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 			else
 				patience += 1
 			end
+			
+			if args["vDev"]
+				info("Epoch: $(i), trn loss: $(lss), single acc: $(dev_acc), paragraph acc: $(dev_prg_acc), $(dev_ins[1].map)")
+				info("TestIt: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+			else
+				info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+			end
 
-			info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+			info("ep: $(i), trn loss: $(trnloss)")
+			
 			if patience >= args["patience1"]
 				break
 			end
@@ -182,19 +212,36 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 		sofarbest = 0.0
 		if args["pg"] != 0
 			prms_rl = initparams(w; args=args)
-			train_data = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[1])
-			append!(train_data, map(ins-> (ins, ins_arr(d["vocab"], ins.text)), train_ins[2]))
+			train_data = map(ins-> (ins, ins_arr(vocab, ins.text)), train_ins[1])
+			append!(train_data, map(ins-> (ins, ins_arr(vocab, ins.text)), train_ins[2]))
 	
 			for i=1:args["pg"]
-				@time lss = train_pg(w, prms_rl, train_data, d["maps"]; args=args)
-				@time tst_acc = test(w, test_data, d["maps"]; args=args)
-				@time tst_prg_acc = test_paragraph(w, test_data_grp, d["maps"]; args=args)
-				@time trnloss = train_loss(w, train_data; args=args)
+				@time lss = train_pg(w, prms_rl, train_data, maps; args=args)
+				@time tst_acc = test(w, test_data, maps; args=args)
+				@time tst_prg_acc = test_paragraph(w, test_data_grp, maps; args=args)
+				@time trnloss = train_loss(w, trn_data; args=args)
 
-				info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
-				info("PGEp: $(i), trn loss: $(trnloss)")
+				dev_acc = 0
+				dev_prg_acc = 0
+
+				if args["vDev"]
+					@time dev_acc = test(w, dev_data, maps; args=args)
+					@time dev_prg_acc = test_paragraph(w, dev_data_grp, maps; args=args)
+				end
+				
+				if args["vDev"]
+					info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(dev_acc), paragraph acc: $(dev_prg_acc), $(dev_ins[1].map)")
+					info("PGTestIt: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+				else
+					info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+				end
+
+				info("PGep: $(i), trn loss: $(trnloss)")
 
 				tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
+				tunefordev = args["tunefor"] == "single" ? dev_acc : dev_prg_acc
+				tunefor = args["vDev"] ? tunefordev : tunefor
+
 				if tunefor > sofarbest
 					sofarbest = tunefor
 					patience = 0
@@ -203,8 +250,7 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 				else
 					patience += 1
 				end
-
-				info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+				
 				if patience >= args["patience2"]
 					break
 				end
@@ -214,24 +260,49 @@ function execute(trainfile, test_ins, args; train_ins=nothing)
 	end
 end
 
+function get_maps()
+	fname = "data/maps/map-grid.json"
+	grid = getmap(fname)
+
+	fname = "data/maps/map-jelly.json"
+	jelly = getmap(fname)
+
+	fname = "data/maps/map-l.json"
+	l = getmap(fname)
+
+	maps = Dict("Grid" => grid, "Jelly" => jelly, "L" => l)
+	return maps
+end
+
 function main()
 	Logging.configure(filename=args["log"])
 	Logging.configure(level=INFO)
 	srand(12345)
 	info("*** Parameters ***")
 	for k in keys(args); info("$k -> $(args[k])"); end
-
+	
 	grid, jelly, l = getallinstructions()
+	lg = length(grid)
+	lj = length(jelly)
+	ll = length(l)
+	dg = args["vDev"] ? floor(Int, lg*0.1) : 0
+	dj = args["vDev"] ? floor(Int, lj*0.1) : 0
+	dl = args["vDev"] ? floor(Int, ll*0.1) : 0
+
+	trainins = [(grid[(dg+1):end], jelly[(dj+1):end]), (grid[(dg+1):end], l[(dl+1):end]), (jelly[(dj+1):end], l[(dl+1):end])]
 	testins = [l, jelly, grid]
+	devins = args["vDev"] ? [vcat(grid[1:dg], jelly[1:dj]), vcat(grid[1:dg], l[1:dg]), vcat(jelly[1:dj], l[1:dl])] : nothing
+	maps = get_maps()
 
-	trainins = args["pg"] == 0 ? [nothing, nothing, nothing] : [(grid, jelly), (grid, l), (l, jelly)]
-
+	vocab = !args["charenc"] ? build_dict(vcat(grid, jelly, l)) : build_char_dict(voc_ins)
+	info("\nVocab: $(length(vocab))")
+	
 	for i in args["order"]
-		args["save"] = string(args["save"], "_", args["trainfiles"][i])
+		args["save"] = string(split(args["save"],"_")[1], "_", args["trainfiles"][i])
 		if args["load"] != ""
-			args["load"] = string(args["load"], "_", args["trainfiles"][i])
+			args["load"] = string(split(args["load"],"_")[1], "_", args["trainfiles"][i])
 		end
-		execute(args["trainfiles"][i], testins[i], args; train_ins=trainins[i])
+		execute(trainins[i], testins[i], maps, vocab, args; dev_ins=devins[i])
 	end
 end
 
