@@ -2,7 +2,7 @@ include("util.jl")
 using ArgParse, DataFrames, Query
 
 MapSize = Dict("Grid"=>874, "Jelly"=>1293, "L"=>1070, "Total"=>3237)
-MapSizeP = Dict("Grid"=>223, "Jelly"=>241, "L"=>235, "Total"=>699)
+MapSizeP = Dict("Grid"=>224, "Jelly"=>242, "L"=>236, "Total"=>702)
 
 function log2csv(fname)
 	df = DataFrame(epochtype = [], epoch = [], loss_reward = [], single = [], paragraph = [], map = [])
