@@ -75,12 +75,15 @@ function decode(weight1, bias1, soft_w1, soft_w2, soft_w3, soft_b, state, x,
 	#return q * soft_w3
 end
 
-
-function sample(linear)
+function probs(linear)
 	linear = linear .- maximum(linear, 2)
-	probs = exp(linear) ./ sum(exp(linear), 2)
-	info("Probs: $probs")
-	c_probs = cumsum(probs, 2)
+	ps = exp(linear) ./ sum(exp(linear), 2)
+	return ps
+end
+
+function sample(ps)
+	info("Probs: $ps")
+	c_probs = cumsum(ps, 2)
 	return indmax(c_probs .> rand())
 end
 
@@ -222,8 +225,9 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			weights["soft_w3"], weights["soft_b"], state, x, mask)
 
 			Xs = Xs == nothing ? state[5] : vcat(Xs, state[5])
-
-			a = sample(Array(ypred))
+			
+			ps = probs(Array(ypred))
+			a = sample(ps)
 			info("Sampled: $a")
 			action = zeros(Float32, 1, 4)
 			action[1, a] = 1.0
@@ -337,7 +341,6 @@ function train_loss(w, data; args=nothing)
 	return lss / cnt
 end
 
-
 function test(weights, data, maps; args=nothing)
 	scss = 0.0
 	mask = convert(KnetArray, ones(Float32, 1,1))
@@ -364,7 +367,13 @@ function test(weights, data, maps; args=nothing)
 
 			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
 			weights["soft_w3"], weights["soft_b"], state, x, mask)
-			action = indmax(Array(ypred))
+			action = 0
+			if args["greedy"]
+				action = indmax(Array(ypred))
+			else
+				ps = probs(Array(ypred))
+				action = sample(ps)
+			end
 			push!(actions, action)
 			current = getlocation(maps[instruction.map], current, action)
 			nactions += 1
@@ -420,7 +429,15 @@ function test_paragraph(weights, groups, maps; args=nothing)
 
 				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
 				weights["soft_w3"], weights["soft_b"], state, x, mask)
-				action = indmax(Array(ypred))
+				
+				action = 0
+				if args["greedy"]
+					action = indmax(Array(ypred))
+				else
+					ps = probs(Array(ypred))
+					action = sample(ps)
+				end
+
 				push!(actions, action)
 				current = getlocation(maps[instruction.map], current, action)
 				nactions += 1
@@ -520,3 +537,167 @@ function initstate(atype, hidden, batchsize, length)
 
 	return state
 end
+
+function test_ensemble(models, data, maps; args=nothing)
+	scss = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
+
+	for (instruction, words) in data
+		words = map(v->convert(KnetArray{Float32},v), words)
+		states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+		
+		for i=1:length(models)
+			weights = models[i]
+			state = states[i]
+			encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+		
+			state[5] = hcat(state[1][end], state[3][end])
+			state[6] = hcat(state[2][end], state[4][end])
+		end
+	
+		current = instruction.path[1]
+		nactions = 0
+		stop = false
+		
+		actions = Any[]
+
+		while !stop
+			view = state_agent_centric_multihot(maps[instruction.map], current)
+			view = convert(KnetArray{Float32}, view)
+
+			cum_ps = zeros(Float32, 1, 4)
+
+			for i=1:length(models)
+				weights = models[i]
+				state = states[i]
+				
+				x = spatial(weights["emb_world"], view)
+
+				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
+				weights["soft_w3"], weights["soft_b"], state, x, mask)
+				
+				ps = probs(Array(ypred))
+				cum_ps += ps
+			end
+
+			cum_ps = cum_ps ./ length(models)
+
+			action = 0
+			if args["greedy"]
+				action = indmax(cum_ps)
+			else
+				action = sample(cum_ps)
+			end
+			push!(actions, action)
+			current = getlocation(maps[instruction.map], current, action)
+			nactions += 1
+
+			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+		end
+		
+		info("$(instruction.text)")
+		info("Path: $(instruction.path)")
+		info("Filename: $(instruction.fname)")
+
+		info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+		info("Current: $(current)")
+
+		if current == instruction.path[end]
+			scss += 1
+			info("SUCCESS\n")
+		else
+			info("FAILURE\n")
+		end
+	end
+
+	return scss / length(data)
+end
+
+function test_paragraph_ensemble(models, groups, maps; args=nothing)
+	scss = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
+
+	for data in groups
+		info("\nNew paragraph")
+		current = data[1][1].path[1]
+		
+		for i=1:length(data)
+			instruction, words = data[i]
+			words = map(v->convert(KnetArray{Float32},v), words)
+			states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+			
+			for i=1:length(models)
+				weights = models[i]
+				state = states[i]
+				encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+
+				state[5] = hcat(state[1][end], state[3][end])
+				state[6] = hcat(state[2][end], state[4][end])
+			end
+
+			nactions = 0
+			stop = false
+		
+			actions = Any[]
+			action = 0
+
+			while !stop
+				view = state_agent_centric_multihot(maps[instruction.map], current)
+				view = convert(KnetArray{Float32}, view)
+
+				cum_ps = zeros(Float32, 1, 4)
+				for i=1:length(models)
+					weights = models[i]
+					state = states[i]
+
+					x = spatial(weights["emb_world"], view)
+
+					ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
+					weights["soft_w3"], weights["soft_b"], state, x, mask)
+
+					ps = probs(Array(ypred))
+					cum_ps += ps
+				end
+
+				cum_ps = cum_ps ./ length(models)
+
+				action = 0
+				if args["greedy"]
+					action = indmax(cum_ps)
+				else
+					action = sample(cum_ps)
+				end
+
+				push!(actions, action)
+				current = getlocation(maps[instruction.map], current, action)
+				nactions += 1
+
+				stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+			end
+		
+			info("$(instruction.text)")
+			info("Path: $(instruction.path)")
+			info("Filename: $(instruction.fname)")
+
+			info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+			info("Current: $(current)")
+
+			if action != 4
+				info("FAILURE")
+				break
+			end
+
+			if i == length(data)
+				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
+					scss += 1
+					info("SUCCESS\n")
+				else
+					info("FAILURE\n")
+				end
+			end
+		end
+	end
+
+	return scss / length(groups)
+end
+
