@@ -54,6 +54,11 @@ function parse_commandline()
 			nargs = '+'
 			default = [0.2, 0.5, 0.5]
 			arg_type = Float64
+		"--pdrops_dec"
+			help = "dropout rates"
+			nargs = '+'
+			default = [0.2, 0.5, 0.5]
+			arg_type = Float64
 		"--bs"
 			help = "batch size"
 			default = 100
@@ -127,6 +132,14 @@ function parse_commandline()
 		"--encoding"
 			help = "grid or multihot"
 			default = "grid"
+		"--greedy"
+			help = "deterministic or stochastic policy"
+			action = :store_true
+		"--seed"
+			help = "seed number"
+			arg_type = Int
+			default = 12345
+
 	end
 	return parse_args(s)
 end		
@@ -163,6 +176,8 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 	#prms_sp = initparams(w; args=args)
 	#prms_rl = initparams(w; args=args)
 
+	globalbest = 0.0
+
 	for it=1:args["iterative"]
 		prms_sp = initparams(w; args=args)
 		patience = 0
@@ -170,16 +185,16 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 		for i=1:args["epoch"]
 			shuffle!(trn_data)
 			@time lss = train(w, prms_sp, trn_data; args=args)
-			@time tst_acc = test(w, test_data, maps; args=args)
-			@time tst_prg_acc = test_paragraph(w, test_data_grp, maps; args=args)
-			@time trnloss = train_loss(w, trn_data; args=args)
+			@time tst_acc = test([w], test_data, maps; args=args)
+			@time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)
+			#@time trnloss = train_loss(w, trn_data; args=args)
 			
 			dev_acc = 0
 			dev_prg_acc = 0
 
 			if args["vDev"]
-				@time dev_acc = test(w, dev_data, maps; args=args)
-				@time dev_prg_acc = test_paragraph(w, dev_data_grp, maps; args=args)
+				@time dev_acc = test([w], dev_data, maps; args=args)
+				@time dev_prg_acc = test_paragraph([w], dev_data_grp, maps; args=args)
 			end
 			
 			tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
@@ -189,8 +204,11 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 			if tunefor > sofarbest
 				sofarbest = tunefor
 				patience = 0
-				info("Saving the model...")
-				savemodel(w, args["save"])
+				if sofarbest > globalbest
+					globalbest = sofarbest
+					info("Saving the model...")
+					savemodel(w, args["save"])
+				end
 			else
 				patience += 1
 			end
@@ -202,7 +220,7 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 				info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
 			end
 
-			info("ep: $(i), trn loss: $(trnloss)")
+			#info("ep: $(i), trn loss: $(trnloss)")
 			
 			if patience >= args["patience1"]
 				break
@@ -217,16 +235,16 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 	
 			for i=1:args["pg"]
 				@time lss = train_pg(w, prms_rl, train_data, maps; args=args)
-				@time tst_acc = test(w, test_data, maps; args=args)
-				@time tst_prg_acc = test_paragraph(w, test_data_grp, maps; args=args)
-				@time trnloss = train_loss(w, trn_data; args=args)
+				@time tst_acc = test([w], test_data, maps; args=args)
+				@time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)
+				#@time trnloss = train_loss(w, trn_data; args=args)
 
 				dev_acc = 0
 				dev_prg_acc = 0
 
 				if args["vDev"]
-					@time dev_acc = test(w, dev_data, maps; args=args)
-					@time dev_prg_acc = test_paragraph(w, dev_data_grp, maps; args=args)
+					@time dev_acc = test([w], dev_data, maps; args=args)
+					@time dev_prg_acc = test_paragraph([w], dev_data_grp, maps; args=args)
 				end
 				
 				if args["vDev"]
@@ -236,7 +254,7 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 					info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
 				end
 
-				info("PGep: $(i), trn loss: $(trnloss)")
+				#info("PGep: $(i), trn loss: $(trnloss)")
 
 				tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
 				tunefordev = args["tunefor"] == "single" ? dev_acc : dev_prg_acc
@@ -245,8 +263,11 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 				if tunefor > sofarbest
 					sofarbest = tunefor
 					patience = 0
-					info("Saving the model...")
-					savemodel(w, args["save"])
+					if sofarbest > globalbest
+						globalbest = sofarbest
+						info("Saving the model...")
+						savemodel(w, args["save"])
+					end
 				else
 					patience += 1
 				end
@@ -277,7 +298,7 @@ end
 function main()
 	Logging.configure(filename=args["log"])
 	Logging.configure(level=INFO)
-	srand(12345)
+	srand(args["seed"])
 	info("*** Parameters ***")
 	for k in keys(args); info("$k -> $(args[k])"); end
 	
@@ -296,9 +317,10 @@ function main()
 
 	vocab = !args["charenc"] ? build_dict(vcat(grid, jelly, l)) : build_char_dict(voc_ins)
 	info("\nVocab: $(length(vocab))")
-	
+
+	base_s = args["save"]
 	for i in args["order"]
-		args["save"] = string(split(args["save"],"_")[1], "_", args["trainfiles"][i])
+		args["save"] = string(base_s, "_", args["trainfiles"][i])
 		if args["load"] != ""
 			args["load"] = string(split(args["load"],"_")[1], "_", args["trainfiles"][i])
 		end
