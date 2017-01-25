@@ -341,6 +341,7 @@ function train_loss(w, data; args=nothing)
 	return lss / cnt
 end
 
+#=
 function test(weights, data, maps; args=nothing)
 	scss = 0.0
 	mask = convert(KnetArray, ones(Float32, 1,1))
@@ -470,7 +471,7 @@ function test_paragraph(weights, groups, maps; args=nothing)
 
 	return scss / length(groups)
 end
-
+=#
 
 function initweights(atype, hidden, vocab, embed, onehotworld)
 	weights = Dict()
@@ -538,7 +539,7 @@ function initstate(atype, hidden, batchsize, length)
 	return state
 end
 
-function test_ensemble(models, data, maps; args=nothing)
+function test(models, data, maps; args=nothing)
 	scss = 0.0
 	mask = convert(KnetArray, ones(Float32, 1,1))
 
@@ -613,7 +614,7 @@ function test_ensemble(models, data, maps; args=nothing)
 	return scss / length(data)
 end
 
-function test_paragraph_ensemble(models, groups, maps; args=nothing)
+function test_paragraph(models, groups, maps; args=nothing)
 	scss = 0.0
 	mask = convert(KnetArray, ones(Float32, 1,1))
 
@@ -621,8 +622,8 @@ function test_paragraph_ensemble(models, groups, maps; args=nothing)
 		info("\nNew paragraph")
 		current = data[1][1].path[1]
 		
-		for i=1:length(data)
-			instruction, words = data[i]
+		for indx=1:length(data)
+			instruction, words = data[indx]
 			words = map(v->convert(KnetArray{Float32},v), words)
 			states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
 			
@@ -687,7 +688,7 @@ function test_paragraph_ensemble(models, groups, maps; args=nothing)
 				break
 			end
 
-			if i == length(data)
+			if indx == length(data)
 				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
 					scss += 1
 					info("SUCCESS\n")
