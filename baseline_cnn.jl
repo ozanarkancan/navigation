@@ -232,7 +232,8 @@ function train_pg(weights, prms, data, maps; args=nothing)
 
 			Xs = Xs == nothing ? state[5] : vcat(Xs, state[5])
 
-			a = sample(Array(ypred))
+			ps = probs(Array(ypred))
+			a = sample(ps)
 			info("Sampled: $a")
 			action = zeros(Float32, 1, 4)
 			action[1, a] = 1.0

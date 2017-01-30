@@ -312,7 +312,7 @@ function main()
 
 	trainins = [(grid[(dg+1):end], jelly[(dj+1):end]), (grid[(dg+1):end], l[(dl+1):end]), (jelly[(dj+1):end], l[(dl+1):end])]
 	testins = [l, jelly, grid]
-	devins = args["vDev"] ? [vcat(grid[1:dg], jelly[1:dj]), vcat(grid[1:dg], l[1:dg]), vcat(jelly[1:dj], l[1:dl])] : nothing
+	devins = args["vDev"] ? [vcat(grid[1:dg], jelly[1:dj]), vcat(grid[1:dg], l[1:dg]), vcat(jelly[1:dj], l[1:dl])] : [nothing, nothing, nothing]
 	maps = get_maps()
 
 	vocab = !args["charenc"] ? build_dict(vcat(grid, jelly, l)) : build_char_dict(voc_ins)
