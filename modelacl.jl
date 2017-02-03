@@ -1,6 +1,5 @@
 using Knet, AutoGrad, Logging
 
-srand(12345)
 include("inits.jl")
 
 function spatial(filters1, bias1, filters2, bias2, filters3, bias3, emb, x)
@@ -485,7 +484,8 @@ function test_paragraph(models, groups, maps; args=nothing)
 					x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"],
 						weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
 					att,att_s = attention(state, weights["attention_w"], weights["attention_v"])
-					ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
+					ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], 
+						weights["soft_w2"], weights["soft_w3"], weights["soft_b"], state, x, mask, att)
 					cum_ps += probs(Array(ypred))
 					info("Attention: $(Array(att_s))")
 				end

@@ -251,10 +251,18 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			action[1, a] = 1.0
 
 			push!(actions, convert(KnetArray, action))
+			prev = current
 			current = getlocation(maps[instruction.map], current, a)
 			nactions += 1
 
-			if nactions > args["limactions"] || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+			nowall = false
+			if action == 1
+				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
+			end
+			current = getlocation(maps[instruction.map], current, a)
+			nactions += 1
+
+			if nactions > args["limactions"] || nowall
 				stop = true
 				push!(rewards, -1.0)
 			elseif a == 4
@@ -358,138 +366,6 @@ function train_loss(w, data; args=nothing)
 	end
 	return lss / cnt
 end
-
-#=
-function test(weights, data, maps; args=nothing)
-	scss = 0.0
-	mask = convert(KnetArray, ones(Float32, 1,1))
-
-	for (instruction, words) in data
-		words = map(v->convert(KnetArray{Float32},v), words)
-		state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
-		
-		encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
-		
-		state[5] = hcat(state[1][end], state[3][end])
-		state[6] = hcat(state[2][end], state[4][end])
-	
-		current = instruction.path[1]
-		nactions = 0
-		stop = false
-		
-		actions = Any[]
-
-		while !stop
-			view = state_agent_centric_multihot(maps[instruction.map], current)
-			view = convert(KnetArray{Float32}, view)
-			x = spatial(weights["emb_world"], view)
-
-			ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
-			weights["soft_w3"], weights["soft_b"], state, x, mask)
-			action = 0
-			if args["greedy"]
-				action = indmax(Array(ypred))
-			else
-				ps = probs(Array(ypred))
-				action = sample(ps)
-			end
-			push!(actions, action)
-			current = getlocation(maps[instruction.map], current, action)
-			nactions += 1
-
-			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
-		end
-		
-		info("$(instruction.text)")
-		info("Path: $(instruction.path)")
-		info("Filename: $(instruction.fname)")
-
-		info("Actions: $(reshape(collect(actions), 1, length(actions)))")
-		info("Current: $(current)")
-
-		if current == instruction.path[end]
-			scss += 1
-			info("SUCCESS\n")
-		else
-			info("FAILURE\n")
-		end
-	end
-
-	return scss / length(data)
-end
-
-function test_paragraph(weights, groups, maps; args=nothing)
-	scss = 0.0
-	mask = convert(KnetArray, ones(Float32, 1,1))
-
-	for data in groups
-		info("\nNew paragraph")
-		current = data[1][1].path[1]
-		
-		for i=1:length(data)
-			instruction, words = data[i]
-			words = map(v->convert(KnetArray{Float32},v), words)
-			state = initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words))
-		
-			encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
-			state[5] = hcat(state[1][end], state[3][end])
-			state[6] = hcat(state[2][end], state[4][end])
-
-			nactions = 0
-			stop = false
-		
-			actions = Any[]
-			action = 0
-
-			while !stop
-				view = state_agent_centric_multihot(maps[instruction.map], current)
-				view = convert(KnetArray{Float32}, view)
-				x = spatial(weights["emb_world"], view)
-
-				ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
-				weights["soft_w3"], weights["soft_b"], state, x, mask)
-				
-				action = 0
-				if args["greedy"]
-					action = indmax(Array(ypred))
-				else
-					ps = probs(Array(ypred))
-					action = sample(ps)
-				end
-
-				push!(actions, action)
-				current = getlocation(maps[instruction.map], current, action)
-				nactions += 1
-
-				stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
-			end
-		
-			info("$(instruction.text)")
-			info("Path: $(instruction.path)")
-			info("Filename: $(instruction.fname)")
-
-			info("Actions: $(reshape(collect(actions), 1, length(actions)))")
-			info("Current: $(current)")
-
-			if action != 4
-				info("FAILURE")
-				break
-			end
-
-			if i == length(data)
-				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
-					scss += 1
-					info("SUCCESS\n")
-				else
-					info("FAILURE\n")
-				end
-			end
-		end
-	end
-
-	return scss / length(groups)
-end
-=#
 
 function initweights(atype, hidden, vocab, embed, onehotworld)
 	weights = Dict()
@@ -611,10 +487,16 @@ function test(models, data, maps; args=nothing)
 				action = sample(cum_ps)
 			end
 			push!(actions, action)
+			prev = current
 			current = getlocation(maps[instruction.map], current, action)
 			nactions += 1
 
-			stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+			nowall = false
+			if action == 1
+				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
+			end
+
+			stop = nactions > args["limactions"] || action == 4 || nowall
 		end
 		
 		info("$(instruction.text)")
@@ -691,10 +573,16 @@ function test_paragraph(models, groups, maps; args=nothing)
 				end
 
 				push!(actions, action)
+				prev = current
 				current = getlocation(maps[instruction.map], current, action)
 				nactions += 1
 
-				stop = nactions > args["limactions"] || action == 4 || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
+				nowall = false
+				if action == 1
+					nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
+				end
+
+				stop = nactions > args["limactions"] || action == 4 || nowall
 			end
 		
 			info("$(instruction.text)")
@@ -723,3 +611,263 @@ function test_paragraph(models, groups, maps; args=nothing)
 	return scss / length(groups)
 end
 
+function test_beam(models, data, maps; args=nothing)
+	beamsize = args["beamsize"]
+
+	scss = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
+
+	for (instruction, words) in data
+		words = map(v->convert(KnetArray{Float32},v), words)
+		states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+
+		for i=1:length(models)
+			weights = models[i]
+			state = states[i]
+			encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"],
+				weights["emb_word"], state, words)
+
+			state[5] = hcat(state[1][end], state[3][end])
+			state[6] = hcat(state[2][end], state[4][end])
+		end
+		cstate5 = Any[]
+		cstate6 = Any[]
+		for m=1:length(models)
+			push!(cstate5, copy(states[m][5]))
+			push!(cstate6, copy(states[m][6]))
+		end
+
+		current = instruction.path[1]
+		cands = Any[(1.0, cstate5, cstate6, current, 0, Any[-1])]
+
+		nactions = 0
+		stop = false
+		stopsearch = false
+
+		while !stopsearch
+			newcands = Any[]
+			newcand = false
+			for cand in cands
+				current = cand[4]
+				for m=1:length(models)
+					states[m][5] = copy(cand[2][m])
+					states[m][6] = copy(cand[3][m])
+				end
+				depth = cand[5]
+				prevActions = cand[end]
+				lastAction = prevActions[end]
+
+				if lastAction == 4
+					push!(newcands, cand)
+					continue
+				end
+
+				view = state_agent_centric_multihot(maps[instruction.map], current)
+				view = convert(KnetArray{Float32}, view)
+
+				cum_ps = zeros(Float32, 1, 4)
+
+				for i=1:length(models)
+					weights = models[i]
+					state = states[i]
+
+					x = spatial(weights["emb_world"], view)
+					att,_ = attention(state, weights["attention_w"], weights["attention_v"])
+					ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
+						weights["soft_w3"], weights["soft_b"], state, x, mask, att)
+
+					ps = probs(Array(ypred))
+					cum_ps += ps
+				end
+
+				cum_ps = cum_ps ./ length(models)
+
+				for i=1:4
+					nactions = depth + 1
+					actcopy = copy(prevActions)
+					if nactions > args["limactions"] && i < 4
+						continue
+					end
+					push!(actcopy, i)
+					cur = identity(current)
+					if i < 4
+						cur = getlocation(maps[instruction.map], cur, i)
+					end
+
+					if i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))
+						continue
+					end
+
+					cstate5 = Any[]
+					cstate6 = Any[]
+					for m=1:length(models)
+						push!(cstate5, copy(states[m][5]))
+						push!(cstate6, copy(states[m][6]))
+					end
+
+					push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, actcopy))
+					newcand = true
+				end
+			end
+			stopsearch = !newcand
+			if !stopsearch
+				sort!(newcands; by=x->x[1], rev=true)
+				l = length(newcands) < beamsize ? length(newcands) : beamsize
+				cands = newcands[1:l]
+			end
+		end
+		current = cands[1][4]
+		actions = cands[1][end]
+		info("$(instruction.text)")
+		info("Path: $(instruction.path)")
+		info("Filename: $(instruction.fname)")
+
+		info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+		info("Current: $(current)")
+
+		if current == instruction.path[end]
+			scss += 1
+			info("SUCCESS\n")
+		else
+			info("FAILURE\n")
+		end
+	end
+
+	return scss / length(data)
+end
+
+function test_paragraph_beam(models, groups, maps; args=nothing)
+	beamsize = args["beamsize"]
+
+	scss = 0.0
+	mask = convert(KnetArray, ones(Float32, 1,1))
+
+	for data in groups
+		info("\nNew paragraph")
+		current = data[1][1].path[1]
+		for indx=1:length(data)
+			instruction, words = data[indx]
+			words = map(v->convert(KnetArray{Float32},v), words)
+			states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+
+			for i=1:length(models)
+				weights = models[i]
+				state = states[i]
+				encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+
+				state[5] = hcat(state[1][end], state[3][end])
+				state[6] = hcat(state[2][end], state[4][end])
+			end
+			cstate5 = Any[]
+			cstate6 = Any[]
+			for m=1:length(models)
+				push!(cstate5, copy(states[m][5]))
+				push!(cstate6, copy(states[m][6]))
+			end
+
+			cands = Any[(1.0, cstate5, cstate6, current, 0, Any[-1])]
+
+			nactions = 0
+			stop = false
+			stopsearch = false
+
+			while !stopsearch
+				newcands = Any[]
+				newcand = false
+				for cand in cands
+					current = cand[4]
+					for m=1:length(models)
+						states[m][5] = copy(cand[2][m])
+						states[m][6] = copy(cand[3][m])
+					end
+					depth = cand[5]
+					prevActions = cand[end]
+					lastAction = prevActions[end]
+
+					if lastAction == 4
+						push!(newcands, cand)
+						continue
+					end
+
+					view = state_agent_centric_multihot(maps[instruction.map], current)
+					view = convert(KnetArray{Float32}, view)
+
+					cum_ps = zeros(Float32, 1, 4)
+
+					for i=1:length(models)
+						weights = models[i]
+						state = states[i]
+
+						x = spatial(weights["emb_world"], view)
+						att,_ = attention(state, weights["attention_w"], weights["attention_v"])
+						ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
+							weights["soft_w3"], weights["soft_b"], state, x, mask, att)
+
+						ps = probs(Array(ypred))
+						cum_ps += ps
+					end
+
+					cum_ps = cum_ps ./ length(models)
+
+					for i=1:4
+						nactions = depth + 1
+						actcopy = copy(prevActions)
+						if nactions > args["limactions"] && i < 4
+							continue
+						end
+						push!(actcopy, i)
+						cur = identity(current)
+						if i < 4
+							cur = getlocation(maps[instruction.map], cur, i)
+						end
+
+						if i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))
+							continue
+						end
+
+						cstate5 = Any[]
+						cstate6 = Any[]
+						for m=1:length(models)
+							push!(cstate5, copy(states[m][5]))
+							push!(cstate6, copy(states[m][6]))
+						end
+
+						push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, actcopy))
+						newcand = true
+					end
+				end
+				stopsearch = !newcand
+				if !stopsearch
+					sort!(newcands; by=x->x[1], rev=true)
+					l = length(newcands) < beamsize ? length(newcands) : beamsize
+					cands = newcands[1:l]
+				end
+			end
+			current = cands[1][4]
+			actions = cands[1][end]
+
+			info("$(instruction.text)")
+			info("Path: $(instruction.path)")
+			info("Filename: $(instruction.fname)")
+
+			info("Actions: $(reshape(collect(actions), 1, length(actions)))")
+			info("Current: $(current)")
+
+			if actions[end] != 4
+				info("FAILURE")
+				break
+			end
+
+			if indx == length(data)
+				if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
+					scss += 1
+					info("SUCCESS\n")
+				else
+					info("FAILURE\n")
+				end
+			end
+		end
+	end
+
+	return scss / length(groups)
+end
