@@ -260,7 +260,6 @@ function train_pg(weights, prms, data, maps; args=nothing)
 				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
 			end
 			current = getlocation(maps[instruction.map], current, a)
-			nactions += 1
 
 			if nactions > args["limactions"] || nowall
 				stop = true
