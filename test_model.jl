@@ -74,6 +74,10 @@ function parse_commandline()
 		"--greedy"
 			help = "deterministic or stochastic policy"
 			action = :store_true
+		"--seed"
+			help = "seed"
+			default = 12345
+			arg_type = Int
 	end
 	return parse_args(s)
 end		
@@ -99,7 +103,7 @@ end
 function main()
 	Logging.configure(filename=args["log"])
 	Logging.configure(level=INFO)
-	srand(12345)
+	srand(args["seed"])
 	info("*** Parameters ***")
 	for k in keys(args); info("$k -> $(args[k])"); end
 	

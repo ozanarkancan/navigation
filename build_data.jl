@@ -16,17 +16,17 @@ function main()
 	t = Instruction[]
 	append!(t, grid)
 	append!(t, jelly)
-	build_data(t, l, "grid_jelly.jld"; charenc=false, encoding=args["encoding"])
+	build_data(t, l, "grid_jelly2.jld"; charenc=false, encoding=args["encoding"])
 
 	t2 = Instruction[]
 	append!(t2, grid)
 	append!(t2, l)
-	build_data(t2, jelly, "grid_l.jld"; charenc=false, encoding=args["encoding"])
+	build_data(t2, jelly, "grid_l2.jld"; charenc=false, encoding=args["encoding"])
 
 	t3 = Instruction[]
 	append!(t3, l)
 	append!(t3, jelly)
-	build_data(t3, grid, "l_jelly.jld"; charenc=false, encoding=args["encoding"])
+	build_data(t3, grid, "l_jelly2.jld"; charenc=false, encoding=args["encoding"])
 end
 
 main()
