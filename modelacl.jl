@@ -288,8 +288,13 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			prev = current
 			current = getlocation(maps[instruction.map], current, a)
 			nactions += 1
-			
-			if nactions > args["limactions"] || !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
+
+			nowall = false
+			if action == 1
+				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
+			end
+
+			if nactions > args["limactions"] || nowall
 				stop = true
 				push!(rewards, -1.0)
 			elseif a == 4
@@ -420,7 +425,7 @@ function test(models, data, maps; args=nothing)
 			nactions += 1
 
 			nowall = false
-			if action == 4
+			if action == 1
 				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
 			end
 
@@ -498,7 +503,7 @@ function test_paragraph(models, groups, maps; args=nothing)
 				nactions += 1
 
 				nowall = false
-				if action == 4
+				if action == 1
 					nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
 				end
 
