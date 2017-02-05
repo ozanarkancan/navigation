@@ -18,5 +18,7 @@ for w in keys(vocab)
 	emb[w] = getvec(model, w)
 end
 
+emb["unk"] = getvec(model, "unk")
+
 println("Saving...")
 save("data/embeddings.jld", "vectors", emb)
