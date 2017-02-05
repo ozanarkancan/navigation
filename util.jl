@@ -52,6 +52,21 @@ function ins_arr(d, ins)
 	return arr
 end
 
+#converts tokens to embeddings
+function ins_arr_embed(embeds, d, ins)
+	arr = Any[]
+	vocablength = length(d)
+
+	for w in ins
+		for t in split(w, "-")
+			vec = haskey(d, t) ? transpose(embeds[t]) : transpose(embeds["unk"])
+			push!(arr, vec)
+		end
+	end
+
+	return arr
+end
+
 #converts chars to onehots
 function ins_char_arr(d, ins)
 	arr = Any[]
