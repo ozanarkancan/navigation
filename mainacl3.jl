@@ -152,6 +152,7 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 	data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"]), vcat(train_ins[1], train_ins[2]))
 	trn_data = minibatch(data;bs=args["bs"])
 
+	train_data = map(ins-> (ins, ins_arr(vocab, ins.text)), train_ins[1])
 	vdims = size(trn_data[1][2][1])
 	
 	info("\nWorld: $(vdims)")
@@ -168,6 +169,8 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 
 	dev_data = dev_ins != nothing ? map(ins -> (ins, ins_arr(vocab, ins.text)), dev_ins) : nothing
 	dev_data_grp = dev_ins != nothing ? map(x -> map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(dev_ins)) : nothing
+	data = dev_ins != nothing ? map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"]), dev_ins) : nothing
+	dev_d = minibatch(data;bs=args["bs"])
 
 	test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
 	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
@@ -185,16 +188,19 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 		for i=1:args["epoch"]
 			shuffle!(trn_data)
 			@time lss = train(w, prms_sp, trn_data; args=args)
+			@time train_acc = test([w], train_data, maps; args=args)
 			@time tst_acc = test([w], test_data, maps; args=args)
 			@time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)
-			#@time trnloss = train_loss(w, trn_data; args=args)
+			@time trnloss = train_loss(w, trn_data; args=args)
 			
 			dev_acc = 0
 			dev_prg_acc = 0
+			dev_loss = 0
 
 			if args["vDev"]
 				@time dev_acc = test([w], dev_data, maps; args=args)
 				@time dev_prg_acc = test_paragraph([w], dev_data_grp, maps; args=args)
+				@time dev_loss = train_loss(w, dev_d; args=args)
 			end
 			
 			tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
@@ -214,12 +220,14 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 			end
 			
 			if args["vDev"]
-				info("Epoch: $(i), trn loss: $(lss), single acc: $(dev_acc), paragraph acc: $(dev_prg_acc), $(dev_ins[1].map)")
-				info("TestIt: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+				info("Epoch: $(i), trn loss: $(lss) , single acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
+				info("TestIt: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
+				info("Losses: $(i), trn loss: $(trnloss) , single acc: $(dev_loss) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
 			else
-				info("Epoch: $(i), trn loss: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+				info("Epoch: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
 			end
 
+			info("Train: $(i) , trn acc: $(train_acc)")
 			#info("ep: $(i), trn loss: $(trnloss)")
 			
 			if patience >= args["patience1"]
@@ -229,14 +237,18 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 		
 		sofarbest = 0.0
 		if args["pg"] != 0
+			if args["load"] != ""
+				w = loadmodel(args["load"])
+			end
 			prms_rl = initparams(w; args=args)
-			train_data = map(ins-> (ins, ins_arr(vocab, ins.text)), train_ins[1])
 			append!(train_data, map(ins-> (ins, ins_arr(vocab, ins.text)), train_ins[2]))
+			#args["greedy"] = false
 	
 			for i=1:args["pg"]
 				@time lss = train_pg(w, prms_rl, train_data, maps; args=args)
 				@time tst_acc = test([w], test_data, maps; args=args)
 				@time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)
+				@time train_acc = test([w], train_data, maps; args=args)
 				#@time trnloss = train_loss(w, trn_data; args=args)
 
 				dev_acc = 0
@@ -248,12 +260,13 @@ function execute(train_ins, test_ins, maps, vocab, args; dev_ins=nothing)
 				end
 				
 				if args["vDev"]
-					info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(dev_acc), paragraph acc: $(dev_prg_acc), $(dev_ins[1].map)")
-					info("PGTestIt: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+					info("PGEpoch: $(i) , avg total_rewards: $(lss) , single acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
+					info("PGTestIt: $(i) , avg total_rewards: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
 				else
-					info("PGEpoch: $(i), avg total_rewards: $(lss), single acc: $(tst_acc), paragraph acc: $(tst_prg_acc), $(test_ins[1].map)")
+					info("PGEpoch: $(i) , avg total_rewards: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
 				end
 
+				info("Train: $(i) , trn acc: $(train_acc)")
 				#info("PGep: $(i), trn loss: $(trnloss)")
 
 				tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
@@ -319,11 +332,12 @@ function main()
 	info("\nVocab: $(length(vocab))")
 
 	base_s = args["save"]
+	base_l = args["load"]
 	for i in args["order"]
 		for j=1:2
 			args["save"] = string(base_s, "_", j, "_", args["trainfiles"][i])
-			if args["load"] != ""
-				args["load"] = string(split(args["load"],"_")[1], "_", j, "_", args["trainfiles"][i])
+			if base_l != ""
+				args["load"] = string(base_l, "_", j, "_", args["trainfiles"][i])
 			end
 			execute(trainins[i], testins[(i-1)*2+j], maps, vocab, args; dev_ins=devins[(i-1)*2+j])
 		end

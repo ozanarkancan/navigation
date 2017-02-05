@@ -31,7 +31,6 @@ function lstm2(weight,bias,hidden,cell,input,att)
 	return (hidden,cell)
 end
 
-
 function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words; dropout=false, pdrops=[0.5, 0.5])
 	for i=1:length(words)
 		x = words[i] * emb
@@ -238,7 +237,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			nactions += 1
 
 			nowall = false
-			if action == 1
+			if a == 1
 				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
 			end
 
@@ -604,7 +603,8 @@ function test_beam(models, data, maps; args=nothing)
 		for i=1:length(models)
 			weights = models[i]
 			state = states[i]
-			encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+			encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], 
+				weights["enc_b1_b"], weights["emb_word"], state, words)
 		
 			state[5] = hcat(state[1][end], state[3][end])
 			state[6] = hcat(state[2][end], state[4][end])

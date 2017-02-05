@@ -256,7 +256,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			nactions += 1
 
 			nowall = false
-			if action == 1
+			if a == 1
 				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
 			end
 
@@ -751,7 +751,8 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 			for i=1:length(models)
 				weights = models[i]
 				state = states[i]
-				encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+				encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], 
+					weights["enc_b1_b"], weights["emb_word"], state, words)
 
 				state[5] = hcat(state[1][end], state[3][end])
 				state[6] = hcat(state[2][end], state[4][end])
