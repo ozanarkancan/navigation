@@ -9,11 +9,11 @@ function parse_commandline()
 	@add_arg_table s begin
 		"--hidden"
 			help = "hidden size"
-			default = 128
+			default = 100
 			arg_type = Int
 		"--embed"
 			help = "embedding size"
-			default = 128
+			default = 100
 			arg_type = Int
 		"--limactions"
 			arg_type = Int
@@ -78,6 +78,9 @@ function parse_commandline()
 			help = "seed"
 			default = 12345
 			arg_type = Int
+		"--vTest"
+			help = "vtest"
+			action = :store_true
 	end
 	return parse_args(s)
 end		
@@ -108,8 +111,14 @@ function main()
 	for k in keys(args); info("$k -> $(args[k])"); end
 	
 	grid, jelly, l = getallinstructions()
+	lg = length(grid)
+	lj = length(jelly)
+	ll = length(l)
+	dg = floor(Int, lg*0.5)
+	dj = floor(Int, lj*0.5)
+	dl = floor(Int, ll*0.5)
 
-	testins = [l, jelly, grid]
+	testins = args["vTest"] ? [l, jelly, grid] : [l[(dl+1):end], l[1:dl], jelly[(dj+1):end], jelly[1:dj], grid[(dg+1):end], grid[1:dg]]
 	maps = get_maps()
 
 	vocab = !args["charenc"] ? build_dict(vcat(grid, jelly, l)) : build_char_dict(voc_ins)

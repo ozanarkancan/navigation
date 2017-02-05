@@ -82,6 +82,10 @@ function parse_commandline()
 			help = "seed"
 			default = 12345
 			arg_type = Int
+		"--vTest"
+			help = "vTest"
+			action = :store_true
+
 	end
 	return parse_args(s)
 end		
@@ -112,8 +116,13 @@ function main()
 	for k in keys(args); info("$k -> $(args[k])"); end
 	
 	grid, jelly, l = getallinstructions()
-
-	testins = [l, jelly, grid]
+	lg = length(grid)
+	lj = length(jelly)
+	ll = length(l)
+	dg = floor(Int, lg*0.5)
+	dj = floor(Int, lj*0.5)
+	dl = floor(Int, ll*0.5)
+	testins = args["vTest"] ? [l, jelly, grid] : [l[(dl+1):end], l[1:dl], jelly[(dj+1):end], jelly[1:dj], grid[(dg+1):end], grid[1:dg]]
 	maps = get_maps()
 
 	vocab = !args["charenc"] ? build_dict(vcat(grid, jelly, l)) : build_char_dict(voc_ins)

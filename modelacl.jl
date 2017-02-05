@@ -289,7 +289,7 @@ function train_pg(weights, prms, data, maps; args=nothing)
 			nactions += 1
 
 			nowall = false
-			if action == 1
+			if a == 1
 				nowall = !haskey(maps[instruction.map].edges[(prev[1], prev[2])], (current[1], current[2]))
 			end
 
@@ -648,7 +648,7 @@ function test_beam(models, data, maps; args=nothing)
 		end
 
 		current = instruction.path[1]
-		cands = Any[(1.0, cstate5, cstate6, current, 0, Any[-1])]
+		cands = Any[(1.0, cstate5, cstate6, current, 0, false, Any[-1])]
 
 		nactions = 0
 		stop = false
@@ -664,10 +664,11 @@ function test_beam(models, data, maps; args=nothing)
 					states[m][6] = copy(cand[3][m])
 				end
 				depth = cand[5]
+				stopped = cand[6]
 				prevActions = cand[end]
 				lastAction = prevActions[end]
 
-				if lastAction == 4
+				if stopped
 					push!(newcands, cand)
 					continue
 				end
@@ -697,7 +698,7 @@ function test_beam(models, data, maps; args=nothing)
 					nactions = depth + 1
 					actcopy = copy(prevActions)
 					if nactions > args["limactions"] && i < 4
-						continue
+						stopped = true
 					end
 					push!(actcopy, i)
 					cur = identity(current)
@@ -705,8 +706,8 @@ function test_beam(models, data, maps; args=nothing)
 						cur = getlocation(maps[instruction.map], cur, i)
 					end
 
-					if i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))
-						continue
+					if (i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))) || i==4
+						stopped = true
 					end
 
 					cstate5 = Any[]
@@ -716,7 +717,7 @@ function test_beam(models, data, maps; args=nothing)
 						push!(cstate6, copy(states[m][6]))
 					end
 
-					push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, actcopy))
+					push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, stopped, actcopy))
 					newcand = true
 				end
 			end
@@ -764,7 +765,8 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 			for i=1:length(models)
 				weights = models[i]
 				state = states[i]
-				encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+				encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"],
+					weights["enc_b1_b"], weights["emb_word"], state, words)
 
 				state[5] = hcat(state[1][end], state[3][end])
 				state[6] = hcat(state[2][end], state[4][end])
@@ -776,7 +778,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 				push!(cstate6, copy(states[m][6]))
 			end
 
-			cands = Any[(1.0, cstate5, cstate6, current, 0, Any[-1])]
+			cands = Any[(1.0, cstate5, cstate6, current, 0, false, Any[-1])]
 
 			nactions = 0
 			stop = false
@@ -794,8 +796,9 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 					depth = cand[5]
 					prevActions = cand[end]
 					lastAction = prevActions[end]
+					stopped = cand[6]
 
-					if lastAction == 4
+					if stopped
 						push!(newcands, cand)
 						continue
 					end
@@ -808,7 +811,8 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 					for i=1:length(models)
 						weights = models[i]
 						state = states[i]
-						x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"],
+						x = spatial(weights["filters_w1"], weights["filters_b1"], 
+							weights["filters_w2"], weights["filters_b2"],
 						weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
 						att,att_s = attention(state, weights["attention_w"], weights["attention_v"])
 						ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"],
@@ -823,7 +827,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 						nactions = depth + 1
 						actcopy = copy(prevActions)
 						if nactions > args["limactions"] && i < 4
-							continue
+							stopped = true
 						end
 						push!(actcopy, i)
 						cur = identity(current)
@@ -831,8 +835,8 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 							cur = getlocation(maps[instruction.map], cur, i)
 						end
 
-						if i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))
-							continue
+						if (i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))) || i==4
+							stopped = true
 						end
 
 						cstate5 = Any[]
@@ -842,7 +846,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 							push!(cstate6, copy(states[m][6]))
 						end
 
-						push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, actcopy))
+						push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, stopped, actcopy))
 						newcand = true
 					end
 				end
