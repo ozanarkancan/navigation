@@ -377,8 +377,8 @@ function action(curr, next)
 	return a
 end
 
-function build_instance(instance, map, vocab; vdims=[39, 39], charenc=false, encoding="grid")
-	words = !charenc ? ins_arr(vocab, instance.text) : ins_char_arr(vocab, instance.text)
+function build_instance(instance, map, vocab; vdims=[39, 39], emb=nothing, encoding="grid")
+	words = emb == nothing ? ins_arr(vocab, instance.text) : ins_arr_embed(emb, vocab, instance.text)
 
 	states = Any[]
 	Y = zeros(Float32, length(instance.path), 4)
