@@ -222,7 +222,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
 			if args["vDev"]
 				info("Epoch: $(i), trn loss: $(lss) , single acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
 				info("TestIt: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
-				info("Losses: $(i), trn loss: $(trnloss) , single acc: $(dev_loss) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
+				info("Losses: $(i), trn loss: $(trnloss) , dev loss: $(dev_loss) , $(test_ins[1].map)")
 			else
 				info("Epoch: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
 			end

@@ -78,6 +78,9 @@ function parse_commandline()
 			help = "beam size"
 			default = 10
 			arg_type = Int
+		"--embedding"
+			help = "embedding"
+			action = :store_true
 		"--seed"
 			help = "seed"
 			default = 12345
@@ -127,14 +130,15 @@ function main()
 
 	vocab = !args["charenc"] ? build_dict(vcat(grid, jelly, l)) : build_char_dict(voc_ins)
 	info("\nVocab: $(length(vocab))")
+	emb = load("data/embeddings.jld", "vectors")
 
 	models = Any[]
 	for mfile in args["load"]; push!(models, loadmodel(mfile)); end
 
 	test_ins = testins[args["test"]]
-	test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
+	test_data = args["embedding"] ? map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)), test_ins) : map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
 	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
-	test_data_grp = map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
+	test_data_grp = args["embedding"] ? map(x->map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)),x), group_singles(test_ins)) : map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
 	
 	@time tst_acc = test_beam(models, test_data, maps; args=args)
 	@time tst_prg_acc = test_paragraph_beam(models, test_data_grp, maps; args=args)

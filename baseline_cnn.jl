@@ -724,6 +724,7 @@ function test_beam(models, data, maps; args=nothing)
 
 		info("Actions: $(reshape(collect(actions), 1, length(actions)))")
 		info("Current: $(current)")
+		info("Prob: $(cand[1])")
 
 		if current == instruction.path[end]
 			scss += 1
@@ -768,9 +769,9 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 			end
 
 			if length(cands) == 0
-				cands = Any[(1.0, cstate5, cstate6, current, 0, false, Any[-1])]
+				cands = Any[(1.0, cstate5, cstate6, current, 0, false, true, Any[-1])]
 			else
-				cands = map(x->(x[1], cstate5, cstate6, x[4], 0, false, x[7]), cands)
+				cands = map(x->(x[1], cstate5, cstate6, x[4], 0, false, x[7], x[end]), cands)
 			end
 
 			nactions = 0
@@ -791,8 +792,8 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 					lastAction = prevActions[end]
 					stopped = cand[6]
 
-					if stopped || !haskey(maps[instruction.map].nodes, (current[1], current[2]))
-						c = (cand[1], cand[2], cand[3], cand[4], cand[5], true, cand[end])
+					if stopped || !cand[7]
+						c = (cand[1], cand[2], cand[3], cand[4], cand[5], true, cand[7], cand[end])
 						push!(newcands, c)
 						continue
 					end
@@ -817,10 +818,12 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 
 					for i=1:4
 						mystop = stopped
+						legitimate = true
 						nactions = depth + 1
 						actcopy = copy(prevActions)
 						if nactions > args["limactions"] && i < 4
 							mystop = true
+							legitimate = false
 						end
 						push!(actcopy, i)
 						cur = identity(current)
@@ -830,6 +833,9 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 
 						if (i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))) || i==4
 							mystop = true
+							if i == 1
+								legitimate = false
+							end
 						end
 
 						cstate5 = Any[]
@@ -839,7 +845,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 							push!(cstate6, copy(states[m][6]))
 						end
 
-						push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, mystop, actcopy))
+						push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, mystop, legitimate, actcopy))
 						newcand = true
 					end
 				end
@@ -860,6 +866,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 				actions = cands[1][end]
 				info("Actions: $(reshape(collect(actions), 1, length(actions)))")
 				info("Current: $(current)")
+				info("Prob: $(cand[1])")
 				
 				if actions[end] != 4
 					info("FAILURE")
