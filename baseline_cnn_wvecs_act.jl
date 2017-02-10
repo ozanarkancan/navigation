@@ -658,12 +658,12 @@ function test_beam(models, data, maps; args=nothing)
 		end
 
 		current = instruction.path[1]
-		cands = Any[(1.0, cstate5, cstate6, current, 0, false, Any[-1])]
+		cands = Any[(1.0, cstate5, cstate6, current, 0, false, Any[4])]
 
 		nactions = 0
 		stop = false
 		stopsearch = false
-
+		araw = reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4)
 		while !stopsearch
 			newcands = Any[]
 			newcand = false
@@ -677,6 +677,8 @@ function test_beam(models, data, maps; args=nothing)
 				prevActions = cand[end]
 				lastAction = prevActions[end]
 				stopped = cand[6]
+				araw[:] = 0.0
+				araw[1, lastAction] = 1.0
 
 				if stopped
 					push!(newcands, cand)
@@ -685,6 +687,7 @@ function test_beam(models, data, maps; args=nothing)
 
 				view = state_agent_centric(maps[instruction.map], current)
 				view = convert(KnetArray{Float32}, view)
+				preva = convert(KnetArray{Float32}, araw)
 
 				cum_ps = zeros(Float32, 1, 4)
 
@@ -695,7 +698,7 @@ function test_beam(models, data, maps; args=nothing)
 					x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"],
 					weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
 					ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
-						weights["soft_w3"], weights["soft_b"], state, x, mask)
+						weights["soft_w3"], weights["soft_b"], state, x, preva, mask)
 					cum_ps += probs(Array(ypred))
 				end
 
@@ -799,6 +802,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 			stop = false
 			stopsearch = false
 
+			araw = reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4)
 			while !stopsearch
 				newcands = Any[]
 				newcand = false
@@ -812,6 +816,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 					prevActions = cand[end]
 					lastAction = prevActions[end]
 					stopped = cand[6]
+					araw[:] = 0.0
 
 					if stopped || !cand[7]
 						c = (cand[1], cand[2], cand[3], cand[4], cand[5], true, cand[7], cand[end])
@@ -821,6 +826,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 
 					view = state_agent_centric(maps[instruction.map], current)
 					view = convert(KnetArray{Float32}, view)
+					preva = convert(KnetArray{Float32}, araw)
 
 					cum_ps = zeros(Float32, 1, 4)
 
@@ -831,7 +837,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 							weights["filters_w2"], weights["filters_b2"],
 							weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
 						ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"],
-							weights["soft_w3"], weights["soft_b"], state, x, mask)
+							weights["soft_w3"], weights["soft_b"], state, x, preva, mask)
 						cum_ps += probs(Array(ypred))
 					end
 
