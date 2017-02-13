@@ -234,8 +234,7 @@ function loss(w, state, words, ys; lss=nothing, views=nothing, as=nothing, dropo
     #decode
     for i=1:length(views)
         x = views == nothing ? spatial(w["emb_world"], as[i]) : 
-            length(args["numfilters"]) > 0 ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i]) : 
-            spatial(w["emb_world"], views[i])
+            args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i]) : spatial(w["emb_world"], views[i])
         
         soft_inp = args["inpout"] ? w["soft_inp"] : nothing
         soft_att = args["attout"] ? w["soft_att"] : nothing
@@ -244,7 +243,7 @@ function loss(w, state, words, ys; lss=nothing, views=nothing, as=nothing, dropo
         
         att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
 
-        ypred = decode(w["dec_w"], w["dec_b"], soft_h, soft_b, state, x; soft_inp=soft_inp, soft_att=soft_att, 
+        ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
             soft_preva=soft_preva, preva=preva, att=att, dropout=dropout, pdrops=decpdrops)
 
         ynorm = logp(ypred,2)
@@ -350,9 +349,10 @@ function test(models, data, maps; args=nothing)
         states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
 
         for ind=1:length(models)
-            weights = models[ind]
+            w = models[ind]
             state = states[ind]
-            encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+            encode(w["enc_w_f"], w["enc_b_f"], w["enc_w_b"], w["enc_b_b"], w["emb_word"],
+                state, words; dropout=false, pdrops=encpdrops)
 
             state[5] = hcat(state[1][end], state[3][end])
             state[6] = hcat(state[2][end], state[4][end])
@@ -363,21 +363,30 @@ function test(models, data, maps; args=nothing)
         stop = false
 
         actions = Any[]
-        araw = reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4)
+        araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
         while !stop
             preva = convert(KnetArray{Float32}, araw)
 
-            view = state_agent_centric(maps[instruction.map], current)
-            view = convert(KnetArray{Float32}, view)
+            view = !args["percp"] ? nothing : args["encoding"] == "grid" ? 
+                state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(maps[instruction.map], current)
+            view = args["percp"] ? convert(KnetArray{Float32}, view) : nothing
+
             cum_ps = zeros(Float32, 1, 4)
             for ind=1:length(models)
-                weights = models[ind]
+                w = models[ind]
                 state = states[ind]
-                x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"], 
-                weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
+                x = views == nothing ? spatial(w["emb_world"], preva) : 
+                    args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i]) : spatial(w["emb_world"], views[i])
 
-                ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
-                weights["soft_w3"], weights["soft_b"], state, x, preva, mask)
+                soft_inp = args["inpout"] ? w["soft_inp"] : nothing
+                soft_att = args["attout"] ? w["soft_att"] : nothing
+                soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
+                preva = (!args["preva"] || args["preva"] && !args["percp"]) ? nothing : preva
+
+                att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
+                            soft_preva=soft_preva, preva=preva, att=att, dropout=false)
+
                 cum_ps += probs(Array(ypred))
             end
 
@@ -389,8 +398,11 @@ function test(models, data, maps; args=nothing)
             else
                 action = sample(cum_ps)
             end
-            araw[:] = 0.0
-            araw[1, action] = 1.0
+            
+            if args["preva"]
+                araw[:] = 0.0
+                araw[1, action] = 1.0
+            end
 
             push!(actions, action)
             prev = current
