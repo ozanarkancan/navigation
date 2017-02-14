@@ -19,13 +19,13 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
     weights["emb_word"] = xavier(Float32, vocab, embed)
     
     #decoder
-    if length(numfilters) > 0
+    if args["percp"] && args["encoding"] == "grid"
         worldfeats = (worldsize[1] - sum(window) + length(window)) * (worldsize[2] - sum(window) + length(window)) * numfilters[end]
         
         weights["emb_world"] = xavier(Float32, worldfeats, embed)
 
-        fs = Array{Array{Float32}}()
-        bs = Array{Array{Float32}}()
+        fs = Any[]
+        bs = Any[]
 
         for i=1:length(numfilters)
             inpch = i == 1 ? onehotworld : numfilters[i-1]
@@ -34,19 +34,23 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
         end
         weights["filters_w"] = fs
         weights["filters_b"] = bs
-    else
+    elseif args["percp"]
         weights["emb_world"] = xavier(Float32, onehotworld, embed)
     end
     
-    if !args["percp"] && args["preva"]
+    if !args["percp"] && args["preva"] && !args["att"]
+        weights["emb_world"] = xavier(Float32, 4, embed)
+        weights["dec_w"] = xavier(Float32, embed + hidden*2, 4*hidden*2)
+    elseif !args["percp"] && args["att"] && args["preva"]
+        weights["emb_world"] = xavier(Float32, 4, embed)
         weights["dec_w"] = xavier(Float32, embed + hidden*2 + hidden*2, 4*hidden*2)
-    elseif args["percp"] && args["attention"] && args["preva"]
+    elseif args["percp"] && args["att"] && args["preva"]
         weights["dec_w"] = xavier(Float32, embed + 4 + hidden*2 + hidden*2, 4*hidden*2)
-    elseif args["percp"] && !args["attention"] && args["preva"]
+    elseif args["percp"] && !args["att"] && args["preva"]
         weights["dec_w"] = xavier(Float32, embed + 4 + hidden*2, 4*hidden*2)
-    elseif args["percp"] && args["attention"] && !args["preva"]
+    elseif args["percp"] && args["att"] && !args["preva"]
         weights["dec_w"] = xavier(Float32, embed + hidden*2 + hidden*2, 4*hidden*2)
-    elseif args["percp"] && !args["attention"] && !args["preva"]
+    elseif args["percp"] && !args["att"] && !args["preva"]
         weights["dec_w"] = xavier(Float32, embed + hidden*2, 4*hidden*2)
     end
     
@@ -54,7 +58,7 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
     weights["dec_b"][1:hidden*2] = 1 # forget gate bias
  
     #attention
-    if args["attention"]
+    if args["att"]
         #fenc, benc, dechid
         weights["attention_w"] = xavier(Float32, hidden*2+hidden*2, hidden)
         weights["attention_v"] = xavier(Float32, hidden, 1)
@@ -67,12 +71,12 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
         weights["soft_inp"] = xavier(Float32, embed, 4)
     end
 
-    if args["attention"] && args["attout"]
-        weights["soft_att"] = xavier(Float32, hidden, 4)
+    if args["att"] && args["attout"]
+        weights["soft_att"] = xavier(Float32, hidden*2, 4)
     end
 
     if args["preva"] && args["prevaout"]
-        weights["soft_preva"] = xavier(Float32, preva, 4)
+        weights["soft_preva"] = xavier(Float32, 4, 4)
     end
 
     weights["soft_b"] = zeros(Float32, 1,4)
@@ -81,6 +85,8 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
         if startswith(k, "filter")
             ws = map(t->convert(atype, t), weights[k])
             weights[k] = ws
+        else
+            weights[k] = convert(atype, weights[k])
         end
     end
 
@@ -88,7 +94,7 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
 end
 
 function spatial(emb, x)
-    return h * emb
+    return x * emb
 end
 
 function spatial(filters, bias, emb, x)
@@ -101,7 +107,7 @@ function cnn(filters, bias, x)
     for i=1:length(filters)-1
         inp = relu(conv4(filters[i], inp; padding=0) .+ bias[i])
     end
-    inp = sigmoid(conv4(filters[i], inp; padding=0) .+ bias[i])
+    inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
     h = transpose(mat(inp))
 end
 
@@ -160,11 +166,11 @@ end
 
 #x might be view or preva
 function decode(weight, bias, soft_h, soft_b, state, x; soft_inp=nothing, soft_att=nothing, 
-    soft_preva=nothing, preva=nothing, att=nothing, dropout=false, pdrops=[0.5, 0.5])
+    soft_preva=nothing, preva=nothing, att=nothing, dropout=false, pdrops=[0.5, 0.5], prevainp=false)
     
     inp = x
     
-    if preva != nothing
+    if preva != nothing && prevainp
         inp = hcat(inp, preva)
     end
 
@@ -173,20 +179,20 @@ function decode(weight, bias, soft_h, soft_b, state, x; soft_inp=nothing, soft_a
     end
 
     if dropout && pdrops[1] > 0.0
-        inp = inp .* (rand!(similar(AutoGrad.getval(x))) .> pdrops[1]) * (1/(1-pdrops[1]))
+        inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[1]) * (1/(1-pdrops[1]))
     end
 
-    state[5], state[6] = lstm(weight1, bias1, state[5], state[6], inp)
+    state[5], state[6] = lstm(weight, bias, state[5], state[6], inp)
 
-    inp = state[5]
+    inph = state[5]
     if dropout && pdrops[2] > 0.0
-        inp = inp .* (rand!(similar(AutoGrad.getval(inp))) .> pdrops[2]) * (1/(1-pdrops[2]))
+        inph = inph .* (rand!(similar(AutoGrad.getval(inph))) .> pdrops[2]) * (1/(1-pdrops[2]))
     end
 
-    q = (inp * soft_h) .+ soft_b
+    q = (inph * soft_h) .+ soft_b
     
     if soft_inp != nothing
-        q = q + x * soft_inp
+        q = q + inp * soft_inp
     end
     
     if soft_preva != nothing
@@ -232,24 +238,25 @@ function loss(w, state, words, ys; lss=nothing, views=nothing, as=nothing, dropo
     state[6] = hcat(state[2][end], state[4][end])
 
     #decode
-    for i=1:length(views)
-        x = views == nothing ? spatial(w["emb_world"], as[i]) : 
+    for i=1:length(ys)
+        x = !args["percp"] ? spatial(w["emb_world"], as[i]) : 
             args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i]) : spatial(w["emb_world"], views[i])
         
         soft_inp = args["inpout"] ? w["soft_inp"] : nothing
         soft_att = args["attout"] ? w["soft_att"] : nothing
         soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
-        preva = (!args["preva"] || args["preva"] && !args["percp"]) ? nothing : as[i]
+        preva = !args["preva"] ? nothing : as[i]
+        prevainp = args["preva"] && args["percp"]
         
         att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
 
         ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
-            soft_preva=soft_preva, preva=preva, att=att, dropout=dropout, pdrops=decpdrops)
+            soft_preva=soft_preva, preva=preva, att=att, dropout=dropout, pdrops=decpdrops, prevainp=prevainp)
 
         ynorm = logp(ypred,2)
         total += sum(ys[i] .* ynorm)
         
-        count += sum(maskouts[i])
+        count += 1
     end
 
     nll = -total/count
@@ -266,7 +273,7 @@ function train(w, prms, data; args=nothing)
     nll = Float32[0, 0]
     for (words, views, ys, _) in data
         bs = size(words[1], 1)
-        state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b1_f"],2)/4), bs, length(words))
+        state = initstate(KnetArray{Float32}, args["hidden"], bs, length(words))
         
         #load data to gpu
         words = map(t->convert(KnetArray{Float32}, t), words)
@@ -282,26 +289,48 @@ function train(w, prms, data; args=nothing)
             acts = args["preva"] ? map(t->convert(KnetArray{Float32}, t), as) : nothing
         end
 
-        g = lossgradient(w, state, words, ys; lss=nll, views=views, as=acts, dropout=true, encdrops=args["encdrops"], decpdrops=args["decdrops"], args=args)
+        g = lossgradient(w, state, words, ys; lss=nll, views=views, as=acts, dropout=true, encpdrops=args["encdrops"], decpdrops=args["decdrops"], args=args)
 
         gclip = args["gclip"]
         if gclip > 0
             gnorm = 0
-            for k in keys(g); gnorm += sumabs2(g[k]); end
+            for k in keys(g)
+                if startswith(k, "filter")
+                    for el in g[k]
+                        gnorm += sumabs2(el)
+                    end
+                else
+                    gnorm += sumabs2(g[k])
+                end
+            end
             gnorm = sqrt(gnorm)
 
             debug("Gnorm: $gnorm")
 
             if gnorm > gclip
                 for k in keys(g)
-                    g[k] = g[k] * gclip / gnorm
+                    if startswith(k, "filter")
+                        gs = Any[]
+                        for el in g[k]
+                            push!(gs, el * gclip / gnorm)
+                        end
+                        g[k] = gs
+                    else
+                        g[k] = g[k] * gclip / gnorm
+                    end
                 end
             end
         end
 
         #update weights
         for k in keys(g)
-            Knet.update!(w[k], g[k], prms[k])
+            if startswith(k, "filter")
+                for ind=1:length(g[k])
+                    Knet.update!(w[k][ind], g[k][ind], prms[k][ind])
+                end
+            else
+                Knet.update!(w[k], g[k], prms[k])
+            end
         end
 
         lss += nll[1] * nll[2]
@@ -310,13 +339,13 @@ function train(w, prms, data; args=nothing)
     return lss / cnt
 end
 
-function train_loss(w, prms, data; args=nothing)
+function train_loss(w, data; args=nothing)
     lss = 0.0
     cnt = 0.0
     nll = Float32[0, 0]
     for (words, views, ys, _) in data
         bs = size(words[1], 1)
-        state = initstate(KnetArray{Float32}, convert(Int, size(w["enc_b1_f"],2)/4), bs, length(words))
+        state = initstate(KnetArray{Float32}, args["hidden"], bs, length(words))
         
         #load data to gpu
         words = map(t->convert(KnetArray{Float32}, t), words)
@@ -332,7 +361,7 @@ function train_loss(w, prms, data; args=nothing)
             acts = args["preva"] ? map(t->convert(KnetArray{Float32}, t), as) : nothing
         end
 
-        loss(w, state, words, ys; lss=nll, views=views, as=acts, dropout=false, encdrops=args["encdrops"], decpdrops=args["decdrops"], args=args)
+        loss(w, state, words, ys; lss=nll, views=views, as=acts, dropout=false, args=args)
 
         lss += nll[1] * nll[2]
         cnt += nll[2]
@@ -346,13 +375,13 @@ function test(models, data, maps; args=nothing)
 
     for (instruction, words) in data
         words = map(v->convert(KnetArray{Float32},v), words)
-        states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+        states = map(weights->initstate(KnetArray{Float32}, args["hidden"], 1, length(words)), models)
 
         for ind=1:length(models)
             w = models[ind]
             state = states[ind]
             encode(w["enc_w_f"], w["enc_b_f"], w["enc_w_b"], w["enc_b_b"], w["emb_word"],
-                state, words; dropout=false, pdrops=encpdrops)
+                state, words; dropout=false)
 
             state[5] = hcat(state[1][end], state[3][end])
             state[6] = hcat(state[2][end], state[4][end])
@@ -365,7 +394,7 @@ function test(models, data, maps; args=nothing)
         actions = Any[]
         araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
         while !stop
-            preva = convert(KnetArray{Float32}, araw)
+            preva = araw != nothing ? convert(KnetArray{Float32}, araw)  : araw
 
             view = !args["percp"] ? nothing : args["encoding"] == "grid" ? 
                 state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(maps[instruction.map], current)
@@ -375,17 +404,18 @@ function test(models, data, maps; args=nothing)
             for ind=1:length(models)
                 w = models[ind]
                 state = states[ind]
-                x = views == nothing ? spatial(w["emb_world"], preva) : 
-                    args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i]) : spatial(w["emb_world"], views[i])
+                x = !args["percp"] ? spatial(w["emb_world"], preva) : 
+                    args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], view) : spatial(w["emb_world"], view)
 
                 soft_inp = args["inpout"] ? w["soft_inp"] : nothing
                 soft_att = args["attout"] ? w["soft_att"] : nothing
                 soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
-                preva = (!args["preva"] || args["preva"] && !args["percp"]) ? nothing : preva
-
+                preva = !args["preva"] ? nothing : preva
+                prevainp = args["preva"] && args["percp"]
+                
                 att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
                 ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
-                            soft_preva=soft_preva, preva=preva, att=att, dropout=false)
+                            soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
 
                 cum_ps += probs(Array(ypred))
             end
@@ -447,7 +477,7 @@ function test_paragraph(models, groups, maps; args=nothing)
         for i=1:length(data)
             instruction, words = data[i]
             words = map(v->convert(KnetArray{Float32},v), words)
-            states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+            states = map(weights->initstate(KnetArray{Float32}, args["hidden"], 1, length(words)), models)
 
             for ind=1:length(models)
                 weights = models[ind]
@@ -538,7 +568,13 @@ end
 function initparams(ws; args=nothing)
     prms = Dict()
 
-    for k in keys(ws); prms[k] = Adam(ws[k];lr=args["lr"]) end;
+    for k in keys(ws)
+        if startswith(k, "filter")
+            prms[k] = map(w->Adam(w;lr=args["lr"]), ws[k])
+        else
+            prms[k] = Adam(ws[k];lr=args["lr"]) 
+        end
+    end
 
     return prms
 end
@@ -574,7 +610,7 @@ function test_beam(models, data, maps; args=nothing)
 
     for (instruction, words) in data
         words = map(v->convert(KnetArray{Float32},v), words)
-        states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+        states = map(weights->initstate(KnetArray{Float32}, args["hidden"], 1, length(words)), models)
 
         for i=1:length(models)
             weights = models[i]
@@ -709,7 +745,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
         for indx=1:length(data)
             instruction, words = data[indx]
             words = map(v->convert(KnetArray{Float32},v), words)
-            states = map(weights->initstate(KnetArray{Float32}, convert(Int, size(weights["enc_b1_f"],2)/4), 1, length(words)), models)
+            states = map(weights->initstate(KnetArray{Float32}, args["hidden"], 1, length(words)), models)
 
             for i=1:length(models)
                 weights = models[i]
