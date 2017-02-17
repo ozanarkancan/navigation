@@ -93,6 +93,15 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
     return weights
 end
 
+function cnn(filters, bias, x)
+    inp = x
+    for i=1:length(filters)-1
+        inp = relu(conv4(filters[i], inp; padding=0) .+ bias[i])
+    end
+    inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
+    return transpose(mat(inp))
+end
+
 function spatial(emb, x)
     return x * emb
 end
@@ -100,15 +109,6 @@ end
 function spatial(filters, bias, emb, x)
     h = cnn(filters, bias, x)
     return h * emb
-end
-
-function cnn(filters, bias, x)
-    inp = x
-    for i=1:length(filters)-1
-        inp = relu(conv4(filters[i], inp; padding=0) .+ bias[i])
-    end
-    inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
-    h = transpose(mat(inp))
 end
 
 function lstm(weight,bias,hidden,cell,input)
@@ -267,7 +267,7 @@ end
 
 lossgradient = grad(loss)
 
-function train(w, prms, data; args=nothing)
+function train(w, prms, data; args=nothing, updatelimit=0)
     lss = 0.0
     cnt = 0.0
     nll = Float32[0, 0]
@@ -335,6 +335,10 @@ function train(w, prms, data; args=nothing)
 
         lss += nll[1] * nll[2]
         cnt += nll[2]
+
+        if cnt >= updatelimit
+            break
+        end
     end
     return lss / cnt
 end
@@ -412,7 +416,7 @@ function test(models, data, maps; args=nothing)
                 soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
                 preva = !args["preva"] ? nothing : preva
                 prevainp = args["preva"] && args["percp"]
-                
+
                 att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
                 ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
                             soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
@@ -421,7 +425,7 @@ function test(models, data, maps; args=nothing)
             end
 
             cum_ps = cum_ps ./ length(models)
-            info("Probs: $(cum_ps)")
+            debug("Probs: $(cum_ps)")
             action = 0
             if args["greedy"]
                 action = indmax(cum_ps)
@@ -448,18 +452,18 @@ function test(models, data, maps; args=nothing)
 
         end
 
-        info("$(instruction.text)")
-        info("Path: $(instruction.path)")
-        info("Filename: $(instruction.fname)")
+        debug("$(instruction.text)")
+        debug("Path: $(instruction.path)")
+        debug("Filename: $(instruction.fname)")
 
-        info("Actions: $(reshape(collect(actions), 1, length(actions)))")
-        info("Current: $(current)")
+        debug("Actions: $(reshape(collect(actions), 1, length(actions)))")
+        debug("Current: $(current)")
 
         if current == instruction.path[end]
             scss += 1
-            info("SUCCESS\n")
+            debug("SUCCESS\n")
         else
-            info("FAILURE\n")
+            debug("FAILURE\n")
         end
     end
 

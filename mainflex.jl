@@ -30,7 +30,7 @@ function parse_commandline()
 		("--charenc"; help = "charecter embedding"; action = :store_true)
 		("--encoding"; help = "grid or multihot"; default = "grid")
 		("--wvecs"; help = "use word vectors"; action= :store_true)
-		("--greedy"; help = "deterministic or stochastic policy"; action = :store_true)
+		("--greedy"; help = "deterministic or stochastic policy"; action = :store_false)
 		("--seed"; help = "seed number"; arg_type = Int; default = 123)
         ("--percp"; help = "use perception"; action = :store_false)
         ("--preva"; help = "use previous action"; action = :store_true)
@@ -61,7 +61,14 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
     w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args)
 
     info("Model Prms:")
-    for k in keys(w); info("$k : $(size(w[k])) "); end
+    for k in keys(w)
+        info("$k : $(size(w[k])) ")
+        if startswith(k, "filter")
+            for i=1:length(w[k])
+                info("$k , $i : $(size(w[k][i]))")
+            end
+        end
+    end
 
     dev_data = dev_ins != nothing ? map(ins -> (ins, (emb != nothing ? ins_arr_embed(emb, vocab, ins.text) : ins_arr(vocab, ins.text))), dev_ins) : nothing
     dev_data_grp = dev_ins != nothing ? map(x->map(ins->(ins, (emb != nothing ? ins_arr_embed(emb, vocab, ins.text) : ins_arr(vocab, ins.text))),x), group_singles(dev_ins)) : nothing
@@ -104,7 +111,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
             if sofarbest > globalbest
                 globalbest = sofarbest
                 info("Saving the model...")
-                savemodel(w, args["save"])
+                savemodel(w, args["save"]; flex=true)
             end
         else
             patience += 1
