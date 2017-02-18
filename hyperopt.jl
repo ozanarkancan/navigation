@@ -79,7 +79,7 @@ function execute(train_ins, dev_ins, maps, vocab, emb, args, res)
     prms_sp = initparams(w; args=args)
     patience = 0
     ld = length(train_ins)
-    totalsource = floor(Int, ld*0.5*res)
+    totalsource = floor(Int, ld*5.0*res)
     ep = 1
     while true
         shuffle!(trn_data)
