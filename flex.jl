@@ -336,7 +336,7 @@ function train(w, prms, data; args=nothing, updatelimit=0)
         lss += nll[1] * nll[2]
         cnt += nll[2]
 
-        if cnt >= updatelimit
+        if updatelimit != 0 && cnt >= updatelimit
             break
         end
     end
@@ -375,7 +375,6 @@ end
 
 function test(models, data, maps; args=nothing)
     scss = 0.0
-    mask = convert(KnetArray, ones(Float32, 1,1))
 
     for (instruction, words) in data
         words = map(v->convert(KnetArray{Float32},v), words)
@@ -472,52 +471,60 @@ end
 
 function test_paragraph(models, groups, maps; args=nothing)
     scss = 0.0
-    mask = convert(KnetArray, ones(Float32, 1,1))
-
     for data in groups
-        info("\nNew paragraph")
+        debug("\nNew paragraph")
         current = data[1][1].path[1]
-
+        
         for i=1:length(data)
             instruction, words = data[i]
             words = map(v->convert(KnetArray{Float32},v), words)
             states = map(weights->initstate(KnetArray{Float32}, args["hidden"], 1, length(words)), models)
 
             for ind=1:length(models)
-                weights = models[ind]
+                w = models[ind]
                 state = states[ind]
-                encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], weights["emb_word"], state, words)
+                encode(w["enc_w_f"], w["enc_b_f"], w["enc_w_b"], w["enc_b_b"], w["emb_word"],
+                state, words; dropout=false)
 
                 state[5] = hcat(state[1][end], state[3][end])
                 state[6] = hcat(state[2][end], state[4][end])
             end
 
+            current = instruction.path[1]
             nactions = 0
             stop = false
 
             actions = Any[]
-            action = 0
-
-            araw = reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4)
+            araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
             while !stop
-                preva = convert(KnetArray{Float32}, araw)
+                preva = araw != nothing ? convert(KnetArray{Float32}, araw)  : araw
 
-                view = state_agent_centric(maps[instruction.map], current)
-                view = convert(KnetArray{Float32}, view)
+                view = !args["percp"] ? nothing : args["encoding"] == "grid" ? 
+                state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(maps[instruction.map], current)
+                view = args["percp"] ? convert(KnetArray{Float32}, view) : nothing
+
                 cum_ps = zeros(Float32, 1, 4)
                 for ind=1:length(models)
-                    weights = models[ind]
+                    w = models[ind]
                     state = states[ind]
-                    x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"], 
-                    weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
+                    x = !args["percp"] ? spatial(w["emb_world"], preva) : 
+                    args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], view) : spatial(w["emb_world"], view)
 
-                    ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
-                    weights["soft_w3"], weights["soft_b"], state, x, preva, mask)
+                    soft_inp = args["inpout"] ? w["soft_inp"] : nothing
+                    soft_att = args["attout"] ? w["soft_att"] : nothing
+                    soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
+                    preva = !args["preva"] ? nothing : preva
+                    prevainp = args["preva"] && args["percp"]
+
+                    att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                    ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
+                    soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
+
                     cum_ps += probs(Array(ypred))
                 end
 
                 cum_ps = cum_ps ./ length(models)
-                info("Probs: $(cum_ps)")
+                debug("Probs: $(cum_ps)")
                 action = 0
                 if args["greedy"]
                     action = indmax(cum_ps)
@@ -525,8 +532,10 @@ function test_paragraph(models, groups, maps; args=nothing)
                     action = sample(cum_ps)
                 end
 
-                araw[:] = 0.0
-                araw[1, action] = 1.0
+                if args["preva"]
+                    araw[:] = 0.0
+                    araw[1, action] = 1.0
+                end
 
                 push!(actions, action)
                 prev = current
@@ -541,33 +550,30 @@ function test_paragraph(models, groups, maps; args=nothing)
                 stop = nactions > args["limactions"] || action == 4 || nowall
             end
 
-            info("$(instruction.text)")
-            info("Path: $(instruction.path)")
-            info("Filename: $(instruction.fname)")
+            debug("$(instruction.text)")
+            debug("Path: $(instruction.path)")
+            debug("Filename: $(instruction.fname)")
 
-            info("Actions: $(reshape(collect(actions), 1, length(actions)))")
-            info("Current: $(current)")
+            debug("Actions: $(reshape(collect(actions), 1, length(actions)))")
+            debug("Current: $(current)")
 
             if action != 4
-                info("FAILURE")
+                debug("FAILURE")
                 break
             end
 
             if i == length(data)
                 if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
                     scss += 1
-                    info("SUCCESS\n")
+                    debug("SUCCESS\n")
                 else
-                    info("FAILURE\n")
+                    debug("FAILURE\n")
                 end
             end
         end
     end
-
     return scss / length(groups)
 end
-
-
 
 function initparams(ws; args=nothing)
     prms = Dict()

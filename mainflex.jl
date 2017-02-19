@@ -38,6 +38,7 @@ function parse_commandline()
         ("--inpout"; help = "direct connection from input to output"; action = :store_true)
         ("--prevaout"; help = "direct connection from prev action to output"; action = :store_true)
         ("--attout"; help = "direct connection from attention to output"; action = :store_true)
+        ("--level"; help = "log level"; default="info")
 	end
 	return parse_args(s)
 end		
@@ -88,7 +89,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
         @time lss = train(w, prms_sp, trn_data; args=args)
         @time train_acc = test([w], train_data, maps; args=args)
         @time tst_acc = test([w], test_data, maps; args=args)
-        #@time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)
+        @time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)
         @time trnloss = train_loss(w, trn_data; args=args)
 
         dev_acc = 0
@@ -97,7 +98,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
 
         if args["vDev"]
             @time dev_acc = test([w], dev_data, maps; args=args)
-            #@time dev_prg_acc = test_paragraph([w], dev_data_grp, maps; args=args)
+            @time dev_prg_acc = test_paragraph([w], dev_data_grp, maps; args=args)
             @time dev_loss = train_loss(w, dev_d; args=args)
         end
 
@@ -118,14 +119,11 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
         end
 
         if args["vDev"]
-            info("Epoch: $(i), trn loss: $(lss) , single acc: $(dev_acc) , $(dev_ins[1].map)")
-            #info("Epoch: $(i), trn loss: $(lss) , single acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
-            #info("TestIt: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
-            info("TestIt: $(i), trn loss: $(lss) , single acc: $(tst_acc) , $(test_ins[1].map)")
+            info("Epoch: $(i), trn loss: $(lss) , single acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
+            info("TestIt: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
             info("Losses: $(i), trn loss: $(trnloss) , dev loss: $(dev_loss) , $(dev_ins[1].map)")
         else
-            info("No result")
-            #info("Epoch: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
+            info("Epoch: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
         end
         info("Train: $(i) , trn acc: $(train_acc)")
 
@@ -151,7 +149,11 @@ end
 
 function mainflex()
 	Logging.configure(filename=args["log"])
-	Logging.configure(level=INFO)
+    if args["level"] == "info"
+	    Logging.configure(level=INFO)
+    else
+	    Logging.configure(level=DEBUG)
+    end
 	srand(args["seed"])
 	info("*** Parameters ***")
 	for k in keys(args); info("$k -> $(args[k])"); end
