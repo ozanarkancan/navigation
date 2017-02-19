@@ -1,4 +1,5 @@
 using Base.Collections
+using Base.Collections: PriorityQueue
 include("../util.jl")
 
 #recursive backtracking algorithm
