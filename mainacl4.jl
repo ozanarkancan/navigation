@@ -152,7 +152,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
 	data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=emb), vcat(train_ins[1], train_ins[2]))
 	trn_data = minibatch(data;bs=args["bs"])
 
-	train_data = map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)), train_ins[1])
+	train_data = map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)), vcat(train_ins[1], train_ins[2]))
 	vdims = size(trn_data[1][2][1])
 	
 	info("\nWorld: $(vdims)")
