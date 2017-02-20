@@ -203,9 +203,15 @@ function mainhyperband()
 
         info("Res: $res")
         emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
-        acc1 = execute(trn, dev1, maps, vocab, emb, args, res)
-        acc2 = execute(trn, dev2, maps, vocab, emb, args, res)
-        lss = 1 - (acc1 + acc2) / 2
+        lss = 100
+        try
+            acc1 = execute(trn, dev1, maps, vocab, emb, args, res)
+            acc2 = execute(trn, dev2, maps, vocab, emb, args, res)
+            lss = 1 - (acc1 + acc2) / 2
+        catch
+            info("Model has been failed")
+            lss = 1000
+        end
         info("Loss: $lss")
 
         return lss
