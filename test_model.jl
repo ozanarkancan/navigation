@@ -1,4 +1,4 @@
-using ArgParse
+using ArgParse, DataFrames
 
 include("util.jl")
 include("io.jl")
@@ -84,6 +84,9 @@ function parse_commandline()
 		"--vTest"
 			help = "vtest"
 			action = :store_true
+        "--categorical"
+            help = "report action categories"
+            action = :store_true
 	end
 	return parse_args(s)
 end		
@@ -133,14 +136,40 @@ function main()
 
 	test_ins = testins[args["test"]]
 	test_data = args["embedding"] ? map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)), test_ins) : map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
-	#test_data_prg = map(ins-> (ins, ins_arr(d["vocab"], ins.text)), merge_singles(test_ins))
 	test_data_grp = args["embedding"] ? map(x->map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)),x), group_singles(test_ins)) : map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
 
 	@time tst_acc = test(models, test_data, maps; args=args)
 	@time tst_prg_acc = test_paragraph(models, test_data_grp, maps; args=args)
 
 	info("Single: $tst_acc , Paragraph: $tst_prg_acc")
+
+    if args["categorical"]
+        df = DataFrame(Category=Any[], Acc=AbstractFloat[], Text=Any[], Path=Any[], Map=Any[], Fname=Any[], Id=Any[])
+        cat = Dict()
+        num = Dict()
+        for i=1:length(test_data)
+            as = getactions(test_data[i][1].path)
+            acc = test(models, test_data[i:i], maps;args=args)
+            push!(df, (as, acc, join(test_data[i][1].text, " "), test_data[i][1].path, test_data[i][1].map, test_data[i][1].fname, test_data[i][1].id))
+            if haskey(cat, as)
+                cat[as] = cat[as] + acc
+                num[as] = num[as] + 1
+            else
+                cat[as] = acc
+                num[as] = 1
+            end
+        end
+
+        writetable(string(args["log"], ".csv"), df)
+
+        df2 = DataFrame(Category=Any[], Acc=AbstractFloat[], Num=Int[])
+        for k in sort(collect(keys(cat)); by=length)
+            info("\nCategory: $k , Dist: $(num[k]) / $(length(test_data))")
+            info("Accuracy: $(cat[k] / num[k])")
+            push!(df2, (k, cat[k]/num[k], num[k]))
+        end
+        writetable(string(args["log"], "_2.csv"), df2)
+    end
 end
 
 main()
-
