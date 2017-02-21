@@ -377,6 +377,16 @@ function action(curr, next)
 	return a
 end
 
+function getactions(path)
+    actions = Any[]
+    for i=1:length(path)
+        curr = path[i]
+        next = i == length(path) ? curr : path[i+1]
+        push!(actions, action(curr, next))
+    end
+     return actions
+end
+
 function build_instance(instance, map, vocab; vdims=[39, 39], emb=nothing, encoding="grid")
 	words = emb == nothing ? ins_arr(vocab, instance.text) : ins_arr_embed(emb, vocab, instance.text)
 

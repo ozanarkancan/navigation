@@ -192,7 +192,7 @@ function decode(weight, bias, soft_h, soft_b, state, x; soft_inp=nothing, soft_a
     q = (inph * soft_h) .+ soft_b
     
     if soft_inp != nothing
-        q = q + inp * soft_inp
+        q = q + inp[:, 1:size(x,2)] * soft_inp
     end
     
     if soft_preva != nothing
@@ -490,10 +490,9 @@ function test_paragraph(models, groups, maps; args=nothing)
                 state[6] = hcat(state[2][end], state[4][end])
             end
 
-            current = instruction.path[1]
             nactions = 0
             stop = false
-
+            action = 0
             actions = Any[]
             araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
             while !stop
@@ -525,7 +524,6 @@ function test_paragraph(models, groups, maps; args=nothing)
 
                 cum_ps = cum_ps ./ length(models)
                 debug("Probs: $(cum_ps)")
-                action = 0
                 if args["greedy"]
                     action = indmax(cum_ps)
                 else

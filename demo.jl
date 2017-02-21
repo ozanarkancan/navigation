@@ -30,17 +30,17 @@ function parse_commandline()
 			nargs = '+'
 		"--window"
 			help = "size of the filter"
-			default = [3]
+			default = [29, 7, 5]
 			arg_type = Int
 			nargs = '+'
 		"--filters"
 			help = "number of filters"
-			default = [30]
+			default = [300, 150, 50]
 			arg_type = Int
 			nargs = '+'
 		"--model"
 			help = "model file"
-			default = "model01.jl"
+			default = "baseline_cnn_wvecs.jl"
 		"--pdrops"
 			help = "dropout rates"
 			nargs = '+'
@@ -53,7 +53,7 @@ function parse_commandline()
 			arg_type = Float64
 		"--bs"
 			help = "batch size"
-			default = 100
+			default = 1
 			arg_type = Int
 		"--log"
 			help = "name of the log file"
@@ -63,7 +63,7 @@ function parse_commandline()
 			arg_type = Int
 		"--load"
 			help = "model path"
-			default = []
+			default = ["mbank/cnn_wvecs_3_1_l_jelly.jld"]
 			nargs = '+'
 		"--charenc"
 			help = "charecter embedding"
@@ -73,20 +73,17 @@ function parse_commandline()
 			default = "grid"
 		"--greedy"
 			help = "deterministic or stochastic policy"
-			action = :store_true
+			action = :store_false
 		"--embedding"
 			help = "embedding"
-			action = :store_true
+			action = :store_false
 		"--seed"
 			help = "seed"
 			default = 12345
 			arg_type = Int
-		"--vTest"
-			help = "vtest"
-			action = :store_true
-        "--categorical"
-            help = "report action categories"
-            action = :store_true
+        "--mapname"
+            help = "name of the map"
+            default = "Grid"
 	end
 	return parse_args(s)
 end		
@@ -110,21 +107,15 @@ function get_maps()
 end
 
 function main()
-	Logging.configure(filename=args["log"])
+	Logging.configure(output=STDOUT)
 	Logging.configure(level=INFO)
 	srand(args["seed"])
 	info("*** Parameters ***")
 	for k in keys(args); info("$k -> $(args[k])"); end
-	
-	grid, jelly, l = getallinstructions()
-	lg = length(grid)
-	lj = length(jelly)
-	ll = length(l)
-	dg = floor(Int, lg*0.5)
-	dj = floor(Int, lj*0.5)
-	dl = floor(Int, ll*0.5)
 
-	testins = args["vTest"] ? [l, jelly, grid] : [l[(dl+1):end], l[1:dl], jelly[(dj+1):end], jelly[1:dj], grid[(dg+1):end], grid[1:dg]]
+    info("Loading...")
+	grid, jelly, l = getallinstructions()
+
 	maps = get_maps()
 
 	vocab = !args["charenc"] ? build_dict(vcat(grid, jelly, l)) : build_char_dict(voc_ins)
@@ -134,41 +125,33 @@ function main()
 	models = Any[]
 	for mfile in args["load"]; push!(models, loadmodel(mfile)); end
 
-	test_ins = testins[args["test"]]
-	test_data = args["embedding"] ? map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)), test_ins) : map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
-	test_data_grp = args["embedding"] ? map(x->map(ins-> (ins, ins_arr_embed(emb, vocab, ins.text)),x), group_singles(test_ins)) : map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
+    info("Working on $(args["mapname"]) map...")
 
-	@time tst_acc = test(models, test_data, maps; args=args)
-	@time tst_prg_acc = test_paragraph(models, test_data_grp, maps; args=args)
+    while true
+        try
+            print("Coordinates and the orientation(x,y,o): ")
+            str = readline(STDIN)
+            x,y,o = map(x->parse(Int, x), split(strip(str), ","))
 
-	info("Single: $tst_acc , Paragraph: $tst_prg_acc")
+            print("Enter an instruction: ")
+            str = readline(STDIN)
+            text = split(strip(str))
 
-    if args["categorical"]
-        df = DataFrame(Category=Any[], Acc=AbstractFloat[], Text=Any[], Path=Any[], Map=Any[], Fname=Any[], Id=Any[])
-        cat = Dict()
-        num = Dict()
-        for i=1:length(test_data)
-            as = getactions(test_data[i][1].path)
-            acc = test(models, test_data[i:i], maps;args=args)
-            push!(df, (as, acc, join(test_data[i][1].text, " "), test_data[i][1].path, test_data[i][1].map, test_data[i][1].fname, test_data[i][1].id))
-            if haskey(cat, as)
-                cat[as] = cat[as] + acc
-                num[as] = num[as] + 1
-            else
-                cat[as] = acc
-                num[as] = 1
+            ins = Instruction("demo", text, Any[(x,y,o)], args["mapname"], 0)
+            dat = args["embedding"] ? [(ins, ins_arr_embed(emb, vocab, ins.text))] : [(ins, ins_arr(vocab, ins.text))]
+
+            test(models, dat, maps; args=args)
+
+            print("Continue y/n: ")
+            c = readline(STDIN)
+            c = strip(c)
+            if c=="N" || c=="n" || c=="no" || c=="No"
+                break
             end
+        catch e
+            info(e)
+            info("Bad things happened...\n")
         end
-
-        writetable(string(args["log"], ".csv"), df)
-
-        df2 = DataFrame(Category=Any[], Acc=AbstractFloat[], Num=Int[])
-        for k in sort(collect(keys(cat)); by=length)
-            info("\nCategory: $k , Dist: $(num[k]) / $(length(test_data))")
-            info("Accuracy: $(cat[k] / num[k])")
-            push!(df2, (k, cat[k]/num[k], num[k]))
-        end
-        writetable(string(args["log"], "_2.csv"), df2)
     end
 end
 
