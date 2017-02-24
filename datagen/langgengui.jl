@@ -278,7 +278,7 @@ function main(window)
         if haskey(dict, :pathbut) && dict2[:maze] != nothing
             txt = plaintext("")
             dict2[:path_meshes] = Any[]
-            dict2[:nodes], dict2[:path] = generate_path(dict2[:maze]; distance=3)
+            dict2[:nodes], dict2[:path] = generate_path(dict2[:maze], dict2[:available]; distance=3)
             h,w,_ = size(dict2[:maze])
             dict2[:path_meshes] = draw_path(dict2[:path], h, w)
         end

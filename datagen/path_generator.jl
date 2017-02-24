@@ -1,8 +1,8 @@
-function generate_path(maze; distance=4)
+function generate_path(maze, available; distance=4)
 	h,w,_ = size(maze)
-	rp = randperm(h*w)
+	rp = randperm(collect(available))
 
-	x1,y1 = ind2sub((h,w), rp[1])
+	x1,y1 = rp[1]
 	z1 = rand(0:3) * 90
 	x2 = 0
 	y2 = 0
@@ -10,12 +10,12 @@ function generate_path(maze; distance=4)
 	i=2
 
 	while dist < distance
-		x2,y2 = ind2sub((h,w), rp[i])
+		x2,y2 = rp[i]
 		i += 1
 		dist = abs(x1-x2)+abs(y1-y2)
 	end
 
-	path = astar_solver(maze, Int[x1, y1], Int[x2, y2])
+	path = astar_solver(maze, available, Int[x1, y1], Int[x2, y2])
 
 	start = (y1, x1, z1)
 	goal = (y2, x2, -1)

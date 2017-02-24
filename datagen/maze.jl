@@ -10,7 +10,6 @@ function generate_maze(h = 4, w = 4; numdel=0)
     available = Set(map(ind->ind2sub((h,w), ind), randperm(h*w)[(numdel+1):end]))
 
     for (r, c) in available; unvisited[r, c] = 1; end
-    showall(available)
 
     function neighbours(r,c)
         ns = Array{Tuple{Int, Int, Int}, 1}()
@@ -122,17 +121,17 @@ function print_maze(maze, available)
 end
 
 #start & goal must be an array with 2 elements
-function astar_solver(maze, start, goal)
+function astar_solver(maze, available, start, goal)
     function neighbours(r,c)
         ns = Any[]
         for i=1:4
-            if i == 1 && maze[r, c, 1] == 1
+            if i == 1 && maze[r, c, 1] == 1 && in((r-1, c), available)
                 push!(ns, Float64[r-1, c])
-            elseif i == 2 && maze[r, c, 2] == 1
+            elseif i == 2 && maze[r, c, 2] == 1 && in((r, c+1), available)
                 push!(ns, Float64[r, c+1])
-            elseif i == 3 && maze[r, c, 3] == 1
+            elseif i == 3 && maze[r, c, 3] == 1 && in((r+1, c), available)
                 push!(ns, Float64[r+1, c])
-            elseif i == 4 && maze[r, c, 4] == 1
+            elseif i == 4 && maze[r, c, 4] == 1 in((r, c-1), available)
                 push!(ns, Float64[r, c-1])
             end
         end
@@ -285,81 +284,6 @@ function generate_navi_map(maze, name; itemcountprobs=[0.05 0.5 0.45], iprob=0.2
     return Map(name, nodes, edges)
 end
 
-"""
-Fills the given maze with items & hall patterns
-itms: Dict{(x,y), Item}, Item is a string
-flts: Dict{Array{(x1, y1), (x2, y2)}}
-"""
-function generate_navi_map(maze, name, itms, flrs, wlls)
-    h,w,_ = size(maze)
-    nodes = Dict()
-    edges = Dict()
-
-    #set nodes and horizontal edges
-    for i=1:h
-        for j=1:w
-            n1 = (j, i)
-            n2 = (j+1, i)
-            item = ""
-
-            if rand() < iprob && length(items) > 0
-                item = pop!(items)
-            end
-
-            get!(nodes, n1, Items[item])
-            wall = 0
-
-            if j+1 <= b1 && i <= b2
-                wall = walls[1]
-            elseif j+1 > b1 && i <= b3
-                wall = walls[2]
-            else
-                wall = walls[3]
-            end
-
-            if maze[i, j, 2] == 1
-                d = get!(edges, n1, Dict(n2 => (wall, floor)))
-                get!(d, n2, (wall, floor))
-                d = get!(edges, n2, Dict(n1 => (wall, floor)))
-                get!(d, n1, (wall, floor))
-            else
-                floor = rand(collect(values(Floors)))
-            end
-        end
-    end
-
-    floor = rand(collect(values(Floors)))
-
-    #set vertical edges
-    for j=1:w
-        for i=1:h
-            n1 = (j, i)
-            n2 = (j, i+1)
-
-            wall = 0
-
-            if j <= b1 && i+1 <= b2
-                wall = walls[1]
-            elseif j > b1 && i+1 <= b3
-                wall = walls[2]
-            else
-                wall = walls[3]
-            end
-
-            if maze[i, j, 3] == 1
-                d = get!(edges, n1, Dict(n2 => (wall, floor)))
-                get!(d, n2, (wall, floor))
-                d = get!(edges, n2, Dict(n1 => (wall, floor)))
-                get!(d, n1, (wall, floor))
-            else
-                floor = rand(collect(values(Floors)))
-            end
-        end
-    end
-
-    return Map(name, nodes, edges)
-end
-
 function testmazepath()
     h,w=(8, 8)
     maze, available = generate_maze(h, w; numdel=8)
@@ -380,4 +304,4 @@ function testmazepath()
     =#
 end
 
-testmazepath()
+#testmazepath()
