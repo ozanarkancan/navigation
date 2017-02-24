@@ -64,7 +64,7 @@ function parse_commandline(argv)
 	arg_type = Int
 	"--load"
 	help = "model path"
-	default = ["mbank/cnn_wvecs_3_1_l_jelly.jld"]
+	default = ["mbank/cnn_wvecs_1_1_l_jelly.jld"]
 	nargs = '+'
 	"--charenc"
 	help = "charecter embedding"
@@ -144,17 +144,14 @@ function main(argv=ARGS)
             println(mapstring(map1, (x,y,o)))
             print("Enter an instruction: ")
             str = strip(readline(STDIN))
-            if str=="" break; end
-            text = split(str)
-
-            ins = Instruction("demo", text, Any[(x,y,o)], args["mapname"], 0)
-            dat = args["embedding"] ? [(ins, ins_arr_embed(emb, vocab, ins.text))] : [(ins, ins_arr(vocab, ins.text))]
-
-            if text[1] == "reset"
-                (x,y,o) = eval(parse(text[2]))
-            elseif text[1] == "quit"
+            if str==""
                 break
+            elseif str[1]=='('
+                (x,y,o) = eval(parse(str))
             else
+                text = split(str)
+                ins = Instruction("demo", text, Any[(x,y,o)], args["mapname"], 0)
+                dat = args["embedding"] ? [(ins, ins_arr_embed(emb, vocab, ins.text))] : [(ins, ins_arr(vocab, ins.text))]
                 (x,y,o) = demotest(models, dat, maps; args=args)
             end
 
@@ -167,6 +164,7 @@ function main(argv=ARGS)
         catch e
             info(e)
             info("Bad things happened...\n")
+            break
         end
     end
 end
@@ -174,9 +172,9 @@ end
 function mapstring(m::Map, coor=nothing)
     xmin,xmax = extrema(map(c->c[1],keys(m.nodes)))
     ymin,ymax = extrema(map(c->c[2],keys(m.nodes)))
-    const mapchars = collect("BCEHLS.123brcfgvwy")
+    const mapchars = collect("BCEHLS.123brcfsgwy")
     const mapwords = split("barstool chair easel hatrack lamp sofa X butterfly fish tower blue brick concrete flower grass gravel wood yellow")
-    maplegend = "B:barstool C:chair E:easel H:hatrack L:lamp S:sofa .:X 1:butterfly 2:fish\n3:tower b:blue r:brick c:concrete f:flower g:grass v:gravel w:wood y:yellow\nxmap:$((xmin,xmax)) ymap:$((ymin,ymax))\n"
+    maplegend = "B:barstool C:chair E:easel H:hatrack L:lamp S:sofa .:X 1:butterfly 2:fish\n3:tower b:blue r:brick c:concrete f:flower s:grass g:gravel w:wood y:yellow\nxmap:$((xmin,xmax)) ymap:$((ymin,ymax))\n"
     itemchar(i)=mapchars[i]
     wallchar(i)=mapchars[i+7]
     floorchar(i)=mapchars[i+10]
