@@ -142,7 +142,7 @@ function main(argv=ARGS)
             # x,y,o = map(x->parse(Int, x), split(strip(str), ","))
 
             println(mapstring(map1, (x,y,o)))
-            print("Enter an instruction (or just hit enter to exit): ")
+            print("Enter an instruction: ")
             str = strip(readline(STDIN))
             if str=="" break; end
             text = split(str)
@@ -150,7 +150,13 @@ function main(argv=ARGS)
             ins = Instruction("demo", text, Any[(x,y,o)], args["mapname"], 0)
             dat = args["embedding"] ? [(ins, ins_arr_embed(emb, vocab, ins.text))] : [(ins, ins_arr(vocab, ins.text))]
 
-            (x,y,o) = demotest(models, dat, maps; args=args)
+            if text[1] == "reset"
+                (x,y,o) = eval(parse(text[2]))
+            elseif text[1] == "quit"
+                break
+            else
+                (x,y,o) = demotest(models, dat, maps; args=args)
+            end
 
             # print("Continue y/n: ")
             # c = readline(STDIN)
@@ -166,19 +172,19 @@ function main(argv=ARGS)
 end
 
 function mapstring(m::Map, coor=nothing)
-    const mapchars = collect("BCEHLS.bftukcogvwy")
+    xmin,xmax = extrema(map(c->c[1],keys(m.nodes)))
+    ymin,ymax = extrema(map(c->c[2],keys(m.nodes)))
+    const mapchars = collect("BCEHLS.123brcfgvwy")
     const mapwords = split("barstool chair easel hatrack lamp sofa X butterfly fish tower blue brick concrete flower grass gravel wood yellow")
-    const maplegend = "B:barstool C:chair E:easel H:hatrack L:lamp S:sofa .:X b:butterfly f:fish\nt:tower u:blue k:brick c:concrete o:flower g:grass v:gravel w:wood y:yellow\nagent=$coor\n\n"
+    maplegend = "B:barstool C:chair E:easel H:hatrack L:lamp S:sofa .:X 1:butterfly 2:fish\n3:tower b:blue r:brick c:concrete f:flower g:grass v:gravel w:wood y:yellow\nxmap:$((xmin,xmax)) ymap:$((ymin,ymax))\n"
     itemchar(i)=mapchars[i]
     wallchar(i)=mapchars[i+7]
     floorchar(i)=mapchars[i+10]
     agentchar(o) = (o==0 ? '^' : o==90 ? '>' : o==180 ? 'V' : o==270 ? '<' : '?')
-    xmin,xmax = extrema(map(c->c[1],keys(m.nodes)))
-    ymin,ymax = extrema(map(c->c[2],keys(m.nodes)))
     ncols = 3+5*(xmax-xmin)
     itemcoor(x,y) = (3*(y-ymin)*ncols + 5*(x-xmin) + 1)
-    wallcoor(x1,y1,x2,y2) = (x1==x2 ? itemcoor(x1,min(y1,y2))+ncols : itemcoor(min(x1,x2),y1)+2)
-    floorcoor(x1,y1,x2,y2) = (x1==x2 ? itemcoor(x1,min(y1,y2))+2*ncols : itemcoor(min(x1,x2),y1)+3)
+    wallcoor(x1,y1,x2,y2) = (x1==x2 ? itemcoor(x1,min(y1,y2))+2*ncols : itemcoor(min(x1,x2),y1)+3)
+    floorcoor(x1,y1,x2,y2) = (x1==x2 ? itemcoor(x1,min(y1,y2))+ncols : itemcoor(min(x1,x2),y1)+2)
     chars = fill!(Array(Char,itemcoor(xmax,ymax)+1),' ')
     chars[ncols:ncols:end] = '\n'
     for (xy,item) in m.nodes
@@ -194,8 +200,9 @@ function mapstring(m::Map, coor=nothing)
     if coor != nothing
         x,y,o = coor
         chars[itemcoor(x,y)] = agentchar(o)
+        maplegend *= "Agent($(agentchar(o))) at $coor\n"
     end
-    return maplegend*String(chars)
+    return maplegend*"\n"*String(chars)
 end
 
 function demotest(models, data, maps; args=nothing)
