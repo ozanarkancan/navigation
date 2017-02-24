@@ -507,7 +507,7 @@ function turnins(navimap, maze, curr, next)
 			for cor in ["corridor ", "hall ", "alley ", "hallway ", "path "]
 				for v in ["facing the ", "seeing the "]
 					for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
-						push!(conds, string(prefx, "you should be ", v, flr, cor))
+						push!(cands, string(prefx, "you should be ", v, flr, cor))
 					end
 				end
 			end
