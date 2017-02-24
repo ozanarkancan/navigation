@@ -131,7 +131,7 @@ function astar_solver(maze, available, start, goal)
                 push!(ns, Float64[r, c+1])
             elseif i == 3 && maze[r, c, 3] == 1 && in((r+1, c), available)
                 push!(ns, Float64[r+1, c])
-            elseif i == 4 && maze[r, c, 4] == 1 in((r, c-1), available)
+            elseif i == 4 && maze[r, c, 4] == 1 && in((r, c-1), available)
                 push!(ns, Float64[r, c-1])
             end
         end
