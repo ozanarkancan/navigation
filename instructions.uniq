@@ -1,0 +1,2007 @@
+==> turn 90 (524)
+==> walk 1 (256)
+==> walk >1 (120)
+==> move to X (186)
+==> move to end (45)
+==> face X (101)
+==> orientation (106)
+==> turn and move (47)
+==> move and turn (57)
+==> current position (71)
+==> unclassified (1724)
+
+
+==> turn 90 (524)
+244	turn left
+221	turn right
+9	turn to the right
+8	take a left
+6	make a right
+6	left
+6	turn to the left
+6	make a left
+6	walk forward
+4	turn left into this hall
+2	take left
+2	then take an immediate left
+1	from here turn right
+1	from here turn to the right
+1	tunr right
+1	go left
+
+==> walk 1 (256)
+182	walk forward once
+35	go forward one segment
+5	move forward one alley
+5	go straight
+4	keep going
+3	foward
+3	move forward
+3	go forward
+3	move one block
+2	go down
+2	go straight one movement
+2	go up the hall
+2	move one alley
+1	fwd 1
+1	do so and walk forward once
+1	wlak forward once
+1	go foward
+1	move foward one spce
+
+==> walk >1 (120)
+57	walk forward twice
+23	walk forward three times
+10	walk forward four times
+9	walk forward five times
+3	walk forward six times
+2	go down two spaces
+1	do so and walk forward twice
+1	go forward twice
+1	go forward two segments
+1	go foward two spaces
+1	wlak forward twice
+1	move forward two alleys
+1	move forward two blocks
+1	then two spaces forward
+1	two spaces foward
+1	go down three spaces
+1	go forward three segments
+1	walk forward three tiems
+1	walk forward three times and stop
+1	walk three times forward
+1	go forward four segments
+1	walk forward about four times
+
+==> move to X (186)
+11	go forward one segment to the blue-tiled hall
+10	go forward one segment to the intersection with the blue-tiled hall
+8	go forward one segment to the intersection with a bare concrete hall
+7	move to the stool
+7	go forward one segment to the intersection with the wooden-floored hall
+6	move to it
+6	go forward one segment to the intersection with the brick hall
+5	go forward two segments to the intersection with the blue-tiled hall
+5	go forward one segment to the intersection with the pink-flowered carpet hall
+5	go forward one segment to the empty corner
+4	go towards the coat rack
+4	go forward one segment to the intersection containing the lamp
+3	take the green path to the red brick intersection
+3	go forward one segment to the intersection containing the easel
+3	go down toward the longer end of the hallway
+3	go forward two segments to the intersection with the yellow-tiled hall
+3	go forward one segment to the intersection with the lamp
+3	take the wood path towards the easel
+3	move to the chair
+3	move to the blue carpet
+3	go forward two segments to the intersection with the pink-flowered carpet hall
+3	go all the way down the winding hall
+3	move to the corner
+3	go forward one segment to the intersection with the yellow-tiled hall
+3	move to the next alley
+3	move past the chair to the stool
+2	go to the blue floored area
+2	go all the way down the blue hall
+2	go all the way down until you hit a spot with a coat rack
+2	go straight towards the pink path
+2	go to blue
+2	go toward the lamp
+2	go towards the pink path
+2	go forward along the brick hall five segments to the intersection with the stone hall
+2	go forward one segment to the corner
+2	go forward one segment to the intersection containing the chair
+2	go forward one segment to the intersection with a bare concrete floor
+2	go forward one segment to the intersection with the bare concrete hall
+2	go forward one segment to the intersection with the blue-tiled floor
+2	go forward one segment to the intersection with the grassy hall
+2	go forward one segment to the pink-flowered carpet hall
+2	go forward three segments to the intersection with the pink-flowered carpet hall
+2	go forward three segments to the pink-flowered carpet hall
+2	go forward two segments to the intersection containing the easel
+2	go forward two segments to the intersection of the yellow-tiled hall
+2	go forward two segments to the intersection with the brick hall
+2	go forward two segments to the intersection with the stone hall
+2	walk to it
+2	walk to the easel
+2	go forward two segments passing the chair
+2	go forward two segments passing the chair to the intersection containing the stool
+2	go forward two segments passing the easel in the intersection with the wooden-floored hall
+2	go on the black road towards the end with the easel
+2	go on the path towards the lamp
+2	move along the brick past the lamp to the hatrack
+2	move along the wooden floor to the chair
+2	take the path towards the lamp
+2	take the red brick path towards the lamp
+2	take the wood path towards the red brick intersection
+
+==> move to end (45)
+6	go forward two segments to the end of the hall
+4	go forward one segment to the end of the hall
+4	go forward one segment to the dead end
+3	go forward to the end of the hall
+3	go until hall ends
+3	go to the end
+2	go to end
+2	go to the end of the hall one segment
+2	go to the far end of the hall
+2	foward till the end
+2	go forward three segments to the end of the hall
+2	move to the dead end
+2	walk forward to the end of the hallway
+2	all the way down the winding hall
+2	follow this hallway out
+2	pass the pink-flowered carpet hall
+2	take the blue path all the way to the end of the hall
+
+==> face X (101)
+7	turn to face the long red hallway
+6	turn to face the yellow hallway
+6	face the easel
+5	turn to face the easel
+4	face the yellow-tiled hall
+4	face the lamp
+4	go left onto the red brick
+3	take a right onto the blue path
+3	turn to face the pink hallway
+2	turn left into the blue-tiled hall
+2	turn right into the wooden hall
+2	here take a left towards the easel
+2	take a right onto the red brick
+2	then take a left onto the wood hall
+2	face the octagon carpet
+2	face the pink-flowered carpet hall
+2	turn to face the green hallway
+2	turn to face the short black hallway with the easel at the end
+2	look for grey tiled hall
+2	look for the rose floors
+1	face teh fish walled area with no pnk floors
+1	face the chair at 6
+1	face the green carpeting
+1	face the hall containing the stool
+1	face the hall toward the stool
+1	face the hatrack
+1	face the hatrack in the blue-tiled hallway
+1	face the intersection containing the hatrack
+1	face the intersection containing the stool
+1	face the long alley
+1	face the pink-flowered carpet hallway
+1	face toward the blue-tiled hall containing the hatrack
+1	face toward the hatrack
+1	face toward the hatrack in the blue-tiled hall
+1	face toward the longer end of the brick hall
+1	face toward the longer portion of the brick hall
+1	orient yourself to face the hall with brown brick
+1	orient yourself to face the longer portion of the brick hall
+1	turn and face the blue floored hallway so that the pink floored hallway is on your left and the wall is on your right
+1	turn to face the black corridor where you can see a painting easel at the end and pictures of butterflys on both sides of the walls
+1	turn to face the black corridor with the fish on either sides of the walls and an easel at the end
+1	turn to face the black corridor with the towers on both sides of the walls
+1	turn to face the black floor
+1	turn to face the black floored hallway that is short and has the chair at the end
+1	turn to face the black hallway with the easel at the end of it
+1	turn to face the black hallway with the pictures of towers on either side and a lamp down in the distance
+1	turn to face the black hallway with the pictures of towers on the walls
+1	turn to face the brown floored hallway so that the chair is on your right
+1	turn to face the green halllway
+1	turn to face the honeycomb yellow floor
+1	turn to face the honeycomb yellow hallway
+1	turn to face the long black hallway witht he lamp at the end
+1	turn to face the pink hallway so that the painting easel is on your back left side
+1	turn to face the short black hallway witht he easel at the end
+1	turn to face the short red hallway
+1	turn to face the walls with the immediate tower pictures
+1	regardless you will turn toward the easel
+
+==> orientation (106)
+19	place your back against the wall of the 't' intersection
+13	place your back to the wall of the 't' intersection
+13	with your back to the wall turn left
+12	turn so that the wall is on your left
+9	turn so the wall is on your left
+8	with your back to the wall turn right
+6	turn so that the wall is on your right
+4	turn so that the wall is on your right and back
+4	turn so the wall is on your back
+2	turn so that the wall is facing your left and back
+2	turn so that the wall is on your back
+2	turn so that the wall is on your left and to your back
+2	turn so that the wall is on your left side
+2	turn so that the wall is on your right side
+2	turn so the wall is on your right
+2	orient yourself along the wooden hall with the hatrack behind you
+2	place your back to the 't' intersection
+2	stand with your back to the wall of the 't' intersection
+
+==> turn and move (47)
+6	turn left and walk forward once
+5	turn right and walk forward once
+5	face and move to the chair
+5	turn left walk forward once
+4	face and move to the lamp
+3	face and move to the easel
+3	turn left walk forward twice
+3	turn left walk forward three times
+3	turn and move past the chair to the octagon carpet
+2	turn left and move to the easel
+2	turn left and walk forward four times
+2	turn right walk forward once
+2	face and move to the hatrack
+2	face the hat rack and move to it
+
+
+==> move and turn (57)
+5	move to the flowered carpet and turn left
+5	make the first left
+4	move to the easel and turn left
+4	move to the easel and turn right
+4	make the first right
+3	at the chair go left onto the blue path
+3	at the coat rack take a right onto the blue path
+3	at the chair take a right
+3	at the easel take a right onto the wood path
+3	a left at the red hall
+2	1st right
+2	at the chair go right
+2	at the corner go right towards the easel
+2	at the end of the hall go left towards the easel
+2	when the hall ends take a right
+2	at the next intersection take a left onto the blue path
+2	make the first rt
+2	move to the blue carpet and turn right
+2	move to the corner and turn left
+2	move to the next alley and turn left
+
+==> current position (71)
+11	this intersection contains a hatrack
+9	only one way to go
+7	this intersection contains an easel
+7	only one direction to go
+4	you are now facing the yellow-tiled hall
+4	you should see blue carpet
+3	there is a bench in this intersection
+3	this intersection contains a bench
+3	turn so that the wall is to your back
+2	you should see gray floor to your right
+2	there is an easel in this intersection
+2	there is an easel to your left
+2	this contains a chair
+2	to your left is grey flooring
+2	blue floored area
+2	in front is a hatrack and left is grey flooring
+2	the bench in the bare concrete hall should be to your left
+2	the bench in the bare concrete hall should be to your right
+2	the side alley has stone flooring
+
+==> unclassified (1724)
+3	follow the red brick path away from the bench
+2	at the end of this hall at the corner you are at position 5
+2	move there
+2	pos 6 is at the end
+2	pos three is in between the two pieces of furniture in this hallway
+2	position 1 has a bench
+2	position 3 is in the middle of the blue hall
+2	position 5 is in the wooden-floored hall
+2	take the blue path all the way down to the pink path intersection
+2	the end of this hall is 3
+2	the very next intersection is 1
+1	1st left
+1	1st lft
+1	1st rt
+1	2 sections down you will see a bench
+1	3 is at the end of this hall
+1	4 is at the intersection of the blue and rose hallways
+1	5 is at the end of the long butterlfy hallway
+1	6 should be one stop down
+1	a left at the blue hall
+1	a right at the red hall
+1	after moving the one segment to reach this spot turn left
+1	again follow the path and take a left at the corner at the end of this hall take a left onto the green path
+1	again move forward to the blue carpet and turn left
+1	again no choice but to turn right
+1	again take a right at the first intersection and go to the end of the hall
+1	all the way down to a winding hall
+1	all the way down until one space before you see a bench
+1	all the way till almost the end
+1	amek a left into dead end
+1	and a right when you see the red hall
+1	and finally turn right and walk forward once
+1	and go all the way down the winding hall until you reach the dead end
+1	and right again and go forward once
+1	and stop
+1	and stop one alley past the chair
+1	and the grey hall to the yellow hall at the intersection
+1	and the very next intersection where there is also a stool is 7
+1	and then another left at the coat rack
+1	and then position 1 has a bench
+1	and then take another left once you see a coatrack in the middle of the hall
+1	and walk forward once
+1	at 4 face the grass carpet
+1	at four face the octagon carpet
+1	at one end the left probably of the intersecting hall there will be a stool and the bare concrete hall will intersect with the stone hall
+1	at one face the lamp
+1	at one face the long brick alley
+1	at seven face from looking at the long alley turn left
+1	at seven face the chair
+1	at seven face the long alley with a lamp and an easel in front of you
+1	at seven put your back to the chair
+1	at six place your back to the wall
+1	at six put your back to the easel
+1	at that intersection stop
+1	at the black bench take a left onto the blue path
+1	at the black road intersection take a left
+1	at the blue path intersection hang a left
+1	at the blue path intersection take a left onto the blue path
+1	at the blue path intersection take a right and follow the blue path to the very end of the hall
+1	at the blue path take a left towards the coat rack
+1	at the chair at the end of the hall go right
+1	at the chair go left towards teh stool
+1	at the chair take a left
+1	at the chair take a left onto the blue path and follow it to the very end of the hall
+1	at the closer end of the hall there is an intersection with a bare concrete hall
+1	at the coat rack go left onto the yellow path and at the end of this hall is 4
+1	at the coat rack take a left
+1	at the coat rack take a left onto the green path
+1	at the coat rack take a left onto the yellow path and go to the end of the hall
+1	at the coat rack take a right onto the blue path and follow past the chair to the pink path intersection
+1	at the coat rack take a right onto the plain cement path
+1	at the coat rack take another left onto the plain cement
+1	at the corner here turn right onto the green path
+1	at the corner take a left
+1	at the corner take a left and at the next corner take a right at the lamp
+1	at the corner take a right
+1	at the corner take a right onto the blue path and go all the way down until you reach a coat rack
+1	at the corner take a right towards the easel
+1	at the easel go left and then take a right onto the blue path at the corner
+1	at the easel go left on the plain path until it intersects with the blue path
+1	at the easel go right and follow the path to the end of the hall
+1	at the easel go right onto the wood path and the next intersection will be 5
+1	at the easel go right onto the wood path and the very first section will be 5
+1	at the easel take a left and go to the corner where you will meet the blue path
+1	at the easel take a left onto the wood path and the very first section you come to you will be at 5
+1	at the easel take a left to the next corner
+1	at the easel take a right onto the wood path and the very next section will be 5
+1	at the easel turn right and walk down the longer alley
+1	at the end of the aisle you should see grass carpet to your left
+1	at the end of the blue flooring turn left
+1	at the end of the grass alley turn right
+1	at the end of the grass there should be green octagon carpet to your right
+1	at the end of the hall at the chair take a right
+1	at the end of the hall go right again
+1	at the end of the hall in the corner you are at position 5
+1	at the end of the hall take a left towards the easel
+1	at the end of this hall at the corner go left towards the easel
+1	at the end of this hall is position 3
+1	at the end of this hall take a left towards the lamp
+1	at the end of this hall take a left towards the lamp and once at the lamp take a right
+1	at the end of this hall you can either only go right or left
+1	at the end where you can only go right or left onto a blue path you are at 3
+1	at the far end you will reach the intersection with the yellow-tiled hall
+1	at the first intersection after the lamp take a right onto the plain cement path
+1	at the first intersection go right
+1	at the first intersection take a left onto the pink path
+1	at the hatrack turn right
+1	at the intersection of plain cement and red brick path this is position 7
+1	at the intersection of plain cement you will go right towards the black stool
+1	at the intersection of the black and yellow path take a left onto the yellow path
+1	at the intersection of the blue and rose floored halls
+1	at the intersection of the blue hall and the rose floored hall
+1	at the intersection of the red brick and wood path go left onto the wood path
+1	at the intersection of the rose floors and the yellow floors
+1	at the intersection where the street with no furniture is at
+1	at the intersection where you can only either go right or left on a blue path this is position 4
+1	at the intersection with plain cement you are at 6
+1	at the intersection with the blue path take a right onto the blue path and follow it towards the chair and past the coat rack
+1	at the intersection with the green path take a right and again go to the end of the hall where the corner meets with the yellow path
+1	at the intersection with the plain cement you'll be at 6
+1	at the intersection with the yellow path take a right onto the yellow path and go all the way to the end of the hall
+1	at the lamp follow the path to the left and then right at the next corner
+1	at the lamp go left
+1	at the lamp take a left
+1	at the lamp take a left and at the next corner go right onto the wood path
+1	at the lamp take another right and follow it to the end of the hall at the corner
+1	at the lamp turn right
+1	at the next corner go right onto the wood path
+1	at the next corner take a left
+1	at the next corner take a right onto the blue path and follow it towards the chair
+1	at the next corner take a right onto the wood path
+1	at the next intersection take a right onto the blue path
+1	at the next junction of yellow and black take a left
+1	at the other end of the bare concrete hall is the blue-tiled hall
+1	at the pink path intersection go left onto the pink path
+1	at the rack go right onto the blue path
+1	at the red brick intersection go right towards the lamp
+1	at the red brick intersection take a left
+1	at the second intersection down take a right
+1	at the stone-floored hall turn right
+1	at the third take a right onto the white cement path
+1	at the very end of the hall you will turn left towards the easel
+1	at the very first intersection on this path take a right and go to the end of the hall
+1	at the very first intersection you will be at the pink path
+1	at the very next intersection go right onto the blue path
+1	at the very next intersection take a left onto the blue path
+1	at the very next intersection take a right onto the plain path and follow it to the end of the hall
+1	at the wood path intersection take the wood path towards the eiffel towers on the walls
+1	at this corner turn left onto the red brick
+1	at this intersection go left onto the pink path
+1	at this intersection go right onto the pink path and at the very first intersection go right to the very end of the hall and this is 6
+1	at this intersection however you can either only go straight or right onto a plain cement path
+1	at this intersection look for flowered carpet and an easel
+1	at this intersection of pink path and red brick you are at position 1
+1	at three put your back to the sofa and move forward towards the stool
+1	at two face the lamp
+1	at two place your back to the wall
+1	at your left you should see grass
+1	blue hall to grassy hall
+1	blue-tiled hall should be to your left the intersection with the chair behind you
+1	but 2 is at the grey hallway and yellow hallway
+1	but butterflies on the wall
+1	but one movement forward and it will
+1	continue down the grey floor until you get to the intersection one movement before the yellow and grey floors intersect
+1	continue one movement past a lamp pole
+1	continue until you get to the grey floor
+1	continuing until you reach the red hall
+1	dead end of the fish area
+1	down blue hall till you hit the grassy hall
+1	down the grassy hall till you hit the yellow hall
+1	down the grey hall
+1	down the grey hall to the red hall
+1	down the grey hall until you reach the blue hall
+1	down the long butterfly hallway with blue walls
+1	down the red hall
+1	down the yellow hall until it intersects with the grey hall and has an easel
+1	end of the fish area
+1	face and move forward to the hatrack
+1	face and move past the chair
+1	face and move to the sofa chair
+1	face and move to the wooden chair
+1	face and move towards the lamp
+1	face away from the dead end
+1	face away from the easel
+1	face away from the shorter end of the hall
+1	face so the aesal is to your left
+1	face so the aesal is to your right
+1	face the lamp and move to it
+1	face the long brick alley and move past the lamp and one alley past the hatrack
+1	face the long red-bricked alley and move along it to the wooden flooring
+1	face the longer end of the fish hallway with no pnk on the florr
+1	face the pink-flowered carpet hall with your back to the bench at the intersection of it and the yellow-tiled hall
+1	face the shorter portion of the brick hall
+1	face the shorter portion of the pink-flowered carpet hall where it interesects the blue-tiled hall
+1	face the stone floored alley and move to the end of it
+1	facing the grey floored deadend move to it
+1	facing the long aisle turn left
+1	fave and move past the chair to the end of the blue flooring
+1	find the aesal in the fish area with black floors near it
+1	find the aesal in this area
+1	find the blue hall
+1	find the butterfly halls
+1	find the fish hallways
+1	find the long butterfly hallway with perpendicular streets ending at its intersection with this ahllway
+1	find the pink flowered floored area
+1	first go straight until you get to the first intersection
+1	first left
+1	follow it all the way to the coat rack and take a left onto the yellow path
+1	follow it all the way to the other end of the hall
+1	follow it around until you can see a lamp
+1	follow it four segments to the intersection with the bare concrete hall passing the chair and stool
+1	follow it to the pink-flowered carpet hall
+1	follow it towards the easel and at the easel take a left
+1	follow it until the intersection of the pink flowered path
+1	follow it until you can take a left onto the pink path
+1	follow it until you come to the pink path inersection
+1	follow the alley
+1	follow the bare concrete hall to the intersection with the brick hall
+1	follow the black path all the way until you reach a black stool
+1	follow the black path until you come to an intersection of the red brick path
+1	follow the black until you meet up with a black easel
+1	follow the blue path all the way to the coat rack
+1	follow the blue path to the black path intersection and go right onto the black path
+1	follow the blue path towards the chair and at the chair take a right towards the stool
+1	follow the blue path towards the chair and one intersection after the chair will be 3
+1	follow the blue path until you come to an intersection with a wood path
+1	follow the blue-tiled hall five segments past the stool and bench to the intersection conataining the hatrack
+1	follow the blue-tiled hall five segments to the pink-flowered carpet hall
+1	follow the blue-tiled hall six segments passing the chair stool and bench to the intersection containing the hatrack
+1	follow the blue-tiled hall two segments to the intersection with the stone hall
+1	follow the blue-tiled hallway away form the bench and hatrack toward the pictures of not-butterflies
+1	follow the blue-tiled hallway to the grass floored hallway at the far end
+1	follow the brown brick floored hall to the second to last intersection
+1	follow the brown brick floored hallway to the wooden floored hallway
+1	follow the grassy hall three segments to the blue-tiled hall
+1	follow the green path all the way to the end of the hall as well
+1	follow the hall until you reach a concrete hall with butterflies to the side the blue tile is on the right side and nothing in the intersection at that end of the hall
+1	follow the hall with the yellow-tiled floor to the hall with pink-flowered carpet on the floor
+1	follow the hallway out
+1	follow the hallway until you reach the about second intersection with a bare concrete floor
+1	follow the long corridor till it makes a right then follow the series of turns to the end
+1	follow the path to the next corner and take a right at the lamp
+1	follow the path to the opposite end of the hall and here is 4
+1	follow the path until the blue path intersection
+1	follow the pink floored area toward the fish walled area
+1	follow the pink flowered path all the way until you see fish on the wall
+1	follow the pink path to the red brick path intersection
+1	follow the pink-flowered carpet hall two segments to the intersection with the brick hall
+1	follow the plain cement towards the blue path intersection
+1	follow the pnk floor
+1	follow the stone hall to your left three segments to the blue-tiled hallway
+1	follow the wood path towards red brick path intersection
+1	follow the wooden floored hallway to the 't' intersection where the top of the 't' is two sections of wooden floor and the stem of the 't' is a yellow hexagonally tiled section
+1	follow the yellow path towards the chair
+1	follow the yellow path towards the coat rack
+1	follow the yellow path until it crosses the black
+1	follow the yellow road all the way to the other end where it ends and take a right
+1	follow the yellow-tiled hall forward three segments passing the bench
+1	follow the yellow-tiled hall to the hall with pink-flowered carpet
+1	follow this all the way down
+1	follow this for as far as it will go
+1	follow this green path to the very end of the hall
+1	follow this hall one segment forward to the intersection with the brick hall
+1	follow this hall past the bench to the hatrack about four segments
+1	follow this hall to its opposite end about seven segments
+1	follow this hall to the wooden-floored hall
+1	follow this hall until it 't's with the yellow-tiled hall
+1	follow this hall until you reach a hall with yellow stone flooring
+1	follow this hall until you reach the hall with a brown stone floor one previous to the blue-tiled hall
+1	follow this hallway three segments to the blue-tiled hallway
+1	follow this hallway till you get to the pink floored area
+1	follow this hallway tward the lamp
+1	follow this hallway until you reach the bare concrete hall one segment away from the last intersection which contains a chair
+1	follow this path straight until you see the blue path
+1	follow this path up until the last possible intersection
+1	follow this to the end of the hall and at the corner go left towards the lamp
+1	follow this until the end of the hall
+1	forward one movement
+1	foward 1
+1	foward 1 space
+1	foward one space
+1	foward till 1st right turn
+1	foward to the fish
+1	from 1 face the flowered carpet with the grass carpet in the next side alley
+1	from 2 you should be able to look left and see a hatrack
+1	from 6 walk forward and move out to the blue carpet
+1	from four face the grass carpet and move to the hat rack
+1	from four face the octagon carpet and move forward one alley
+1	from four walk as far as you can
+1	from here you can turn left and see a lamp
+1	from one turn until you can see a corner of blue carpet on the side alleys
+1	from one turn until you see a corner of blue carpet in a side alley
+1	from the easel move one block and place yourself between butterfly pictures
+1	from this corner you can view a lamp to your right and the hatrack you just came from
+1	from this perspective turn to your right and walk two spaces
+1	from this point turn right
+1	from two face towards the hat rack
+1	go 2 intersections down and you'll be at 3
+1	go all the way down the blue floor until you see a coat rack
+1	go all the way down the blue hall until you see a coat rack
+1	go all the way down the grassy hall
+1	go all the way down the hall until you get to the end with an easel
+1	go all the way down the winding hallway
+1	go all the way down to the grey hall
+1	go all the way down until two sections past the lamp
+1	go all the way down until you get to a black easel
+1	go all the way down until you reach a chair
+1	go all the way down until you reach the black intersection
+1	go all the way down until you see butterflies on the wall and one section past the lamp
+1	go all the way to end of the blue carpet
+1	go all the way to the end of the hall
+1	go all the way to the end of the hall and this is 4
+1	go all the way to the wood intersection
+1	go all the way until the intersection of black road
+1	go all the way until you can either go right or left on a blue path
+1	go all the way util the intersection of the black and yellow paths and this is 2
+1	go away from the lamp to the intersection of the red brick and wood
+1	go doen this hallway
+1	go down 1 block
+1	go down first left
+1	go down grey hall until you get to the red hall
+1	go down make a left go down make left stop at the bench
+1	go down make a rt in to the blue floored area
+1	go down make the first left
+1	go down make the first rt
+1	go down the blue-tiled floor until you reach a hall with pink-flowered carpet
+1	go down the butterfly walled/blue floored hallway
+1	go down the first alley to your right and stop at the end
+1	go down the grassy hallway one segment to the bare concrete hall
+1	go down the hall with yellow stone floors until you come to a hall to your left with pink-flowered carpet
+1	go down the longer end of the pink floored area
+1	go down the longer end of this hallway
+1	go down the red hall until you see the blue hall
+1	go down the rose hall
+1	go down the rose hall until you reach the red hall
+1	go down the yellow hall
+1	go down this ahllway until you see the fish ahllways
+1	go down this blue floored alley past the chair to the end
+1	go down this way till the pink floored area
+1	go down till the bench
+1	go down till the easel is on the right
+1	go down till the fish are on teh walls
+1	go down till the fish hallway on your left
+1	go down till you can make a right in to another hallway
+1	go down till you see the fish walled areas
+1	go down to the easel and take a left
+1	go down toward the bench
+1	go down until the pink floored area
+1	go forward about two segments to an intersection with a bare concrete hall
+1	go forward about two segments to the intersection containing the chair
+1	go forward about two segments to the intersection containing the hatrack
+1	go forward about two segments to the intersection of the stone floor and the yellow-tiled floor
+1	go forward along the bare concrete hal one segment ti the intersection of the hall of pink-flowered carpet
+1	go forward along the brick hall away from the lamp one segment
+1	go forward along the brick hall four segments to the wooden-floored hall
+1	go forward along the brick hall six segments to the intersection with the wooden-floored hall passing a hatrack and a lamp
+1	go forward along the brick hall three segments to the intersection with the pink-flowered carpet hall passing a lamp
+1	go forward along the pink-flowered carpet hall three segments to the blue-tiled hall passing a hatrack maybe
+1	go forward along the pink-flowered carpet hall two segments to the intersection with the brick hall
+1	go forward along the stone hall one segment to the intersection with a bare concrete hall
+1	go forward along the stone hall one segment to the intersection with the brick hall
+1	go forward along the stone hall to the intersection with the yellow-tiled hall
+1	go forward along the yellow-tiled hall one segment to the intersection with a bare concrete hall
+1	go forward and turn left at the rose carpet
+1	go forward down the bare concrete hall two segments passing the chair
+1	go forward down the hall until a hall opens to your left
+1	go forward five segements to the intersection with the stone hall passing a lamp and a hatrack
+1	go forward five segments to the empty intersection with a bare concrete hall passing a hatrack and a lamp
+1	go forward five segments to the second intersection with a bare concrete floor
+1	go forward four segments down the brick hallway passing a lamp and an easel to the grassy hallway
+1	go forward four segments passing a lamp to the intersection with the wood hall
+1	go forward four segments passing a lamp to the intersection with the wooden-floored hall
+1	go forward four segments passing the bench to the intersection containing the hatrack
+1	go forward four segments passing the stool and chair to the grassy hallway
+1	go forward four segments to the intersection with the pink-carpeted hall passing a lamp
+1	go forward four segments to the intersection with the wooden-floored hall
+1	go forward in the brown brick-floored hall until you reach the intersection with the hall with the pink-flowered carpet
+1	go forward into the pink-flowered carpet hall one segment to the intersection with the brick hall
+1	go forward once
+1	go forward one movement
+1	go forward one movement in the direction of the red floor
+1	go forward one segment ot the blue-tiled hall
+1	go forward one segment to the 't' intersection with the bare concrete hall
+1	go forward one segment to the blue-tiled hall intersection
+1	go forward one segment to the brick hall
+1	go forward one segment to the grassy hall
+1	go forward one segment to the hatrack
+1	go forward one segment to the interesection containing the stool
+1	go forward one segment to the interesection with a bare concrete hall
+1	go forward one segment to the intersection containing the stool
+1	go forward one segment to the intersection of the brick hall
+1	go forward one segment to the intersection of the pink-flowered carpet hall and the brick hall
+1	go forward one segment to the intersection which has eiffel tower pictures ahead and butterfly pictures behind
+1	go forward one segment to the intersection with a bare concrete flor
+1	go forward one segment to the intersection with the pink-flowered carpet
+1	go forward one segment to the intersection with the stone hall
+1	go forward one segment to the intersection with the stool
+1	go forward one segment to the intersection with the yellow-tiled floor
+1	go forward one segment to the intersection wth the wooden-floored hall
+1	go forward one segment to the stool
+1	go forward one segment to the wooden-tiled hall
+1	go forward one segment to the yellow-tiled hall
+1	go forward one segment to this intersection
+1	go forward passing the chair to the intersection with the pink-flowered carpet
+1	go forward passing the easel
+1	go forward passing the pink-flowered carpet hall on your left
+1	go forward six segments to the intersection with the stone hall
+1	go forward six segments to the intersection with the stone hall passing a lamp and a hatrack
+1	go forward three segements to the 't' intersection with the stone floor
+1	go forward three segment along this hall to the intersection with a bare concrete hall
+1	go forward three segments along the brick hall to the intersection with the pink-flowered carpet hall passing a lamp
+1	go forward three segments along the yellow-tiled hall to the intersection with a bare concrete floor
+1	go forward three segments down the yellow-tiled hall passing the bench
+1	go forward three segments passing the hatrack to the intersection with the blue-tiled hall
+1	go forward three segments passing the lamp
+1	go forward three segments past the stool to the intersection of the bare concrete hall
+1	go forward three segments to an intersection with a bare concrete hall passing a lamp
+1	go forward three segments to the 't' interesection with the pink-flowered carpet hallway
+1	go forward three segments to the intersection of the grassy and yellow-tiled hallways passing the hatrack
+1	go forward three segments to the intersection with the blue-tiled hall
+1	go forward three segments to the intersection with the stone hall passing the hatrack
+1	go forward three segments to the intersection with the yellow-tiled hall
+1	go forward three segments to the intersection with the yellow-tiled hallway passing the hatrack
+1	go forward to the bare concrete intersection between two intersections containing furniture
+1	go forward to the empty intersection that has eiffel tower pictures ahead of you and butterfly pictures behind you
+1	go forward to the far end of the hall
+1	go forward to the intersection which has butterfly pictures on one side and eiffel tower pictures on the other
+1	go forward to the intersection with the pink-flowered carpet hall passing the chair
+1	go forward to the intersection with the yellow-tiled hall
+1	go forward two sections passing the chair to the intersection containing the stool
+1	go forward two segments along the blue-tiled hall
+1	go forward two segments along the blue-tiled hall to the intersection with the pink-flowered carpet hall
+1	go forward two segments along the wooden-floored hall to the intersection containing the easel
+1	go forward two segments along the yellow-tiled hall to the intersection with the stone hall
+1	go forward two segments down the wooden hall to the chair in the blue-tiled hall passing the lamp
+1	go forward two segments or to the first empty intersection
+1	go forward two segments passing a chair
+1	go forward two segments passing a chair to the intersection containing the stool
+1	go forward two segments passing another piece of furniture
+1	go forward two segments passing the bench
+1	go forward two segments passing the chair to the intersection with the pink-flowered carpet hall
+1	go forward two segments passing the easel
+1	go forward two segments past the bench to the intersection containing the hatrack
+1	go forward two segments past the bench to the intersection of the yellow-tiled and grassy halls
+1	go forward two segments to a bare concrete hall
+1	go forward two segments to intersection with the brick hall
+1	go forward two segments to the 't' intersection with the yellow-tiled hall
+1	go forward two segments to the blue-tiled hall
+1	go forward two segments to the intersection containing the stool passing a chair
+1	go forward two segments to the intersection containing the stool passing the chair
+1	go forward two segments to the intersection of the bare concrete hallway
+1	go forward two segments to the intersection of the blue-tiled hall
+1	go forward two segments to the intersection of the grassy hall and the yellow-tiled hall
+1	go forward two segments to the intersection with the bare concrete hall
+1	go forward two segments to the intersection with the brick hall passing the easel
+1	go forward two segments to the intersection with the easel
+1	go forward two segments to the wooden hall
+1	go forward two segmentsm passing the chair
+1	go forward until you reach a hall with pink flowered carpet
+1	go forward until you reach an intersection with wooden flooring to your right
+1	go forward until you reach the intersection with the pink-flowered carpet hall to your right
+1	go forward until you reach the intersection with the stone floor
+1	go foward one segment to the dead end
+1	go foward one segment to the intersection with the stone hall
+1	go foward then make a left keep going down this hallway to you get to the end
+1	go foward till the blue hallway
+1	go foward twice or until you come upon a charred black floor to your right
+1	go left a long way until you reach where there are butterflies on the wall
+1	go left on pink flowered path at that juncture
+1	go left on red brick
+1	go left on the pink path until you either have to turn left or go towards a dead end
+1	go left on wood
+1	go left onto the red brick and the first intersection is 1
+1	go left onto the red brick path
+1	go left onto the red brick path and go all the way down to where the butterflies are on the wall
+1	go left onto the yellow
+1	go left towards the lamp to the very end of the hall
+1	go left until you come to the four way intersection of the red and rose floors with an easel
+1	go on the blue path towards the chair
+1	go on the path towards the coat rack
+1	go on the wood path towards the easel
+1	go one section down to the bench and you are at position 1
+1	go one segment forward to the corner
+1	go one segment forward to the intersection with the hall with pink-flowered carpet
+1	go one space away from the aesal
+1	go one space foward
+1	go out of the dead end you are in
+1	go past the black bench and all of the way down until you reach the wood path intersection
+1	go past the easel to the end of the hall and go left onto the red brick path
+1	go past the easel to the end of this hall and take a left onto the red brick at the corner
+1	go past the easel to the next corner and go right again onto the blue path
+1	go past the easel to the next corner and take a right onto the blue path
+1	go past the easel until you come to the corner with the red brick intersection
+1	go right on red brick
+1	go right on the red brick
+1	go right one move
+1	go right onto the black
+1	go right onto the blue path and follow it towards the chair
+1	go right onto the green path to the end of the hall
+1	go right onto the pink path
+1	go right onto the pink path all the way to the black easel
+1	go right onto the red brick path towards the lamp
+1	go right onto the red brick towards the lamp
+1	go several intersections down to the plain cement intersection and take a left
+1	go straight a few movements
+1	go straight again and at the next corner take a right onto the wood path
+1	go straight and all the way down the hall
+1	go straight down the yellow hall until you hit a corner that intersects with the grass hall
+1	go straight down thre grey hall
+1	go straight on black path to red brick junction
+1	go straight on the pink flowered path to the intersection of the red brick
+1	go straight on the plain cement path
+1	go straight to the black bench
+1	go straight to the very next corner and this is 2
+1	go straight toward the wall hangings of the eiffel tower and take a right on the pink flowered path
+1	go straight towards teh black chair
+1	go straight towards the chair
+1	go straight towards the coat rack
+1	go straight towards the coat rack and take a right at this junction
+1	go straight towards the pink path and at this intersection take a left onto th epink path
+1	go straight unitl the end of the hall here take a left and go straight again until the end of the hall
+1	go straight until hall ends
+1	go straight until the hall ends again and take another right
+1	go straight until you can either go left or towards a dead end
+1	go straight until you get to the grey floor
+1	go straight until you get to the intersection of the grey and yellow halls with fish on the walls
+1	go straight until you get to the intersection with the grey floor
+1	go straight until you reach an intersection of the black path with a yellow path
+1	go straight until you see an intersection of a black path
+1	go three segments down the grassy hall to the blue-tiled hall passing the hatrack
+1	go till the aesal is on your right
+1	go till the bench
+1	go to blue floor area
+1	go to blue floored area
+1	go to it one segment
+1	go to the aesal in the pink floored area
+1	go to the bench
+1	go to the blue flooored area
+1	go to the butterfly walled area
+1	go to the corner
+1	go to the end of the hall
+1	go to the end of the hall and take a left
+1	go to the end of this alley
+1	go to the end of this hallway
+1	go to the end of this till you reach the blue floored area
+1	go to the fish area
+1	go to the fish walled area
+1	go to the intersection of plain cement and wood path
+1	go to the intersection of the red brick path
+1	go to the intersection with black and yellow
+1	go to the intersection with the yellow-tiled hall passing a chair
+1	go to the intersection within which whne you look down this street you see no furniture
+1	go to the longer end of the pink floored area
+1	go to the longetr end of the hallway
+1	go to the opposite end of the blue-tiled hall passing the chair
+1	go to the other end of the hallway
+1	go to the pink floored area
+1	go to the pink flowered area
+1	go to the pink flowered floored area
+1	go to the right toward the hall with the yellow hexagonal tile floor
+1	go to the shorter end of the hallway make a left go till the bench
+1	go tot the end
+1	go towad the lamp
+1	go toward the bench at the end of the hall with pink-flowered carpet
+1	go toward the hatrack
+1	go toward the intersection containing the lamp
+1	go towards an intersection with a red brick road
+1	go towards the chair
+1	go towards the chair and one intersection past the chair is position 3
+1	go towards the chair at the end of the hall
+1	go towards the chair on the blue path
+1	go towards the chair on the green path
+1	go towards the chair on the path
+1	go towards the coat rack and take a left at the coat rack
+1	go towards the easel on the red brick road
+1	go towards the intersection of red brick
+1	go towards the intersection of the black path and the brick path
+1	go towards the intersection of the red brick path
+1	go towards the intersection wiht red brick
+1	go towards the lamp and at the corner take a left
+1	go towards the lamp and two intersections after the lamp turn right and when you can only go right or left you are at 3
+1	go towards the lamp on the red brick road take a right onto the wood path
+1	go towards the lamp to the end of the hall
+1	go towards the pink path intersection
+1	go towards the red brick intersection
+1	go two segments down the grassy hall to the hat rack
+1	go two segments to the intesection with the stone-floored hallway
+1	go until it dead ends again and take another left
+1	go until the hall dead ends take a left
+1	go until there are fish on the wall and you can either only go left or towards a dead end
+1	go until you see a pink flowered path
+1	goi down that hall until you get to the blue hall
+1	grassy hall to blue hall
+1	grassy hall to yellow hall
+1	having covered that one segment turn left
+1	head all the way toward the butterfly hallway
+1	head away form the bench
+1	head down toward the futon/bench
+1	head toward the aesal
+1	head toward the blue floored hallway
+1	head toward the butterfly areas
+1	here at the end of the hall take a right to the blue path
+1	here go left
+1	here go left onto the wood path
+1	here go left towards the easel
+1	here go right onto the pink path
+1	here take a left
+1	here take a left on the plain path towards the easel and then a right onto the wood path at the easel
+1	here take a left onto the blue path and another left at the coat rack
+1	here take a left onto the yellow path
+1	here take a right onto the black path
+1	here take a right onto the blue path and follow it towards the coat rack
+1	here take a right onto the wood path
+1	here the green meets the yellow path and you are at position 4
+1	here turn left and move past the hatrack to the end of the green octagon floored alley
+1	here turn right and go all the way until the end where you can only turn right or left onto a blue path
+1	i 90% sure that you will turn left although i am certain that you will turn in the direction in which more hallways are visible
+1	i believe it is six segments forward
+1	i believe it is to your right
+1	i believe they are those lovely yellow fish
+1	i believe this is a right turn an dthat the intersection is two segments down
+1	i believe you turn right
+1	if there is a solid wall on your right then you are at position 6
+1	if there is a wall on your right side then you are there
+1	if these directions fail position 4 is at end of the yellow-tiled hall farthest from the intersection with the stone hall
+1	if you are at the intersection of red and pink and there is a painting thing you are there
+1	if you are in the right place you should be at the intersection of black and yellow
+1	if you are standing at the intersection of the blue and yellow floors back up once
+1	if you can only see pictures of towers in front of you and butterflys on the walls behind you then you are in the right spot
+1	if you continue on you will see a hat rack
+1	if you enter it immediately having simply walked forward go forward
+1	if you start with your back toward the wall you should not go forward toward the grassy hall
+1	in front of you is a chair
+1	in front of you is a hatrack
+1	in front of you is a hatrack and to your left is grey floored alley
+1	in front of you is a hatrack and to your left is grey flooring
+1	in the next block is a hatrack
+1	in the opposite direction from the intersection of the blue-tiled hall with the pink-flowered carpet hall the hall contains some furniture
+1	in the opposite direction one segment away is an intersection containing an easel
+1	in this intersection is an easel
+1	intersection of the gray hallway
+1	it contains a stool
+1	it has flowered carpet
+1	it is a dead end which branches off and has two pictures of the eiffel tower on the walls
+1	it is a hall section between the two sections of butterfly pictures
+1	it is a hall segment that is between pictures of butterflies
+1	it is at the aesal
+1	it is one block before the end
+1	it was two pictures of the eiffel tower on it
+1	it's at a spot between the yellow floor and the grey floor with an easel
+1	it's at the corner of the yellow floor and the grass floor
+1	it's at the corner of the yellow floor and the grassy floor
+1	it's at the end of the yellow fish hall with yellow floors dead end
+1	it's at the intersection of the rose hall and the yellow hall
+1	it's at the intersection of the yellow and grey halls with an easel
+1	it's in the middle
+1	it's in the middle of a grey floored hall with a stool
+1	it's in the middle of the blue hall with two objects at either side
+1	it's one movement after a lamp pole
+1	keep goin till the pink flowerd floor hallway
+1	keep goin till there is a hallway on the left
+1	keep going down it until you reach a dead end square area
+1	keep going down this hallways for as long as it will go
+1	keep going looking down each of the streets on the right until you see the street with no furniture do not go down it
+1	keep going till the aesal is to your left
+1	keep going till the pink floored area
+1	keep going till the pink floored area is on your right
+1	keep going till the pink flor id on your left
+1	keep going till you get to a piece of furniture
+1	keep going unitl the first hallway on the left appears
+1	keep going until it intersects with the red hallway and has an easel
+1	keep going until the bench
+1	keep going until the pink floord area to your right
+1	keep going until you see a aesal on the left
+1	left down the blue hall
+1	look at the pictures on all of the immediate walls
+1	look for a blue aesal
+1	look for a spot where the red and rose floors intersect four ways with an easel
+1	look for the blue hall
+1	make 1st right go tward black floored area
+1	make 1st rt
+1	make 1st rt into dead end
+1	make a laft into fishy area
+1	make a left at the hat rack
+1	make a left at the hatrack
+1	make a left in the fish walled hallway and go to the very end
+1	make a left one street before the end
+1	make a left toward the longer end of the hallway
+1	make a right at the end
+1	make a right at the pink floored are to your right
+1	make a right at the pink foored area
+1	make a right go one space foward
+1	make a right into it
+1	make a right on it
+1	make a right then a right
+1	make a right tinto butterfly walled area
+1	make a right toward the pink floored area
+1	make a rt
+1	make a rt into the pink flowered floor hallway
+1	make a rt just before the aesal
+1	make a turn
+1	make th first left
+1	make the 1st right
+1	make the first left in to the fish hallwyas
+1	make the first left into a dead ended street
+1	make the first right into a dead end
+1	move along it to the end till you reach the blue carpet alley which should be to your left and right
+1	move along the blue and turn left at the first alley
+1	move along the blue carpet past the sofa stool and chair til the alley with the flowered carpet
+1	move along the blue carpet past the sofa to the hat rack
+1	move along the blue carpet to the chair
+1	move along the blue carpeting until you get to wooden flooring
+1	move along the blue floored alley past the chair to the hatrack
+1	move along the blue one alley past the chair
+1	move along the blue to the chair and turn right
+1	move along the brick alley til you reach the alley with the stone floor
+1	move along the brick floor one alley past the hatrack
+1	move along the brick floor past the lamp to the hatrack
+1	move along the brick flooring and turn right at the end of it
+1	move along the flowered carpet two alleys past the lamp
+1	move along the flowered carpet two blocks
+1	move along the flowers past the hatrack and one alley past the lamp
+1	move along the flowers to the blue carpeted side alleys
+1	move along the octagon carpet to the stone floor
+1	move along the octagon carpet to the wall
+1	move along the red brick past the lamp to the easel
+1	move along the stone alley past the sofa chair
+1	move along the stone floor till you reach the alley with green octagon carpet
+1	move along the stone floor to the sofa chair
+1	move along the stone floor to the stool
+1	move along the stone floor two alleys to the brick floor
+1	move along the stone floor until you get to the octagon side alleys
+1	move along the stone flooring to the end
+1	move along the wooden flooring and turn left
+1	move between the butterfly pictures
+1	move down it until you get to the wood flooring
+1	move down this and stop at the first alley
+1	move down this to the hatrack
+1	move down two blocks til you get to the alley with flowered carpet
+1	move far down the blue carpet to the flowered carpet
+1	move forward along the brick floor until you get to
+1	move forward along the rock floor to the end
+1	move forward and follow the alley around until you end up on blue carpet
+1	move forward and turn right
+1	move forward and turn right at the corner
+1	move forward and turn right at the first alley
+1	move forward one alley along the stone floor in the direction of the easel
+1	move forward one alley and turn right
+1	move forward one alley to the wooden flooring
+1	move forward one block
+1	move forward one block and turn right
+1	move forward one block until you get to the flower carpeted side alley
+1	move forward past the chair to the hatrack
+1	move forward past the lamp and hatrack
+1	move forward past the lamp and the hatrack until you get to the stone floor
+1	move forward three or four blocks til you get to the green octagon carpet turn left and move forward one block
+1	move forward to the blue carpet
+1	move forward to the easel
+1	move forward to the hat rack and turn right
+1	move forward to the hatrack and turn right
+1	move forward to the next block and turn right
+1	move forward to the octagon flooring
+1	move forward to the stool and turn right
+1	move forward two alleys to the wall
+1	move into the corner
+1	move into the corner and turn left
+1	move into the corner such that the lamp is behind you and to your right you see a gray carpeted alley
+1	move into the deadend
+1	move one alley along the brick
+1	move one alley along the stone floor
+1	move one alley and turn left
+1	move one alley past the chair
+1	move one alley past the chair and turn right
+1	move one block down this alley
+1	move one block on the green octagon carpet
+1	move one block to between the wall hanging butterflies
+1	move one block to the middle of the pictures
+1	move one block towards the easel
+1	move one space away form the aesal
+1	move one space toward the aesal
+1	move one space wawya from teh aesal
+1	move one square
+1	move onto the flowered carpet and turn left
+1	move onto this and stop at the chair
+1	move out of the dead end
+1	move past the chair to the side alley with flowered carpet
+1	move past the hatrack to the end of this flowered carpet
+1	move past the lamp and one block past the hatrack
+1	move past the lamp into the corner
+1	move past the stool and chair to the flowered carpet
+1	move past the stool and the chair to the side alley with flowered carpet
+1	move past the stool to the alley before the sofa
+1	move past the stool until you get to the intersection where gray floor is to your right
+1	move right along the grass to the hatrack
+1	move straight into the corner
+1	move to hatrack and turn right
+1	move to it and down the alley
+1	move to it and turn right
+1	move to the alley where there is only gray floor to your left
+1	move to the alley with the brown wooden floor
+1	move to the blue carpet and turn left
+1	move to the brick alley and turn right
+1	move to the brick floor and turn right
+1	move to the chair and turn left
+1	move to the chair and turn right
+1	move to the corner and turn right again
+1	move to the corner you see in front of you
+1	move to the deadend
+1	move to the easel
+1	move to the easel with the wooden floored side alleys
+1	move to the end
+1	move to the end of green octagon flooring to the stone floor
+1	move to the end of the octagon alley
+1	move to the end of this alley and turn left
+1	move to the end of this alley and turn right
+1	move to the grass carpet
+1	move to the hat rack
+1	move to the hat rack and turn left
+1	move to the hat rack and turn right
+1	move to the hatrack
+1	move to the lamp and turn right
+1	move to the next chair and turn right
+1	move to the other end of the alley and turn right
+1	move to the pink floored area
+1	move to the right side alley with flowered carpet
+1	move to the second alley
+1	move to the stool and turn right
+1	move to the wall
+1	move to the wall and turn left
+1	move to this
+1	move to this chair and turn right
+1	move to this easel and turn left
+1	move to this sofa chair and turn right
+1	move to this spot
+1	move to where the red brick alley is on your right and left
+1	move toward the longer end of the hallway
+1	move towards the easel and turn right at the first alley
+1	move until you see red brick floor to your right
+1	next at the easel take a right to the end of the hall
+1	next take a left onto the red brick at that intersection
+1	next take a right and follow the path until you reach a black easel this is position 2
+1	next when you come to a pink flowered path intersection take a right
+1	now walk along the brick floor past a lamp
+1	now you will be looking for a pink flowered path
+1	on intersection past the lamp will be 7
+1	once again go to the very end of the hall and at the corner of the green path and the yellow path you are at 4
+1	once at the black easel you are at 1
+1	once at the lamp take a right to the very end of the hall and at the corner this is 2
+1	once at this intersection go left onto the pink path
+1	once here go right onto the pink path until you reach a black easel
+1	once here go right onto the plain cement path
+1	once here take a left onto the pink path
+1	once here take a right on the green path
+1	once here take a right onto the red brick and follow it until the intersection with red brick and plain cement
+1	once on the pink path take a right at the first intersection and go all the way to the end of the hall
+1	once you hit a intersection with a bench you are at position 1
+1	once you reach the black stool you are at 7
+1	one alley past this chair
+1	one block past the chair is p-3
+1	one intersection before the coat rack will be 3
+1	one intersection down is 6
+1	one intersection past the chair is position 3
+1	one intersection past the lamp is 7
+1	one movement forward
+1	one movement forward until you reach the red hall
+1	one movement to the right
+1	one section past the lamp you will reach a 't' intersection with a bare concrete hall
+1	one segment away there will be an intersection containing a stool in a stone hall
+1	one segment down this hall a brick -floored hallway intersects it
+1	one segment past the chair is position 3
+1	one space
+1	one space forward
+1	one space foward
+1	only one way to travel
+1	orient yourself along the bare concrete hall facing the blue-tiled hallway
+1	orient yourself along the stone hall
+1	orient yourself along the stone hall facing the end of the hall containing the easel
+1	orient yourself along the stone hall with the end of the hall containing the easel at your back
+1	orient yourself along the stone hall with the end of the hall containing the easel behind you
+1	orient yourself along the stone hall with your back away from the end of the hall containing the easel
+1	orient yourself along the stone hall with your back facing the easel
+1	orient yourself along the stone hall with your back to the end of the hall containing the easel
+1	orient yourself along the stone hallway with the end containing the easel to your back
+1	orient yourself along the wooden hall with the end of the hall containing the hatrack at your back
+1	orient yourself along the wooden hall with your back to the hatrack
+1	orient yourself along the wooden-floored hall
+1	orient yourself along the wooden-floored hall with your back to the end containing the hatrack
+1	orient yourself along the yellow-tiled hall
+1	orient yourself along the yellow-tiled hall with the easel in the stone hall to your left
+1	orient yourself along the yellow-tiled hallway with the easel in the stone hall to your left
+1	orient yourself in the stone hall facing the end of the hall containing the easel
+1	p 4 is at the end of the alley with the green octagon floor
+1	p 4 is at the end of this alley
+1	p 6 should have two alleys of wood floor and one of gray
+1	p-6 is at the end of this alley
+1	pass a lampshade in the middle of a hall
+1	pass the chair
+1	pass through this segment to the intersection with the hall of brown brick
+1	past the easel and at the next corner take a right onto the blue path
+1	place your back against the 't' intersection
+1	place your back to the easel and move forward two alleys along the stone floor
+1	place your back to the easel and the sofa to your right
+1	pos 1 is on the aesal
+1	pos 3 in between 2 furniture
+1	pos 3 is in between the two pieces of furnitute in this hallway
+1	pos 4 is at the corner of the grass floor and yellow floor with fish on the walls
+1	pos 4 is at the dead end of one of the fish walled hallways
+1	pos 5 is in that corner
+1	pos 5 is in the corner to the left as you enter the square block
+1	pos 5 is in this corner
+1	pos one is in the area with the pink floors on the aesal
+1	pos three is in between the two pieaces of furniture
+1	position 1 is in the middle of a red brick floored room
+1	position 1 is in the middle of the hall with the red brick floor
+1	position 1 is in the middle of the red brick floored hall
+1	position 1 is in the middle of the red brick floored room
+1	position 1 is in the red brick hall
+1	position 1 is the intersection containing the easel
+1	position 2 is at a corner between two halls with no tiles on the floor
+1	position 2 is at an intersection of two halls with no tiles on the floor but with monarch butterflies on the walls
+1	position 2 is at the corner of two halls with no tiles on the floor but butterflies on the walls
+1	position 2 is at the corner of two halls with no tiles on the floor but with butterflies on the wall
+1	position 2 is located where the yellow floors and the grey floors intersect
+1	position 2 is the intersection containing the easel
+1	position 3 is in the middle of the blue tiled floor in between the coat rack and a chair of some sort
+1	position 3 is in the middle of the blue tiled hall with a coat rack at one end and a chair or something at the other end
+1	position 3 is previous to the hatrack but after any other objects in the hall
+1	position 3 is the empty intersection between two which contain objects
+1	position 3 is the empty section between the two pieces of furniture in this hall
+1	position 4 is a dead end of the yellow floored fish hallway
+1	position 4 is a dead end of the yellow floored hall with fish on the walls
+1	position 4 is at the dead end of a hall with yellow floors and fish on the walls
+1	position 4 is at the dead end of a yellow tiled hall with fish on the walls
+1	position 4 is at the dead end of the yellow fish hall with yellow floors
+1	position 4 is at the intersection of the blue and rose floored halls
+1	position 4 will be at the end of the path where the pink path is intersected by a blue path
+1	position 5 is in a hall with wood floors
+1	position 5 is in the middle
+1	position 5 is in the middle of the red brick floored room
+1	position 5 is in the middle of the wood floored hall
+1	position 5 is in the middle of the wood-floored room
+1	position 5 is in the middle of the wooden floor with butterflies on the walls
+1	position 5 is in the middle with a dead end branch to the left and nothing on the walls
+1	position 5 is one stop before the intersection of the red brick and the wood
+1	position 6 is a dead end branch off the rose floor with two eiffel towers on the walls
+1	position 6 is a dead end branching off from the rose hall
+1	position 6 is a dead end of a branch of the rose colored hall with two pictures of the eiffel tower on the walls
+1	position 6 is at a dead end a branch off from the rose floors
+1	position 6 is at a dead end a branch off from the rose floors and has two pictures of the eiffel tower on it
+1	position 6 is at the end of a bare concrete hall one segment along the pink-flowered carpet hall away from the blue-tiled hall
+1	position 6 is in the hall with the rose floors
+1	position 7 is at the intersection of the yellow and grey floored halls
+1	position 7 is in the middle of the grey floored hall
+1	position 7 is in the middle of the grey floored hall with a coat rack or something
+1	position 7 is in the middle of the grey hall and has i think a chair or coat rack or some sort of object
+1	position 7 is in the middle of the grey tiled floor hall
+1	position 7 is in the middle of the hall with a stool
+1	position 7 is the intersection of a bare concrete hall and the stone hall
+1	position 7 is the intersection of the stone hall with a bare concrete hall
+1	position five is the first section after you pass the lamp
+1	position one is at the red floors and rose floors intersection
+1	position one is in the pink floored area on the aesal
+1	position one is one section down at the bench
+1	position one is the intersection containing an easel
+1	position one is where the bench is
+1	position three is located in the butterfly area
+1	position three will be an empty segment on this hallway
+1	position two is at the aesal in the area between two black floors and one green floor
+1	position yourself where you can see both the lamp and the hatrack
+1	possibly place your back to the 't' intersection walk forward one segment to the intersection with the wooden-floored hall
+1	postion 2 is the intersection at the end of the hall containing the easel
+1	postion 6 will be either one segment before or one segment after the segment with the lamp and will be empty
+1	postition 5 is one section past the lampl
+1	probably twice
+1	resume your forward course along the black floor for one more click
+1	right
+1	right into blue floored hallway
+1	spot is near the end of the red hall with a branch to the side with a blank walled dead end
+1	standing next to a chair and looking at a chair move to the next chair and turn to face the red brick
+1	start facing the easel
+1	stay on the blue patch for about two sections
+1	stay on the butterfly street
+1	step forward and follow the alley around
+1	stop at the alley where there is green octagon floor to your left
+1	stop at the hat rack
+1	stop here
+1	stop one alley past the lamp
+1	stop when the first fish hallway to your left appears
+1	straight
+1	taek the brick path towards the lamp
+1	take a left at the intersection with a wood path and position one will be at the point that there is a bench
+1	take a left down the hallway
+1	take a left down the red hall
+1	take a left follow the path and then take a right at the lamp
+1	take a left here
+1	take a left here at the intersection of the wood
+1	take a left i think
+1	take a left on red brick and then a right on the black path
+1	take a left onto it
+1	take a left onto the black path and the next intersection should be position 6
+1	take a left onto the brick patch and go all the way down until you get to where there are butterflies on the wall
+1	take a left onto the pink path
+1	take a left onto the pink path and at the first intersection go right
+1	take a left onto the red brick
+1	take a left onto the red brick and go a ways down until you come to the section with the butterflies on the wall
+1	take a left onto the red brick towards the lamp
+1	take a left onto the wood
+1	take a right at the black road intersection and follow it until you come to a black easel
+1	take a right at the easel onto the wood path and the first section you come to will be 5
+1	take a right at the first intersection
+1	take a right at the first intersection and go straight unti you reach the intersection with red brick crossing over
+1	take a right down the blue corridor
+1	take a right down the blue hall until you see a coat rack
+1	take a right maybe
+1	take a right next onto the black path at that juncture
+1	take a right on the plain path two intersections after the lamp
+1	take a right onto red brick
+1	take a right onto the black path
+1	take a right onto the black path all the way down until you reach the black easel
+1	take a right onto the black path and go until you reach the intersection of black and yellow path
+1	take a right onto the blue path and go straight towards the coat rack
+1	take a right onto the blue path at the next intersection
+1	take a right onto the green path all the way to the end of the hall where the green and yellow paths meet in a corner
+1	take a right onto the pink path and at the black easel the brick path intersection you are at 1
+1	take a right onto the red brick and go all the way down until the intersection of the black path
+1	take a right onto the red brick path and go straight until you see a pink flowered path
+1	take a right onto the wood path
+1	take a right onto this
+1	take another immediate left
+1	take another left here
+1	take another left when the hall ends again
+1	take it
+1	take left again when hall ends
+1	take one movement towards the blue corridor
+1	take the alley w/ butterflies on the wall and stop when the butterflies are not on the wall
+1	take the black path and turn left on the red path at that intersection
+1	take the black path away from the bench to the very end of the hall
+1	take the black path towards the end of the hall farthest away
+1	take the black path towards the fish until you reach the pink flowered path
+1	take the black path towards the intersection with the red brick path
+1	take the black path towards the pink flowered path intersection
+1	take the black path towards the red brick intersection
+1	take the black path towars the red brick intersection
+1	take the black path until you come to an intersection with red brick
+1	take the blue hall to the grassy hall
+1	take the blue hall until you get to the grassy hall
+1	take the blue path all the way to the end of the hall and at the corner go left towards the easel
+1	take the blue path away from the black bench
+1	take the blue path towards teh chair
+1	take the blue path towards the black bench
+1	take the blue path towards the chair all the way to the end of the hall
+1	take the blue path towards the chair and at the pink path intersection take a right onto the pink path
+1	take the blue path towards the chair to the very end of the hall
+1	take the grassy hall to the blue hall
+1	take the left alley
+1	take the path straight with the fish on the walls
+1	take the path towards the chair
+1	take the pink flowered path directly to the other end of the hall
+1	take the pink path to the red brick
+1	take the pink path to the red brick intersection
+1	take the pink path to the red brick juncture
+1	take the pink path to the red brick path
+1	take the pink path towards the wood path
+1	take the pink path until the intersection of the red brick path
+1	take the red brick patch towards the lamp
+1	take the red brick path away from the bench and at the corner go right towards the easel
+1	take the red brick path straight towards the lamp and all the way until the end of the hall
+1	take the red brick path towards the butterflies
+1	take the red brick path towards the chair
+1	take the red brick path towards the lamp all the way down to the intersectino of the black path
+1	take the red brick road away from the lamp to the green path intersection
+1	take the red brick towards the butterflies on the wall
+1	take the red hall to the grey hall
+1	take the red hall until you get ot the grey hall
+1	take the wood path away from the easel
+1	take the wood path to the right and follow it until you see pictures of the eiffel tower on the wall
+1	take the wood path towards the chair
+1	take the wood path towards the easel and at the easel go left
+1	take the yellow hall until you get to the intersection of it and the rose floored hall
+1	take the yellow path all the way down to the wood path intersection
+1	take the yellow path all the way to the end of the hall until you can only either go right or left
+1	take the yellow path all the way to the end of the hall where the corner brings the yellow and green path together
+1	take the yellow path all the way to the other end of the hall
+1	take the yellow path away from the end of the hall
+1	take the yellow path away from the end of the hall and at the blue path intersection go right onto the blue path
+1	take the yellow path away from the end of the hall to the blue path intersection
+1	take the yellow path to the pink path intersection
+1	take the yellow path to the wood path intersection
+1	take the yellow path towards the coat rack
+1	take the yellow path towards the end of the hall that's farthest away
+1	take this black path until you reach the intersection with the white cement
+1	that's it
+1	the alley to the right has grey floor
+1	the alley to your left has grey floor
+1	the alley to your left has grey floor and you see a lamp in front of you
+1	the alley to your left should have green octagon carpet
+1	the bare concrete hall should be to your right
+1	the bench at the intersection of the pink-flowered carpet hall and the yellow-tiled hall at your left; the intersection of the blue-tiled hall the the pink-flowered carpet hall to your right
+1	the black hallway should be in front of you
+1	the blue-tiled hall is behind you
+1	the blue-tiled hallway should be visible to your right
+1	the carpet has roses
+1	the carpet is flowers
+1	the carpet should be blue
+1	the carpet should be flowers
+1	the carpet should have green octagons
+1	the chair about halfway down is on p-7
+1	the chair should be behind
+1	the easel in the stone hall should be to your right
+1	the end containing the bench should be to your left
+1	the end of this alley is 6
+1	the end of this hall at the corner is 2
+1	the end of this hall is 2
+1	the end of this hall is 4
+1	the end of this hall is 5
+1	the end of this hall is position 3
+1	the end of this hall will be 5
+1	the first intersection at the black will be position 6
+1	the first segment of this bar concrete hall to your left should have butterfly pictures; followed by a second segment containg eiffel tower pictures
+1	the floor of this hall is brick
+1	the floor should be bare concrete
+1	the flooring of the hall intersecting it will be bare concrete
+1	the following 't' intersection will be empty as will the intersecting bare concrete hall
+1	the hallway should 't' after the segment of eiffel tower pics
+1	the hatrack in the brick hall should be one segment behind you
+1	the intersection in front of you should contain a chair and turn to the right
+1	the intersection is empty
+1	the intersection should be empty though the next intersection will contain a bench and the one following will contain a hatrack
+1	the intersection to your left should be empty
+1	the intersection to your right should be empty though you should see a blue-tiled hallway to either side of it
+1	the intersection to your right will be vacant though blue tile will be visible to each side
+1	the intersection with the blue-tiled hall should be to your left; the section containing the chair behind you
+1	the intersection you are standing in should also be empty
+1	the lamp should still be in front of you
+1	the left alley at the easel has the eiffel tower and the right has butterflies
+1	the left side alley should be stone
+1	the longer side of the wooden hall should be to your left the shorter to the right
+1	the most efficient route is probably to your left if you have your back facing the wall of the 't' intersection
+1	the next corner you come to is 2
+1	the next intersection and last of that hall is 4
+1	the next intersection is 1
+1	the next intersection is 7
+1	the next intersection of yellow and black paths is 2
+1	the next intersection will be 1
+1	the next intersection will be three where the plain cement meets the blue path
+1	the next junction is position 2
+1	the next side alley should be flowered carpet
+1	the right side alley should have blue flooring
+1	the second intersection after the lamp will be position 7
+1	the second intersection down on the blue path is 3
+1	the second intersection down will be position 2
+1	the side alley has blue floor
+1	the side alley to the left has stone flooring
+1	the side alley to your right should be blue
+1	the side alleys are red brick
+1	the side alleys are stone
+1	the side alleys have blue carpet
+1	the side alleys have blue flooring and in front of you
+1	the side alleys have green octagon carpet
+1	the side alleys have grey floor and to your right is a sofa
+1	the side alleys have stone flooring
+1	the side alleys have stone flooring and there is an easel to your right
+1	the space containing the easel is position 2
+1	the square containing the easel is position 2
+1	the stool is key
+1	the t intersection is the position 3
+1	the very end of this hall is 6
+1	the very first intersection will be position 7
+1	the very next intersection will be 5
+1	the very next intersection will be position 7
+1	the very next intersection with the wood path is position 1
+1	the very next section is 5
+1	the walls have butterflies
+1	the walls to you left should have pictures of the eiffel tower
+1	then 1 has a bench on its spot
+1	then 2 movements to the right
+1	then a left down the red hall until it intersects with the rose hall and has an easel
+1	then a left onto a grey hall
+1	then a left onto a red hall past a lamp until you reach an intersection with a dead end with blank floors and walls
+1	then a left onto the red hall
+1	then a left where grey and yellow floors intersect
+1	then a right
+1	then a right at teh red hall
+1	then a right at the grey hall
+1	then a right at the intersection of the yellow and grey halls
+1	then all the way down a winding hall unitl you reach a dead end
+1	then all the way down the grey hall
+1	then all the way down until you get between the bench and coat rack
+1	then all the way down until you get to where the yellow and grey halls intersect with an easel
+1	then anopther right
+1	then another left onto a wood hall
+1	then another left onto the wooden hall
+1	then down the red hall
+1	then find the fish hallways with yellow floors
+1	then find where the wooden floor and the yellow floor doesn't quite intersect
+1	then first rt again
+1	then follow the grassy hall to the end where it intersects with the yellow hall
+1	then go all the way down the grassy hall until it intersects with the yellow hall
+1	then go all the way down until you get to the yellow and rose floor intersection
+1	then go down
+1	then go down the hall until the grey floor intersects with a blank floor
+1	then go down the red hall until you can look to the right and see a blue corridor
+1	then go foward
+1	then go left
+1	then go straight
+1	then go to the red floor until you can look to the left and see a blue corridor
+1	then left
+1	then left all the way down the blue hall
+1	then left on to the blue floored area
+1	then left to the red hall oine movement
+1	then one movement forward
+1	then one movement left
+1	then one movement to the left
+1	then one space forward
+1	then pink
+1	then pink area
+1	then pink floored area
+1	then pos 1 is at the four way intersection of the red hall and the rose hall with an easel
+1	then postion 4 is at the intersection of the blue and rose floored halls
+1	then right
+1	then stop
+1	then stop at the first intersection
+1	then stop at the intersection of the yellow and the grey
+1	then stop when you look to the right and see a blue corridor
+1	then straight down the bvlue hall until you get to a place in between a bench and a chair
+1	then take a left and go all the way down the winding hall till you hit a dead end
+1	then take a left and take the hall all the way down to the dead end
+1	then take a right
+1	then take a right at the grassy hall
+1	then take a right onto the black path at that intersection
+1	then take another left at the pink flowered intersection onto the pink path
+1	then take another left at the red floor
+1	then take the grey hall until it intersects with the yellow hall
+1	then the blue hall almost all the way down
+1	then the grassy hall to the yellow hall until they intersect
+1	then tke one movement to the left
+1	then turn onto the red hall
+1	then turn onto the wood floor hall
+1	then turn onto the wood hall
+1	then turn when you see the red hall
+1	there are two pictures of the eiffel tower on the walls
+1	there is a bench in the hall to your right
+1	there is a bench there
+1	there is a bench to your right
+1	there is a bench two segments farther down the hall
+1	there is a bench two segments farther down the hall in front of you
+1	there is a bench two segments to your left
+1	there is a hatrack two segments to your right
+1	there is a lamp in this interesection
+1	there is a lamp in this intersection
+1	there is a piece of furniture here
+1	there is a stool in this intersection
+1	there is also a bench there
+1	there is an easel in front of you
+1	there is an easel one segment farther down the hall ahead of you
+1	there is an easel one segment farther down this hall
+1	there is an easel there
+1	there is an easel to your right
+1	there is bench one segment down the hall to your left
+1	there is only one direction to walk
+1	there should be a bare concrete floored hall at the this intersection; pictures of butterflies in the hall to the right leading to an empty 't' intersection with the blue-tiled hall and pictures of the eiffel tower leading to an empty 't' intersection to your left
+1	there should be a bare concrete hall to each side of you
+1	there should be a bench and a hatrack ahead of you in the blue-tiled hall and no objects in either of the intersections to your left
+1	there should be a bench in this hall to your right
+1	there should be a bench to your right
+1	there should be a brick floor in the hall to either side of you
+1	there should be a chair in the interection to your left
+1	there should be a hatrack in the intersection you are facing and a lamp in the intersection behind you
+1	there should be a painting easel there too
+1	there should be a sofa in front of you and a hat rack beyond that
+1	there should be an easel behind you
+1	there should be an easel one block in front of you
+1	there should be an easel to your left
+1	there should be an orange floor to the left
+1	there should be another chair
+1	there should be blue carpet on the first alley
+1	there should be butterfly images on the side at this point
+1	there should be butterfly pcitures on the walls to your left and eiffel tower pictures on the walls to your right
+1	there should be fish on the wall and you should be at position 7
+1	there should be no visible pictures of fish
+1	there should be only once choice to turn right
+1	there should be pictures of butterflys on the walls in front of you and towers in the back
+1	there will be a bench to your left
+1	there will be a bench two segments to your left
+1	there will be a lamp in the next segment in front of you
+1	there will be black easel here
+1	there will be butterfly pictures to your left and eiffel tower pictures to your right
+1	there will be pictures of butterflies on the walls in the hall to your right and pictures of the eiffel tower in the hall to your left
+1	this 't' intersection is position 3
+1	this corner where the yellow-tiled hall intersects the grassy hall is position 4
+1	this hall will be empty
+1	this hall will end in the blue-tiled hall
+1	this interesction contains a chair
+1	this interesction contains a hatrack
+1	this interesection contains a hatrack
+1	this intersection conatains an easel
+1	this intersection conatins an easel
+1	this intersection contains a chair
+1	this intersection is empty but the one on either side in the blue-tiled hall contain furniture
+1	this intersection should be empty
+1	this intersection should be empty and is position 7
+1	this intersection should contain an easel
+1	this intersection will contain an easel
+1	this will contain an easel
+1	those to your right will have butterflies
+1	three is at the intersection of the long blue floored buterfly walled and the hallway with no furniture
+1	three is in the long butterfly hallway with blue floors
+1	till you are at the hat rack
+1	till you get to a grey hall
+1	tilll you get tot blue floored area
+1	to one side you will see an intersection with the stone hall containing a stool
+1	to the left and right you should see flowered carpet
+1	to your left and right is flowered carpet
+1	to your left and right is green octagon flooring and an easel is in front of you
+1	to your left and right should be blue carpet
+1	to your left and right should be brick and in front of you the stool where you just came from
+1	to your left is a chair
+1	to your left is gray floor
+1	to your left is grey flooring and in front of you is brick
+1	to your left is grey flooring with a wooden chair in the distance
+1	to your left should be grass
+1	to your left you see a chair and grey carpet
+1	to your right is a short alley with grey carpet
+1	to your right is grey flooring and in front is a chair
+1	to your right is stone flooring
+1	to your right should be grass
+1	to your right should be green octagon flooring
+1	to your right there will be a bare concrete hall
+1	to your right you should see an alley with grey carpet
+1	to your right you will follow a couple turns to reach a wooden hall
+1	turn a few times and then dead end
+1	turn and move past the chair
+1	turn and move past the chair to the stool
+1	turn and move to the corner past the chair
+1	turn and move to the deadend
+1	turn and move to the end of the octagon carpet
+1	turn and walk down the red brick until you get to an alley with grey floor
+1	turn and walk one block pst the chair
+1	turn and walk to the dead end
+1	turn around
+1	turn around and go straight until you get to the intersection of the rose floor and the yellow floor
+1	turn around when you hit the wall
+1	turn down this alley and move to the stool
+1	turn down this alley and turn right at the first alley
+1	turn into the brick hall
+1	turn left again and go forward once
+1	turn left again and move along the brick one alley
+1	turn left and continue 2 steps to the end of the yellow hallway
+1	turn left and go forward once
+1	turn left and go to the end of the yellow hallway about 2 steps
+1	turn left and move along the brick floor past the hatrack and one alley past the lamp
+1	turn left and move along the octagons past the hatrack to the end of this alley
+1	turn left and move along the wooden flooring to the easel
+1	turn left and move down the aisle with blue flooring
+1	turn left and move down the octagon flooring to the end
+1	turn left and move forward along the green octagon flooring
+1	turn left and move forward one block to the wall
+1	turn left and move one block
+1	turn left and move onto the blue carpet
+1	turn left and move onto the brick floor
+1	turn left and move straight to the end of the green octagon alley
+1	turn left and move to the chair
+1	turn left and move to the end of the aisle
+1	turn left and move to the end of the alley with green octagon floor
+1	turn left and move to the end of the green octagon flooring
+1	turn left and move to the next chair
+1	turn left and move to the stool
+1	turn left and move to this sofa chair
+1	turn left and walk along the grass to the chair
+1	turn left and walk down the red hallway four times
+1	turn left and walk forward twice
+1	turn left and walk one block past the lamp
+1	turn left at the chair and face another chair
+1	turn left at the chair and turn right at the next interesection
+1	turn left at the first alley
+1	turn left at the gray stone carpet and move to the alley with octagon flooring on either side
+1	turn left at the hat rack
+1	turn left at the hatrack and move to the corner
+1	turn left at the hatrack and move to the end of the aisle
+1	turn left at the hatrack into the bare concrete hall
+1	turn left at the hatrack into the blue-tiled hall
+1	turn left at the sofa chair and move to the next sofa chair
+1	turn left at the sofa chair and right at the next sofa chair
+1	turn left at the stool
+1	turn left at the stool in the blue-tiled hall
+1	turn left at the yellow floors and walk to the end of the hall
+1	turn left at this intersection
+1	turn left at this sofa chair and turn right at the next one
+1	turn left down the stone floored hallway
+1	turn left in the blue-tiled hall away from the intersection with the grassy hall
+1	turn left in this hall
+1	turn left into the bare concrete floored hall whose intersection with the blue-tiled hall contains the hatrack
+1	turn left into the bare concrete hallway
+1	turn left into this hallway
+1	turn left or right to locate the easel
+1	turn left to face the red hallway
+1	turn left to face the yellow hallway
+1	turn left toward the yellow hexagonal tiled hallway
+1	turn left walk forward four times
+1	turn left walk to the wall
+1	turn onto the blue hallway
+1	turn onto the green carpet
+1	turn onto the pink hallway
+1	turn onto the pink hallway and walk forward once
+1	turn onto this carpet and move forward as far as you can
+1	turn right again and walk past the easel to the blue carpeted side alley
+1	turn right along the pink-flowered carpet hall
+1	turn right and go forward twice
+1	turn right and go to the dead end
+1	turn right and move along the brick floor two alleys past the lamp
+1	turn right and move along the green octagon carpet to the grey stone carpet
+1	turn right and move forward to the stool
+1	turn right and move into the corner
+1	turn right and move into the dead end
+1	turn right and move one alley
+1	turn right and move one block
+1	turn right and move past the chair to the stool
+1	turn right and move to the dead end
+1	turn right and move to the hatrack
+1	turn right and move to the next alley
+1	turn right and move to the next side alley
+1	turn right and move to the stool
+1	turn right and walk along the flowered carpet until the left side alley is green octagon carpeting
+1	turn right and walk down the blue hallway twice
+1	turn right and walk forward twice
+1	turn right and walk to the hat rack
+1	turn right and you see grass carpet in front of you and green octagon carpet down the next alley
+1	turn right at the bench into the yellow tiled hall
+1	turn right at the hatrack contained in this intersection
+1	turn right at the hatrack go forward two segments passing the bench to the empty intersection
+1	turn right at the rose hallway
+1	turn right at the stone floor
+1	turn right at this second chair and move along brick to the next alley
+1	turn right down the long blue alley
+1	turn right down this alley and then right again at the first alley
+1	turn right from the flowered carpet to face a dead end w/ grey floor
+1	turn right in the blue-tiled hall
+1	turn right in this hall
+1	turn right in to this hall
+1	turn right into the blue-tiled hall
+1	turn right into the brick hall
+1	turn right into the hall with pink-flowered carpet
+1	turn right into the wood floored hall
+1	turn right into this hall
+1	turn right on the pink hallway
+1	turn right onto the blue carpet
+1	turn right onto the blue hallway
+1	turn right onto the blue hallway and travel all the way down to the far end
+1	turn right onto the blue hallway and walk forward four times
+1	turn right onto the green hallway
+1	turn right onto the pink hallway
+1	turn right onto the stone and move to the second alley
+1	turn right so your back is at the easel
+1	turn right to face the black hallway
+1	turn right to face the blue floor
+1	turn right toward the hatrack visible ahead
+1	turn right walk forward four times
+1	turn right walk forward three times
+1	turn right you should see an easel in front of you
+1	turn right you should see gray floor with the red brick on the next alley
+1	turn so that the chair is on the right and you are facing the brown floor
+1	turn so that the chair is on your right
+1	turn so that the chair is on your right side
+1	turn so that the pics of towers are to your back
+1	turn so that the wall is on your left and back
+1	turn so that the wall is on your left and the pink hallway is to the right
+1	turn so that the walls are on your right and back
+1	turn so that there is a wall to your left blue floor to the front and pink floor to your right
+1	turn so that you are facing the butterflys and the towers are on the walls behind you
+1	turn so that your back is to the wall
+1	turn so that your back side faces the easel
+1	turn so the wall is on your left and back
+1	turn so the wall is on your right and back
+1	turn so the wall is on your right side
+1	turn so the wall is to your back
+1	turn so the walls are on your right and back
+1	turn so to face the short yellow floored hallway
+1	turn to the left into the wooden-floored hallway
+1	turn to the right and walk forward three times
+1	turn to where the wall is on your left side
+1	turn to your left along the blue-tiled hall
+1	turn toward that end and go forward one segment to that intersection
+1	turn toward the end of the hall that intersects the yellow-tiled hall
+1	turn towards the direction on this path which leads to butterflies on the wall
+1	turning left you see a hatrack
+1	turning left you see flowered carpet
+1	turning right you see a chair and in front of you a sofa chair
+1	turning right you see a lamp and right again the hatrack you just came from
+1	two blocks in front of you is an easel and to your left is a chair
+1	two is on an aesal not in the pink floored area the other one
+1	until you get to a dead end
+1	until you reach the yellow floors
+1	upon turning right you should see an alley with rose carpet
+1	walk along the blue carpet and you pass two objects
+1	walk along the blue past a stool and a sofa
+1	walk along the blue til you get to the alley with flowered carpet
+1	walk along the brick two alleys past the lamp
+1	walk along the flowered carpet to the red brick side alleys
+1	walk along the flowers to the hatrack
+1	walk along the grass carpet to the wall
+1	walk along the grass to the hatrack and turn right
+1	walk along the wooden floor until you see red brick floor
+1	walk down the blue carpet past a stool and a chair to the end
+1	walk down the blue hallway untill you intersect the yellow hallway about 5 steps
+1	walk down the grass
+1	walk down the pink corridor to the intersection of the red one 2 steps
+1	walk down the pink hallway three times
+1	walk down the yellow corridor twice
+1	walk down the yellow floored hallway twice
+1	walk down the yellow hallway twice
+1	walk down this
+1	walk down this aisle to the flowered carpet
+1	walk down to the end of the blue carpet
+1	walk forward 3 times
+1	walk forward and turn left at the easel
+1	walk forward five times or until you reach the yellow walkway
+1	walk forward maybe four times and you should be at the intersection of blue and brown
+1	walk forward on the blue carpet till you get to a chair
+1	walk forward once or until the pink hallway is on your right
+1	walk forward once turn left
+1	walk forward once turn right
+1	walk forward one alley and turn left
+1	walk forward one segment to the intersection with the blue-tiled hall
+1	walk forward three times or until you are at the intersection of green and yellow
+1	walk forward three times or until you reach the corner of yellow and green
+1	walk forward three times or until you reach the pink walkway
+1	walk forward till the end of the hallway maybe 3 spaces
+1	walk forward to the end of the aisle to the blue carpet
+1	walk forward to the end of the hallway four spaces
+1	walk forward to the far end
+1	walk forward twice or until you reach the blue hallway
+1	walk forward until you come to the intersection of the brown hallways
+1	walk forward until you reach the blue floors
+1	walk forward until you rech the red walkway
+1	walk on the blue until you pass a chair w/ a four way intersection
+1	walk one alley past the chair
+1	walk past the flowered carpet side alley
+1	walk past the hatrack and the lamp to the wooden flooring
+1	walk past two chairs and to the lamp
+1	walk the one segment to it
+1	walk the one segment toward it
+1	walk to that and turn right
+1	walk to the blue carpet and turn right
+1	walk to the blue interseciton
+1	walk to the chair and turn left
+1	walk to the chair and turn right
+1	walk to the corner
+1	walk to the corner and turn left
+1	walk to the corner of the green octagon carpet
+1	walk to the end maybe four spaces
+1	walk to the end of the black hall 3 steps
+1	walk to the end of the yellow hall 3 steps
+1	walk to the end of the yellow hallway 3 steps
+1	walk to the end of this aisle
+1	walk to the far end maybe 5 spaces
+1	walk to the fourth alley where there is gray carpet on the left alley
+1	walk to the second alley
+1	walk to the stool
+1	walk toward the easel and stop on the block where there are no butterflies on the sides
+1	walk until there is an exit on the left
+1	walk until there is an opening on you right
+1	walk until you are in the same square as the hatrack
+1	walk until you see an almost black carpet
+1	walk until you see an easel
+1	whe it dead ends again take another left
+1	whe you reach this intersection and there are fish pictures on the wall you have reached position 7
+1	when hall ends again go right
+1	when hall ends go right
+1	when road ends go right
+1	when the hall ends again take another right
+1	when the hall ends again take antoher right
+1	when you can either turn only right or left onto a blue path you are at position 4
+1	when you come to a red brick path go left
+1	when you come to the intersection with the plain cement path you are at position 6
+1	when you get to the alley with the roack floor stop and turn right
+1	when you get to the intersection containing the easel the perpendicular hall will have brown brick flooring turn to the left
+1	when you get to the intersection with fish on the wall to your right and eiffel towers on your path this is position 6
+1	when you reach an intersection in which you can only turn left and see a dead end in front of you you are at position 7
+1	when you reach an intersection with a wood path turn left
+1	when you reach an intersection with black and normal concrete you are at 6
+1	when you reach an intersection with plain cement and their are eiffel towers on the walls of the wood path and fish on the walls of the plain path you are at 6
+1	when you reach the black easel you are at position 1
+1	when you reach the blue path take a right onto it
+1	when you reach the stool you are at 7
+1	when you reach the stool you are at postion 7
+1	when you reach the yellow-tiled hall you wil turn away from the end which intersects the stone hall and follow the yellow-tiled hall to that end
+1	when you reach this path take a left onto it
+1	where an easel is
+1	where this hall intersects the yellow-tiled hall there should be an empty intersection
+1	with you back to the wall turn left
+1	with your back to the easel and the chair to your right move one alley
+1	with your back to the easel move into the corner and turn left
+1	with your back to the easel turn right
+1	with your back to the easel walk along the stone flooring to the next alley
+1	with your back to the easel walk forward two blocks until you get to the blue carpet
+1	with your back to the sofa
+1	with your back to the wall
+1	with your back to the wall at 2 turn right
+1	with your back to the wall at 3 turn left
+1	with your back to the wall at 3 you see an alley in front and blue carpet to each side
+1	with your back to the wall at 6 turn left
+1	with your back to the wall at three move forward one alley
+1	with your back to the wall move along the flowered carpet one block
+1	with your back to the wall move along the green octagon carpet two alleys to the grey stone carpet
+1	with your back to the wall move forward along the octagon carpet one alley
+1	with your back to the wall move forward along the octagon flooring to the end of the alley
+1	with your back to the wall move forward one alley
+1	with your back to the wall move forward past the hatrack
+1	with your back to the wall move forward to the chair and turn left
+1	with your back to the wall move forward to the hatrack
+1	with your back to the wall move forward to the second alley
+1	with your back to the wall move forward to the wall
+1	with your back to the wall move forward until the brick alley is to your left and right
+1	with your back to the wall move to the chair and turn right
+1	with your back to the wall move to the end of the rock floor alley
+1	with your back to the wall move to the hatrack
+1	with your back to the wall turn left and move one block
+1	with your back to the wall turn left and move two alleys to the side alley with stone flooring
+1	with your back to the wall turn right and move into the corner
+1	with your back to the wall turn right and move to the end
+1	yellow hall down to the wooden floor intersection
+1	yellow hall to blue hall
+1	yellow hall to wooden hall
+1	you are facing a chair
+1	you are facing a chair and wooden flooring
+1	you are facing flowered carpet
+1	you are facing gray stone carpet and an easel is behind you
+1	you are looking at an easel
+1	you are looking at an object and to your right is gray floor
+1	you are one block away from an easel
+1	you are placed where you can see an easel
+1	you may be able to reach the blue tiled hall by finding the intersection in the wooden hall that contains the easel
+1	you see a chair and grass side alleys
+1	you see a hat rack in front of you and an alley to your left
+1	you see a hatrack
+1	you see a lamp in front of you and grey carpeted alley to your right
+1	you see a long alley with grass
+1	you see a sofa and then a hat rack
+1	you see butterflies on the walls
+1	you see green carpet w/ octagons
+1	you see grey stone
+1	you should be able to face the hat rack behind which should be a wall not a hallway
+1	you should be able to see a painting easel in the far distance
+1	you should be able to see the grassy hall to your right
+1	you should be at the end of the hallway
+1	you should be at the end of the hallway again
+1	you should be at the end of this hallway
+1	you should be at the interection of the pink and red floors
+1	you should be at the intersection of blue and brown
+1	you should be facing a black hallway
+1	you should be facing a chair and an alley with wooden flooring
+1	you should be facing a long red floored hallway
+1	you should be facing a wall with red floors on both sides
+1	you should be facing an easel one segment away
+1	you should be facing down a brown hallway
+1	you should be facing flowered carpet and an easel
+1	you should be facing the blue hallway
+1	you should be facing the longer alley of wooden flooring and butterfly pictures on the side
+1	you should be facing the longer wooden alley
+1	you should be facing the longer wooden floored alley
+1	you should be facing the red hallway
+1	you should be facing wood flooring
+1	you should be facing wooden floor and butterflies on the walls
+1	you should be in the same square as an easel
+1	you should be in the same square as an easel and rock flooring to your right and left
+1	you should be looking at the blue hallway
+1	you should be standing next to a stool
+1	you should be two alleys away from a lamp and then an easel beyond that
+1	you should be two blocks in front of the corner
+1	you should be two blocks in front of the easel
+1	you should end up at the intersection of yellow and green
+1	you should have the blue hallway on your right now
+1	you should meet here with the green path
+1	you should now be facing a black floored hallway
+1	you should now be facing the yellow-tiled hall
+1	you should now have butterfly pictures in front of you and tower pictures behind you
+1	you should see a chair and a hatrack in front of you
+1	you should see a chair and then a hat rack
+1	you should see a longer alley than the one behind you
+1	you should see a side alley to the right with blue flooring
+1	you should see a sofa chair in front of you and a wooden chair to your right
+1	you should see a sofa to your left and a stool two alleys to your right
+1	you should see an alley to your left
+1	you should see an easel
+1	you should see an easel after you turn the corner
+1	you should see an easel on dark gray carpet
+1	you should see blue on the floors perpendicular to the street w/ no furniture
+1	you should see butterflies on the walls ahead of you
+1	you should see flowered carpet
+1	you should see flowered carpet to the sides
+1	you should see gray floor to your right and a chair in front of you
+1	you should see gray floor to your right and a stool in front of you
+1	you should see red brick to your right and left and a lamp two alleys over to your left and an easel beyond that
+1	you should see wood flooring
+1	you should then see olive green octagon carpet to your right
+1	you will be facing a hatrack farther down the hall
+1	you will be turning toward many pictures of butterflies
+1	you will come to an intersection with a black path
+1	you will follow the blue-tiled hall past the intersection with the pink-flowered carpet hall on your left
+1	you will follow the regular concrete path toward the blue tiled flooring one segment
+1	you will now be facing the yellow-tiled hall
+1	you will pass a chair and a hatrack
+1	you will pass a hatrack and a lamp
+1	you will pass a lamp
+1	you will pass a lamp and a hatrack
+1	you will pass an easel
+1	you will pass the bare concrete hall whose intersection contains the lamp
+1	you will see pictures on the wall up ahead of towers then butterflys
+1	you will then be looking for a pink flowered path
+1	you will walk on the brick flooring away from the shorter expanse of hallway containing the single chair toward longer expanse of hallway containing the lamp and the easel
+1	your back should be away from the bench at the opposite end where the pink-flowered carpet hall meets the yellow-tiled hall two segments away
+1	your back should be toward the bench
