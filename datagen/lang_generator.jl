@@ -14,7 +14,7 @@ numbers = Dict(1=>["one", "a"],2=>["two"],3=>["three"],4=>["four"],5=>["five"],
 wall_names = Dict(1=>"butterflies",2=>"fish",3=>"towers")
 floor_names = Dict(1=>["octagon", "blue-tiled"],2=>["brick"],3=>["concrete"],4=>["flower"],
 	5=>["grass"],6=>["gravel", "stone"],7=>["wood", "wooden"],8=>["yellow"])
-item_names = Dict(1=>"barstool", 2=>"chair", 3=>"easel", 4=>"hatrack",
+item_names = Dict(1=>"stool", 2=>"chair", 3=>"easel", 4=>"hatrack",
 	5=>"lamp", 6=>"sofa")
 
 function action(curr, next)
