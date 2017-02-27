@@ -15,7 +15,20 @@ println("Building vocab...")
 emb = Dict()
 
 for w in keys(vocab)
-	emb[w] = getvec(model, w)
+    t = w
+    if contains(w, "rack")
+        t = "rack"
+    elseif w == "grey"
+        t = "gray"
+    elseif w in ["a", "of", "to", "and"]
+        t = string("_", w)
+    end
+
+    vec, unk = getvec(model, t)
+    emb[w] = vec
+    if unk
+        println(w)
+    end
 end
 
 emb["unk"] = getvec(model, "unk")
