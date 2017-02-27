@@ -4,67 +4,27 @@ using Knet, ArgParse, JLD
 # Will rethink when we do minibatching.
 
 # Some special tokens
-const SOS=1
-const SOSSTR=" S "
-const UNK=2
-const UNKSTR=" U "
-# spaces ensure they won't match a regular tokens
+const EOS=1
+const EOSSTR=" S "
+# const UNK=2
+# const UNKSTR=" U "
+# spaces ensure they won't match regular tokens which are stripped
 
 """
-    s2s(params,state,inputs,outputs)
-
-Return loss for the [sequence-to-sequence model](https://arxiv.org/abs/1409.3215).
-
-* `params`: a pair with encoder and decoder parameters.
-* `state`: initial hidden and cell states.
-* `inputs`: input sequence for the encoder. Int array, no start/end tokens.
-* `outputs`: output sequence for the decoder. Int array, no start/end tokens.
+    lstm(weight,bias,hidden,cell,input) => (newhidden,newcell)
+    
+All inputs are row major.
 """
-function s2s(params,state,inputs,outputs)
-    encoder,decoder = params
-    for input in inputs
-        state = encode(encoder, state, input)
-    end
-    sumloss = 0
-    prev = SOS
-    for output in outputs
-        prediction,state = decode(decoder, state, prev)
-        sumloss -= logp(prediction,2)[output]
-        prev = output
-    end
-    prediction,state = decode(decoder, state, prev)
-    sumloss -= logp(prediction,2)[SOS]
-    return sumloss
-end
-
-"""
-    avgloss(params,data)
-
-Return average per-token loss over all (x,y) sequence pairs in data.    
-"""
-function avgloss(params,data)
-    sumloss = cntloss = 0
-    state = initstate(params[1])
-    for (inputs,outputs) in data
-        sumloss += s2s(params,state,inputs,outputs)
-        cntloss += length(outputs)
-    end
-    return sumloss / cntloss
-end
-
-"""
-    decode(param, state, input) => prediction,newstate
-
-* `input`: an integer representing an input token
-* `state[2k-1,2k]`: hidden and cell for the k'th lstm layer
-* `param[2k-1,2k]`: weight and bias for k'th lstm layer
-* `param[end-2]`: input embeddings (array of row vectors)
-* `param[end-1,end]`: weight and bias for final prediction
-"""
-function decode(param, state, input)
-    newstate = encode(param, state, input)
-    prediction = newstate[end-1] * param[end-1] .+ param[end]
-    return (prediction, newstate)
+function lstm(weight,bias,hidden,cell,input)
+    gates   = hcat(input,hidden) * weight .+ bias
+    hsize   = size(hidden,2)
+    forget  = sigm(gates[:,1:hsize])
+    ingate  = sigm(gates[:,1+hsize:2hsize])
+    outgate = sigm(gates[:,1+2hsize:3hsize])
+    change  = tanh(gates[:,1+3hsize:end])
+    cell    = cell .* forget + ingate .* change
+    hidden  = outgate .* tanh(cell)
+    return (hidden,cell)
 end
 
 """
@@ -85,22 +45,111 @@ function encode(param, state, input)
     return newstate
 end
 
+
 """
-    lstm(weight,bias,hidden,cell,input) => (newhidden,newcell)
-    
-All inputs are row major.
+    decode(param, state, input) => prediction,newstate
+
+* `input`: an integer representing an input token
+* `state[2k-1,2k]`: hidden and cell for the k'th lstm layer
+* `param[2k-1,2k]`: weight and bias for k'th lstm layer
+* `param[end-2]`: input embeddings (array of row vectors)
+* `param[end-1,end]`: weight and bias for final prediction
 """
-function lstm(weight,bias,hidden,cell,input)
-    gates   = hcat(input,hidden) * weight .+ bias
-    hsize   = size(hidden,2)
-    forget  = sigm(gates[:,1:hsize])
-    ingate  = sigm(gates[:,1+hsize:2hsize])
-    outgate = sigm(gates[:,1+2hsize:3hsize])
-    change  = tanh(gates[:,1+3hsize:end])
-    cell    = cell .* forget + ingate .* change
-    hidden  = outgate .* tanh(cell)
-    return (hidden,cell)
+function decode(param, state, input)
+    newstate = encode(param, state, input)
+    prediction = newstate[end-1] * param[end-1] .+ param[end]
+    return (prediction, newstate)
 end
+
+
+"""
+    s2s(params,state,inputs,outputs)
+
+Return loss for the [sequence-to-sequence model](https://arxiv.org/abs/1409.3215).
+
+* `params`: a pair with encoder and decoder parameters.
+* `state`: initial hidden and cell states.
+* `inputs`: input sequence for the encoder. Int array, no start/end tokens.
+* `outputs`: output sequence for the decoder. Int array, no start/end tokens.
+"""
+function s2s(params,state,inputs,outputs)
+    encoder,decoder = params
+    for input in reverse(inputs)
+        state = encode(encoder, state, input)
+    end
+    sumloss = 0
+    prev = EOS
+    for output in outputs
+        prediction,state = decode(decoder, state, prev)
+        sumloss -= logp(prediction,2)[output]
+        prev = output
+
+    end
+    prediction,state = decode(decoder, state, prev)
+    sumloss -= logp(prediction,2)[EOS]
+    return sumloss
+end
+
+"""
+    avgloss(params,data)
+
+Return average per-token loss over all (x,y) sequence pairs in data.    
+"""
+function avgloss(params,data)
+    sumloss = cntloss = 0
+    state = initstate(params[1])
+    for (inputs,outputs) in data
+        sumloss += s2s(params,state,inputs,outputs)
+        cntloss += length(outputs)+1 # +1 for EOS
+    end
+    return sumloss / cntloss
+end
+
+Base.indmax(x::KnetArray)=indmax(Array(x))
+
+
+"""
+    predict(params,state,inputs)
+
+Return an output sequence for a given a model, initial state, and an
+input sequence.  The sequences are Array{Int} and do not contain EOS
+tokens.
+
+"""
+function predict(params,state,inputs)
+    encoder,decoder = params
+    for input in reverse(inputs)
+        state = encode(encoder, state, input)
+    end
+    action = EOS; actions = Int[]
+    while true
+        pred,state = decode(decoder, state, action)
+        action = indmax(pred)
+        if action == EOS || length(actions) > 10; break; end
+        push!(actions, action)
+    end
+    return actions
+end
+
+
+"""
+    accuracy(params,data)
+
+Return percentage of correctly predicted action sequences.  Only exact
+match output sequences considered correct.
+
+"""    
+function accuracy(params,data)
+    correct = total = 0
+    state = initstate(params[1])
+    for (inputs,outputs) in data
+        p = predict(params, state, inputs)
+        correct += (p == outputs)
+        total += 1
+    end
+    return correct / total
+end
+
 
 function readdata2(file; vocab1=nothing, vocab2=nothing, o...)
     data = []
@@ -125,20 +174,20 @@ end
 # `param[end-2]`: input embedding matrix
 # `param[end-1,end]`: weight and bias for final prediction
 function initweights(; hidden=nothing, embed1=nothing, embed2=nothing,
-                     vocab1=nothing, vocab2=nothing, winit=nothing, atype=nothing, o...)
+                     vocab1=nothing, vocab2=nothing, atype=nothing, o...)
     nlayer = length(hidden)
     encoder = Array(Any, 2*nlayer+1)
     decoder = Array(Any, 2*nlayer+3)
     input1,input2 = embed1,embed2 # TODO: do we really need embeddings?
     for k = 1:nlayer
-        encoder[2k-1] = atype(winit * randn(input1 + hidden[k], 4*hidden[k]))
-        decoder[2k-1] = atype(winit * randn(input2 + hidden[k], 4*hidden[k]))
+        encoder[2k-1] = atype(xavier(input1 + hidden[k], 4*hidden[k]))
+        decoder[2k-1] = atype(xavier(input2 + hidden[k], 4*hidden[k]))
         encoder[2k] = atype(zeros(1, 4*hidden[k]))
         decoder[2k] = atype(zeros(1, 4*hidden[k])) # TODO: do we really need biases?
     end
-    encoder[2*nlayer+1] = [ atype(winit * randn(1,embed1)) for i=1:length(vocab1) ]
-    decoder[2*nlayer+1] = [ atype(winit * randn(1,embed2)) for i=1:length(vocab2) ]
-    decoder[2*nlayer+2] = atype(winit * randn(hidden[end],length(vocab2)))
+    encoder[2*nlayer+1] = [ atype(xavier(1,embed1)) for i=1:length(vocab1) ]
+    decoder[2*nlayer+1] = [ atype(xavier(1,embed2)) for i=1:length(vocab2) ]
+    decoder[2*nlayer+2] = atype(xavier(hidden[end],length(vocab2)))
     decoder[2*nlayer+3] = atype(zeros(1, length(vocab2)))
     return (encoder, decoder)
 end
@@ -178,13 +227,12 @@ function main(args=ARGS)
         ("--seed"; arg_type=Int; default=-1; help="Random number seed.")
         ("--atype"; default=(gpu()>=0 ? "KnetArray{Float32}" : "Array{Float32}"); help="Array and element type.")
         ("--train"; nargs='+'; help="If provided, use first file for training, second for dev, others for eval.")
-        ("--hidden"; nargs='+'; arg_type=Int; default=[256]; help="Sizes of one or more LSTM layers.")
+        ("--hidden"; nargs='+'; arg_type=Int; default=[64]; help="Sizes of one or more LSTM layers.")
         ("--vocab1"; help="Load input vocab (Dict{WordStr,WordIdx}) from file.")
         ("--vocab2"; help="Load input vocab (Dict{WordStr,WordIdx}) from file.")
-        ("--embed1"; arg_type=Int; default=256; help="Size of the input embedding vector.")
-        ("--embed2"; arg_type=Int; default=256; help="Size of the output embedding vector.")
-        ("--winit"; arg_type=Float64; default=0.1; help="Stdev of initial random weights.")
-        ("--epochs"; arg_type=Int; default=3; help="Number of epochs for training.")
+        ("--embed1"; arg_type=Int; default=512; help="Size of the input embedding vector.")
+        ("--embed2"; arg_type=Int; default=32; help="Size of the output embedding vector.")
+        ("--epochs"; arg_type=Int; default=5; help="Number of epochs for training.")
         ("--fast"; action=:store_true; help="skip loss printing for faster run")
         # TODO:
         # ("--test"; help="Apply model to input sequences in test file.")
@@ -196,6 +244,7 @@ function main(args=ARGS)
         # ("--batchsize"; arg_type=Int; default=10; help="Size of minibatches.")
         # ("--dropout"; arg_type=Float64; default=0.0; help="Dropout probability.")
         # ("--gclip"; arg_type=Float64; default=0.0; help="Gradient clip.")
+        # ("--winit"; arg_type=Float64; default=0.1; help="Stdev of initial random weights.") # using xavier instead
     end
     println(s.description)
     isa(args, AbstractString) && (args=split(args))
@@ -203,10 +252,11 @@ function main(args=ARGS)
     println("opts=",[(k,v) for (k,v) in o]...)
     o[:seed] > 0 && srand(o[:seed])
     o[:atype] = eval(parse(o[:atype]))
-    o[:vocab1] = o[:vocab1]!=nothing ? load(o[:vocab1], "vocab") : Dict(SOSSTR=>SOS,UNKSTR=>UNK)
-    o[:vocab2] = o[:vocab2]!=nothing ? load(o[:vocab2], "vocab") : Dict(SOSSTR=>SOS,UNKSTR=>UNK)
+    o[:vocab1] = o[:vocab1]!=nothing ? load(o[:vocab1], "vocab") : Dict(EOSSTR=>EOS)
+    o[:vocab2] = o[:vocab2]!=nothing ? load(o[:vocab2], "vocab") : Dict(EOSSTR=>EOS)
     o[:datas] = [readdata2(file; o...) for file in o[:train]] # yes I know data is already plural :)
     o[:model] = initweights(; o...)
+    o[:models] = [ deepcopy(o[:model]) ]
     o[:opt] = oparams(o[:model])
     report(t,p,d)=println((t,[ avgloss(p,di) for di in d ]...))
     !o[:fast] && report(0,o[:model],o[:datas])
@@ -217,6 +267,7 @@ function main(args=ARGS)
             o[:grad] = s2sgrad(o[:model],istate,x,y)
             Knet.update!(o[:model],o[:grad],o[:opt])
         end
+        push!(o[:models], deepcopy(o[:model]))
         !o[:fast] && report(epoch,o[:model],o[:datas])
     end
     return o
@@ -230,16 +281,15 @@ s2sgrad = grad(s2s)
 
 function getconfig2()
     c = Dict()
-    c[:hidden] = [ rand(50:200) ] # multi-layer?
+    c[:hidden] = [ rand(50:200) ] # multi-layer? dropout?, gclip?
     c[:embed1] = rand(100:600)
     c[:embed2] = rand(10:100)
-    c[:winit] = 0.1 # Float32(0.01^rand())    # dropout?, gclip?
     return c
 end
 
 function getloss2(c,n)
     o = copy(config0)
-    for s in (:hidden,:embed1,:embed2,:winit); o[s] = c[s]; end
+    for s in (:hidden,:embed1,:embed2); o[s] = c[s]; end
     o[:epochs] = n
     o[:model] = initweights(; o...)
     o[:opt] = oparams(o[:model])
@@ -256,7 +306,7 @@ function getloss2(c,n)
 end
 
 # Navigation specific part
-#=
+
 include("util.jl")
 include("io.jl")
 function savemaps()
@@ -269,10 +319,27 @@ function savemaps()
             print(io, join(instr.text,' '))
             print(io, '\t')
             a = getactions(instr.path)
+            pop!(a) # s2s adds stop
             print(io, join(actions[a],' '))
             print(io, '\n')
         end
         close(io)
     end
 end
-=#
+
+# Experiments:
+
+# Baseline:
+# main("--train trn tst --seed 1")
+# trn: jelly+l, tst: grid
+# opts=(:atype,"KnetArray{Float32}")(:train,Any["trn","tst"])(:winit,0.1)(:vocab2,nothing)(:embed2,32)(:hidden,[64])(:epochs,5)(:seed,1)(:vocab1,nothing)(:embed1,512)(:fast,false)
+# (2,0.5125578f0,0.6423336f0)
+
+# Xavier:
+# (3,0.49982417f0,0.64756024f0)
+# Equal performance, one less parameter, adapted.
+
+# Reverse input:
+# (3,0.48766702f0,0.62641555f0), accuracy: 0.6167048054919908
+# Significant, adapted.
+
