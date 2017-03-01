@@ -1,9 +1,7 @@
 using ArgParse, DataFrames
 
 include("io.jl")
-include("datagen/maze.jl")
-include("datagen/path_generator.jl")
-include("datagen/lang_generator.jl")
+include("datagen/data_generator.jl")
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -16,12 +14,13 @@ function parse_commandline()
         ("--window"; help = "size of the filter"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
         ("--filters"; help = "number of filters"; default = [200, 100, 50]; arg_type = Int; nargs = '+')
         ("--model"; help = "model file"; default = "flex.jl")
-        ("--encdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
-        ("--decdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
+        ("--encdrops"; help = "dropout rates"; nargs = '+'; default = [0.0, 0.0]; arg_type = Float64)
+        ("--decdrops"; help = "dropout rates"; nargs = '+'; default = [0.0, 0.0]; arg_type = Float64)
         ("--bs"; help = "batch size"; default = 1; arg_type = Int)
         ("--gclip"; help = "gradient clip"; default = 5.0; arg_type = Float64)
         ("--log"; help = "name of the log file"; default = "test.log")
         ("--save"; help = "model path"; default = "")
+        ("--savecsv"; help = "csv path"; default = "")
         ("--load"; help = "model path"; default = "")
         ("--charenc"; help = "charecter embedding"; action = :store_true)
         ("--encoding"; help = "grid or multihot"; default = "grid")
@@ -44,100 +43,6 @@ args = parse_commandline()
 
 include(args["model"])
 
-
-CHARS = collect("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-items = filter(x->x!="", collect(keys(Items)))
-
-"""
-stage: number of actions except the stop action
-"""
-function generatedata(stage=1; numins=100)
-    h,w = (8,8)
-    data = Any[]
-    mps = Dict()
-    itemcounts = zeros(length(items))
-
-    inscount = 0
-
-    while inscount < numins
-        maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; iprob=-1.0)
-
-        nodes, path = generate_path(maze, available)
-
-        segments = segment_path(nodes)
-
-        for i=1:length(segments)
-            tp, path = segments[i]
-            if length(path)-1 != stage || tp == "move"
-                continue
-            end
-
-            mname = join(rand(CHARS, 20))
-            cpmp = copy(navimap)
-            cpmp.name = mname
-
-            mps[mname] = cpmp
-
-            inscount += 1
-
-            sits = shuffle(items)
-
-            n1 = path[1]
-            nbs = collect(keys(cpmp.edges[n1[1:2]]))
-
-            for j=1:length(nbs); cpmp.nodes[nbs[j]] = Items[sits[j]]; end
-
-            prefx = ""
-            nb = nothing
-            if tp == "turn"
-                nb = getlocation(cpmp, path[2], 1)
-                prefx = "turn to the "
-            else
-                nb = path[2]
-                prefx = "move to the "
-            end
-
-            itindx = cpmp.nodes[nb[1:2]]
-            itemcounts[itindx] += 1
-
-            ins = Instruction(string("artificial_", inscount), split(string(prefx, item_names[itindx])), path, mname, inscount)
-            push!(data, ins)
-            break
-            #=
-            if inscount >= numins
-                break
-            end
-            =#
-        end
-    end
-
-    return data, mps, itemcounts
-end
-
-function testgeneratedata()
-    Logging.configure(filename=args["log"])
-    if args["level"] == "info"
-        Logging.configure(level=INFO)
-    else
-        Logging.configure(level=DEBUG)
-    end
-    for i=1:100
-        info("i: $i")
-        dat, maps, counts = generatedata()
-        for ins in dat
-            m = maps[ins.map]
-            fs = filter(t->m.nodes[t] != 7, collect(keys(m.nodes)))
-            @assert length(fs) != 0
-            its = map(t->m.nodes[t], fs)
-
-            @assert length(its) == length(Set(its))
-        end
-    end
-
-    info("PASSED")
-end
-
 function pretrain(vocab, emb, args)
     w = nothing
     prms = nothing
@@ -145,15 +50,13 @@ function pretrain(vocab, emb, args)
     avg_acc = 0
 
     df = DataFrame(Batch=Int[], Loss=Any[], Acc=Any[])
-    itmcnts = zeros(length(items))
 
     for i=1:args["numbatch"]
-        dat, maps, counts = generatedata()
-        itmcnts += counts
+        dat, maps = generatedata(turnToX)
         data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dat)
         trn_data = minibatch(data;bs=args["bs"])
         
-        dat2, maps2, _ = generatedata()
+        dat2, maps2 = generatedata(turnToX)
         tst_data = map(ins-> (ins, ins_arr(vocab, ins.text)), dat2)
         
         vdims = size(trn_data[1][2][1])
@@ -192,22 +95,21 @@ function pretrain(vocab, emb, args)
         @time lss = train(w, prms, trn_data; args=args)
         @time tst_acc = test([w], tst_data, maps2; args=args)
 
-        avg_lss = avg_lss == 0 ? lss : avg_lss*0.95 + 0.05*lss
-        avg_acc = avg_acc == 0 ? tst_acc : avg_acc*0.95 + 0.05*tst_acc
+        avg_lss = avg_lss == 0 ? lss : avg_lss*0.9 + 0.1*lss
+        avg_acc = avg_acc == 0 ? tst_acc : avg_acc*0.9 + 0.1*tst_acc
 
         info("BatchNum: $i , Loss: $lss , Acc: $(tst_acc)")
 
         push!(df, (i, avg_lss, avg_acc))
 
         info("$(df[i,:])")
-        info("Item counts: $(itmcnts) \n")
 
         if (1.0 - avg_acc) < 1e-3
             break
         end
     end
 
-    writetable(args["save"], df)
+    writetable(args["savecsv"], df)
 end
 
 function get_maps()
@@ -253,4 +155,3 @@ function mainpretraining()
 end
 
 mainpretraining()
-#testgeneratedata()

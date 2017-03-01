@@ -12,6 +12,27 @@ rightof(d) = ((d+1) % 4) == 0 ? 4 : ((d+1) % 4)
 leftof(d) = (((d-1)+4) % 4) == 0 ? 4 : (((d-1)+4) % 4)
 backof(d) = ((d+2) % 4) == 0 ? 4 : ((d+2) % 4)
 
+function nodes_visible(navimap, curr)
+    nbs = Any[]
+    for nb in keys(navimap.edges[curr])
+        dir = Any[]
+        x = nb[1] - curr[1]
+        y = nb[2] - curr[2]
+
+        prev = nb
+        next = map(Int, (nb[1] + x, nb[2] + y))
+
+        while haskey(navimap.edges, prev) && haskey(navimap.edges[prev], next)
+            push!(dir, prev)
+            prev = next
+            next = map(Int, (prev[1] + x, prev[2] + y))
+        end
+        push!(dir, prev)
+        push!(nbs, dir)
+    end
+    return nbs
+end
+
 function is_corner(maze, p)
     if sum(maze[p[1], p[2], :]) == 2
         conds = false
