@@ -23,6 +23,21 @@ function lstm(weight,bias,hidden,cell,input)
     return (hidden,cell)
 end
 
+
+"""
+    dropout(x,p)
+
+Return `x` if `p==0` or new array with `p` fraction of elements in `x` replaced with 0's if `p>0`.
+"""
+function dropout(x,p)
+    if p > 0
+        x .* (rand!(similar(x)) .> p) ./ (1-p)
+    else
+        x
+    end
+end
+
+
 """
     encode(param, state, input) => newstate
 
@@ -31,10 +46,11 @@ end
 * `param[2k-1,2k]`: weight and bias for k'th lstm layer
 * `param[1+length(state)]`: input embeddings (array of row vectors)
 """
-function encode(param, state, input)
+function encode(param, state, input; pdrop=0)
     input = param[1+length(state)][input]
     newstate = similar(state)
     for i = 1:2:length(state)
+        input = dropout(input, pdrop)
         (newstate[i],newstate[i+1]) = lstm(param[i],param[i+1],state[i],state[i+1],input)
         input = newstate[i]
     end
@@ -51,9 +67,10 @@ end
 * `param[end-2]`: input embeddings (Vector of row vectors)
 * `param[end-1,end]`: weight and bias for final prediction
 """
-function decode(param, state, input)
-    newstate = encode(param, state, input)
-    prediction = newstate[end-1] * param[end-1] .+ param[end]
+function decode(param, state, input; pdrop=0)
+    newstate = encode(param, state, input; pdrop=pdrop)
+    output = dropout(newstate[end-1], pdrop)
+    prediction = output * param[end-1] .+ param[end]
     return (prediction, newstate)
 end
 
@@ -68,23 +85,25 @@ Return loss for the [sequence-to-sequence model](https://arxiv.org/abs/1409.3215
 * `inputs::Vector{Int}`: Input sequence for the encoder. No start/end tokens.
 * `outputs::Vector{Int}`: Output sequence for the decoder. No start/end tokens.
 """
-function s2s(params,state,inputs,outputs; EOS=1)
+function s2s(params,state,inputs,outputs; EOS=1, pdrop=0)
     encoder,decoder = params
     for input in reverse(inputs)
-        state = encode(encoder, state, input)
+        state = encode(encoder, state, input; pdrop=pdrop)
     end
     sumloss = 0
     prev = EOS
     for output in outputs
-        prediction,state = decode(decoder, state, prev)
+        prediction,state = decode(decoder, state, prev; pdrop=pdrop)
         sumloss -= logp(prediction,2)[output]
         prev = output
 
     end
-    prediction,state = decode(decoder, state, prev)
+    prediction,state = decode(decoder, state, prev; pdrop=pdrop)
     sumloss -= logp(prediction,2)[EOS]
     return sumloss
 end
+
+s2sgrad = grad(s2s)
 
 """
     avgloss(params,data)
@@ -112,7 +131,7 @@ input sequence.  The sequences are Array{Int} and do not contain EOS
 tokens.
 
 """
-function predict(params,state,inputs; EOS=1)
+function predict(params,state,inputs; EOS=1, maxlen=10)
     encoder,decoder = params
     for input in reverse(inputs)
         state = encode(encoder, state, input)
@@ -121,7 +140,7 @@ function predict(params,state,inputs; EOS=1)
     while true
         pred,state = decode(decoder, state, action)
         action = indmax(pred)
-        if action == EOS || length(actions) > 10; break; end
+        if action == EOS || length(actions) >= maxlen; break; end
         push!(actions, action)
     end
     return actions
@@ -136,7 +155,7 @@ match output sequences considered correct.
 
 """    
 function accuracy(params,data)
-    correct = total = 0
+    correct = total = 0f0
     state = initstate(params[1])
     for (inputs,outputs) in data
         p = predict(params, state, inputs)
@@ -200,6 +219,8 @@ function initweights(; hidden=nothing, embed1=nothing, embed2=nothing,
         decoder[2k-1] = atype(xavier(input2 + hidden[k], 4*hidden[k]))
         encoder[2k] = atype(zeros(1, 4*hidden[k]))
         decoder[2k] = atype(zeros(1, 4*hidden[k])) # TODO: do we really need biases?
+        encoder[2k][1:hidden[k]] = 1 # forget gate bias init=1
+        decoder[2k][1:hidden[k]] = 1 # forget gate bias init=1
         input1 = input2 = hidden[k]
     end
     decoder[2*nlayer+2] = atype(xavier(hidden[end],length(vocab2)))
@@ -234,74 +255,10 @@ function pstruct(x,r=0)
     end
 end
 
-function main(args=ARGS)
-    s = ArgParseSettings()
-    s.description="s2s.jl [sequence-to-sequence model](https://arxiv.org/abs/1409.3215). (c) Deniz Yuret, 2017."
-    s.exc_handler=ArgParse.debug_handler
-    @add_arg_table s begin
-        ("--seed"; arg_type=Int; default=-1; help="Random number seed.")
-        ("--atype"; default=(gpu()>=0 ? "KnetArray{Float32}" : "Array{Float32}"); help="Array and element type.")
-        ("--train"; nargs='+'; help="If provided, use first file for training, second for dev, others for eval.")
-        ("--hidden"; nargs='+'; arg_type=Int; default=[64]; help="Sizes of one or more LSTM layers.")
-        ("--embed1"; arg_type=Int; default=512; help="Size of the input embedding vector.")
-        ("--embed2"; arg_type=Int; default=32;  help="Size of the output embedding vector.")
-        ("--epochs"; arg_type=Int; default=5; help="Number of epochs for training.")
-        ("--fast"; action=:store_true; help="skip loss printing for faster run")
-        ("--loadfile"; help="Initialize model, vocab, and/or embeddings from file")
-        # TODO:
-        # vocab::Vector{WordString}, embed::Vector{WordVector}
-        # ("--vocab1"; help="Size or dictionary file")
-        # ("--vocab2"; help="Size or dictionary file")
-        # ("--test"; help="Apply model to input sequences in test file.")
-        # ("--savefile"; help="Save final model to file")
-        # ("--bestfile"; help="Save best model to file")
-        # ("--embeddings1"; help="Load input embeddings from file")
-        # ("--embeddings2"; help="Load output embeddings from file")
-        # ("--batchsize"; arg_type=Int; default=10; help="Size of minibatches.")
-        # ("--dropout"; arg_type=Float64; default=0.0; help="Dropout probability.")
-        # ("--gclip"; arg_type=Float64; default=0.0; help="Gradient clip.")
-        # ("--winit"; arg_type=Float64; default=0.1; help="Stdev of initial random weights.") # using xavier instead
-    end
-    println(s.description)
-    isa(args, AbstractString) && (args=split(args))
-    global o = parse_args(args, s; as_symbols=true)
-    println("opts=",[(k,v) for (k,v) in o]...)
-    o[:seed] > 0 && srand(o[:seed])
-    o[:atype] = eval(parse(o[:atype]))
-    o[:vocab1] = Dict(); o[:vocab2] = Dict(" <S> "=>1) # TODO: handle unk, eos, restricted vocab size
-    if o[:loadfile] != nothing
-        for (k,v) in load(o[:loadfile])
-            o[Symbol(k)] = v
-        end
-    end
-    o[:datas] = [readdata2(file,o[:vocab1],o[:vocab2]) for file in o[:train]]
-    if !haskey(o,:model); o[:model] = initweights(; o...); end
-    @printf("vocab1=%d vocab2=%d embed1=%d embed2=%d\n",
-            length(o[:vocab1]), length(o[:vocab2]),
-            length(o[:model][1][end][1]), length(o[:model][2][end-2][1]))
-    @show (emsize1,emsize2)
-    o[:models] = [ deepcopy(o[:model]) ]
-    o[:opt] = oparams(o[:model])
-    report(t,p,d)=println((t,[ avgloss(p,di) for di in d ]...))
-    !o[:fast] && report(0,o[:model],o[:datas])
-    s2sgrad = grad(s2s)
-    istate = initstate(o[:model][1])
-    for epoch = 1:o[:epochs]
-        @time for (x,y) in o[:datas][1]
-            o[:grad] = s2sgrad(o[:model],istate,x,y)
-            Knet.update!(o[:model],o[:grad],o[:opt])
-        end
-        push!(o[:models], deepcopy(o[:model]))
-        !o[:fast] && report(epoch,o[:model],o[:datas])
-    end
-    return o
-end
-
 
 # hyperband stuff
-include(Knet.dir("examples/hyperband.jl"))
-config0 = main("--fast --epochs 0 --train trn tst")
-s2sgrad = grad(s2s)
+# include(Knet.dir("examples/hyperband.jl"))
+# config0 = main("--fast --epochs 0 --train trn tst")
 
 function getconfig2()
     c = Dict()
@@ -312,6 +269,8 @@ function getconfig2()
 end
 
 function getloss2(c,n)
+    global config0
+    if !isdefined(:config0); config0 = main("--fast --epochs 0 --train trn tst"); end
     o = copy(config0)
     for s in (:hidden,:embed1,:embed2); o[s] = c[s]; end
     o[:epochs] = n
@@ -351,6 +310,63 @@ function savemaps()
     end
 end
 
+
+function main(args=ARGS)
+    s = ArgParseSettings()
+    s.description="s2s.jl [sequence-to-sequence model](https://arxiv.org/abs/1409.3215). (c) Deniz Yuret, 2017."
+    s.exc_handler=ArgParse.debug_handler
+    @add_arg_table s begin
+        ("--seed"; arg_type=Int; default=-1; help="Random number seed.")
+        ("--atype"; default=(gpu()>=0 ? "KnetArray{Float32}" : "Array{Float32}"); help="Array and element type.")
+        ("--train"; nargs='+'; help="If provided, use first file for training, second for dev, others for eval.")
+        ("--hidden"; nargs='+'; arg_type=Int; default=[64]; help="Sizes of one or more LSTM layers.")
+        ("--embed1"; arg_type=Int; default=512; help="Size of the input embedding vector.")
+        ("--embed2"; arg_type=Int; default=32;  help="Size of the output embedding vector.")
+        ("--epochs"; arg_type=Int; default=10; help="Number of epochs for training.")
+        ("--fast"; action=:store_true; help="skip loss printing for faster run")
+        ("--loadfile"; help="Initialize model, vocab, and/or embeddings from file")
+        ("--dropout"; arg_type=Float32; default=0.5f0; help="Dropout probability.")
+        # TODO:
+        # ("--test"; help="Apply model to input sequences in test file.")
+        # ("--savefile"; help="Save final model to file")
+        # ("--bestfile"; help="Save best model to file")
+        # ("--batchsize"; arg_type=Int; default=10; help="Size of minibatches.")
+        # ("--gclip"; arg_type=Float64; default=0.0; help="Gradient clip.")
+    end
+    println(s.description)
+    isa(args, AbstractString) && (args=split(args))
+    global o = parse_args(args, s; as_symbols=true)
+    println("opts=",[(k,v) for (k,v) in o]...)
+    o[:seed] > 0 && setseed(o[:seed])
+    o[:atype] = eval(parse(o[:atype]))
+    o[:vocab1] = Dict(); o[:vocab2] = Dict(" <S> "=>1) # TODO: handle unk, eos, restricted vocab size
+    if o[:loadfile] != nothing
+        for (k,v) in load(o[:loadfile])
+            o[Symbol(k)] = v
+        end
+    end
+    o[:datas] = [readdata2(file,o[:vocab1],o[:vocab2]) for file in o[:train]]
+    if !haskey(o,:model); o[:model] = initweights(; o...); end
+    o[:opt] = oparams(o[:model])
+    @printf("vocab1=%d vocab2=%d embed1=%d embed2=%d\n",
+            length(o[:vocab1]), length(o[:vocab2]),
+            length(o[:model][1][end][1]), length(o[:model][2][end-2][1]))
+    # o[:models] = [ deepcopy(o[:model]) ]
+    report(t,p,d)=println((t,[ (avgloss(p,di),accuracy(p,di)) for di in d ]...))
+    !o[:fast] && report(0,o[:model],o[:datas])
+    istate = initstate(o[:model][1])
+    for epoch = 1:o[:epochs]
+        @time for (x,y) in o[:datas][1]
+            o[:grad] = s2sgrad(o[:model],istate,x,y; pdrop=o[:dropout])
+            Knet.update!(o[:model],o[:grad],o[:opt])
+        end
+        # push!(o[:models], deepcopy(o[:model]))
+        !o[:fast] && report(epoch,o[:model],o[:datas])
+    end
+    return o
+end
+
+
 # Experiments:
 
 # Baseline:
@@ -384,6 +400,38 @@ end
 
 # Load pretrained word embeddings:
 # o = main("--train trn tst --load embed1.jld --seed 1");
-# best epoch=3 avgloss=0.6041012f0 accuracy=0.62128
+# best epoch=3 avgloss=0.60410120f0 accuracy=0.62128
 # compared to random embeddings:
-# best epoch=3 avgloss=0.6253560f0 accuracy=0.61670
+# best epoch=3 avgloss=0.62535596f0 accuracy=0.61670
+# adapted as an option.
+
+# Initialize forget gate bias = 1:
+# o = main("--train trn tst --seed 1");
+# vocab1=524 vocab2=4 embed1=512 embed2=32
+# best epoch=2 avgloss=0.6265209f0
+# Not significant difference but right thing to do, adapted.
+
+# Pretrained embed with latest version:
+# o = main("--train trn tst --seed 1 --load embed1.jld")
+# vocab1=524 vocab2=4 embed1=300 embed2=32
+# best avgloss=0.6006409f0 at epoch=3
+# best accuracy=0.61327231 at epoch=2
+
+# Test loss and accuracy do not reach minimum together:
+# 
+# o = main("--train trn tst --seed 1") # default options
+# (epoch,(trnloss,trnacc),(tstloss,tstacc))
+# (5,(0.39382565f0,0.7431232f0),(0.6655941f0,0.6235698f0))  # best accuracy
+# (2,(0.5277382f0,0.66271687f0),(0.6265209f0,0.60297483f0)) # best loss
+# 
+# o = main("--train trn tst --seed 1 --dropout 0.5") # dropout with best test accuracy (tried 0.1:0.1:0.9)
+# (6,(0.44146112f0,0.71603894f0),(0.6252134f0,0.6361556f0)) # best accuracy at dropout=0.5 epoch=6
+# (4,(0.48044023f0,0.69318664f0),(0.60365015f0,0.61899316f0)) # best loss at dropout=0.5 epoch=4
+#
+# o = main("--train trn tst --seed 1 --load embed1.jld") # pretrained embeddings
+# (7,(0.32677525f0,0.78374946f0),(0.74263537f0,0.61899316f0)) # best accuracy
+# (3,(0.4598019f0,0.70672876f0),(0.6006409f0,0.6075515f0)) # best loss
+#
+# o = main("--train trn tst --seed 1 --load embed1.jld --dropout ?") # pretrained embeddings with dropout
+# (6,(0.44951436f0,0.70799834f0),(0.5994176f0,0.63386726f0)) # best accurary at dropout=0.6 epoch=6
+# (3,(0.48624966f0,0.68303007f0),(0.59056264f0,0.617849f0))  # best loss at dropout=0.3 epoch=3
