@@ -2,9 +2,9 @@ using Knet, AutoGrad, Logging
 
 include("inits.jl")
 
-function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39], args=nothing)
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39], args=nothing, premb=nothing)
     weights = Dict()
-    input = embed
+    input = premb == nothing ? embed : size(premb, 2)
 
     #first layer
     weights["enc_w_f"] = xavier(Float32, input+hidden, 4*hidden)
@@ -16,7 +16,7 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
     weights["enc_b_b"][1:hidden] = 1 # forget gate bias
 
     #vocab 300 for embeddings, 512 for standard
-    weights["emb_word"] = xavier(Float32, vocab, embed)
+    weights["emb_word"] = premb == nothing ? xavier(Float32, vocab, embed) : premb
     
     #decoder
     if args["percp"] && args["encoding"] == "grid"
@@ -579,8 +579,10 @@ function initparams(ws; args=nothing)
     for k in keys(ws)
         if startswith(k, "filter")
             prms[k] = map(w->Adam(w;lr=args["lr"]), ws[k])
+            #prms[k] = map(w->Sgd(;lr=args["lr"]), ws[k])
         else
             prms[k] = Adam(ws[k];lr=args["lr"]) 
+            #prms[k] = Sgd(;lr=args["lr"]) 
         end
     end
 

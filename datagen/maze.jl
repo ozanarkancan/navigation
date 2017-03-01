@@ -197,7 +197,7 @@ end
 """
 Decorates the given maze with items & hall patterns
 """
-function generate_navi_map(maze, name; itemcountprobs=[0.05 0.5 0.45], iprob=0.2)
+function generate_navi_map(maze, name; itemcountprobs=[0.05 0.5 0.45], iprob=0.2, emptyfloor=false, emptywall=false)
     h,w,_ = size(maze)
     nodes = Dict()
     edges = Dict()
@@ -241,6 +241,12 @@ function generate_navi_map(maze, name; itemcountprobs=[0.05 0.5 0.45], iprob=0.2
                 wall = walls[3]
             end
 
+            if emptyfloor
+                floor = -1
+            elseif emptywall
+                wall = -1
+            end
+
             if maze[i, j, 2] == 1
                 d = get!(edges, n1, Dict(n2 => (wall, floor)))
                 get!(d, n2, (wall, floor))
@@ -269,7 +275,13 @@ function generate_navi_map(maze, name; itemcountprobs=[0.05 0.5 0.45], iprob=0.2
             else
                 wall = walls[3]
             end
-
+            
+            if emptyfloor
+                floor = -1
+            elseif emptywall
+                wall = -1
+            end
+            
             if maze[i, j, 3] == 1
                 d = get!(edges, n1, Dict(n2 => (wall, floor)))
                 get!(d, n2, (wall, floor))

@@ -6,31 +6,28 @@ include("datagen/path_generator.jl")
 include("datagen/lang_generator.jl")
 
 function parse_commandline()
-	s = ArgParseSettings()
+    s = ArgParseSettings()
 
-	@add_arg_table s begin
-		("--lr"; help = "learning rate"; default = 0.001; arg_type = Float64)
-		("--hidden"; help = "hidden size"; default = 100; arg_type = Int)
-		("--embed"; help = "embedding size"; default = 100; arg_type = Int)
-		("--limactions"; arg_type = Int; default = 35)
-		("--epoch"; help = "number of epochs"; default = 2; arg_type = Int)
-		("--trainfiles"; help = "built training jld file"; default = ["grid_jelly.jld", "grid_l.jld", "l_jelly.jld"]; nargs = '+')
-		("--testfiles"; help = "test file as regular instruction file(json)"; default = ["l", "jelly", "grid"]; nargs = '+')
-		("--window"; help = "size of the filter"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
-		("--filters"; help = "number of filters"; default = [200, 100, 50]; arg_type = Int; nargs = '+')
-		("--model"; help = "model file"; default = "flex.jl")
-		("--encdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
-		("--decdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
-		("--bs"; help = "batch size"; default = 1; arg_type = Int)
-		("--gclip"; help = "gradient clip"; default = 5.0; arg_type = Float64)
-		("--log"; help = "name of the log file"; default = "test.log")
-		("--save"; help = "model path"; default = "")
-		("--load"; help = "model path"; default = "")
-		("--charenc"; help = "charecter embedding"; action = :store_true)
-		("--encoding"; help = "grid or multihot"; default = "grid")
-		("--wvecs"; help = "use word vectors"; action= :store_true)
-		("--greedy"; help = "deterministic or stochastic policy"; action = :store_false)
-		("--seed"; help = "seed number"; arg_type = Int; default = 123)
+    @add_arg_table s begin
+        ("--lr"; help = "learning rate"; default = 0.001; arg_type = Float64)
+        ("--hidden"; help = "hidden size"; default = 100; arg_type = Int)
+        ("--embed"; help = "embedding size"; default = 100; arg_type = Int)
+        ("--limactions"; arg_type = Int; default = 35)
+        ("--window"; help = "size of the filter"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
+        ("--filters"; help = "number of filters"; default = [200, 100, 50]; arg_type = Int; nargs = '+')
+        ("--model"; help = "model file"; default = "flex.jl")
+        ("--encdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
+        ("--decdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
+        ("--bs"; help = "batch size"; default = 1; arg_type = Int)
+        ("--gclip"; help = "gradient clip"; default = 5.0; arg_type = Float64)
+        ("--log"; help = "name of the log file"; default = "test.log")
+        ("--save"; help = "model path"; default = "")
+        ("--load"; help = "model path"; default = "")
+        ("--charenc"; help = "charecter embedding"; action = :store_true)
+        ("--encoding"; help = "grid or multihot"; default = "grid")
+        ("--wvecs"; help = "use word vectors"; action= :store_true)
+        ("--greedy"; help = "deterministic or stochastic policy"; action = :store_false)
+        ("--seed"; help = "seed number"; arg_type = Int; default = 123)
         ("--percp"; help = "use perception"; action = :store_false)
         ("--preva"; help = "use previous action"; action = :store_true)
         ("--att"; help = "use attention"; action = :store_true)
@@ -39,8 +36,8 @@ function parse_commandline()
         ("--attout"; help = "direct connection from attention to output"; action = :store_true)
         ("--level"; help = "log level"; default="info")
         ("--numbatch"; help = "number of batches"; default=100; arg_type=Int)
-	end
-	return parse_args(s)
+    end
+    return parse_args(s)
 end		
 
 args = parse_commandline()
@@ -54,7 +51,7 @@ items = filter(x->x!="", collect(keys(Items)))
 """
 stage: number of actions except the stop action
 """
-function generatedata(stage=1; numins=200)
+function generatedata(stage=1; numins=100)
     h,w = (8,8)
     data = Any[]
     mps = Dict()
@@ -65,7 +62,7 @@ function generatedata(stage=1; numins=200)
     while inscount < numins
         maze, available = generate_maze(h, w; numdel=1)
         navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        
+
         nodes, path = generate_path(maze, available)
 
         segments = segment_path(nodes)
@@ -75,7 +72,7 @@ function generatedata(stage=1; numins=200)
             if length(path)-1 != stage || tp == "move"
                 continue
             end
-            
+
             mname = join(rand(CHARS, 20))
             cpmp = copy(navimap)
             cpmp.name = mname
@@ -106,9 +103,12 @@ function generatedata(stage=1; numins=200)
 
             ins = Instruction(string("artificial_", inscount), split(string(prefx, item_names[itindx])), path, mname, inscount)
             push!(data, ins)
+            break
+            #=
             if inscount >= numins
                 break
             end
+            =#
         end
     end
 
@@ -118,9 +118,9 @@ end
 function testgeneratedata()
     Logging.configure(filename=args["log"])
     if args["level"] == "info"
-	    Logging.configure(level=INFO)
+        Logging.configure(level=INFO)
     else
-	    Logging.configure(level=DEBUG)
+        Logging.configure(level=DEBUG)
     end
     for i=1:100
         info("i: $i")
@@ -150,16 +150,31 @@ function pretrain(vocab, emb, args)
     for i=1:args["numbatch"]
         dat, maps, counts = generatedata()
         itmcnts += counts
-        data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=emb), dat)
+        data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dat)
         trn_data = minibatch(data;bs=args["bs"])
-        train_data = map(ins-> (ins, (emb != nothing ? ins_arr_embed(emb, vocab, ins.text) : ins_arr(vocab, ins.text))), dat)
+        
+        dat2, maps2, _ = generatedata()
+        tst_data = map(ins-> (ins, ins_arr(vocab, ins.text)), dat2)
         
         vdims = size(trn_data[1][2][1])
-        vocabsize = args["wvecs"] ? 300 : length(vocab) + 1
+
+        vocabsize = length(vocab) + 1
         world = length(vdims) > 2 ? vdims[3] : vdims[2]
 
         if w == nothing
-            w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args)
+            embedsize = args["wvecs"] ? 300 : args["embed"]
+            world = length(vdims) > 2 ? vdims[3] : vdims[2]
+
+            premb = nothing
+            if args["wvecs"]
+                premb = zeros(Float32, vocabsize, embedsize)
+                for k in keys(vocab)
+                 premb[vocab[k], :] = emb[k]
+                end
+            end
+
+            w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb)
+
             info("Model Prms:")
             for k in keys(w)
                 info("$k : $(size(w[k])) ")
@@ -175,64 +190,64 @@ function pretrain(vocab, emb, args)
             prms = initparams(w; args=args)
         end
         @time lss = train(w, prms, trn_data; args=args)
-        @time train_acc = test([w], train_data, maps; args=args)
+        @time tst_acc = test([w], tst_data, maps2; args=args)
 
         avg_lss = avg_lss == 0 ? lss : avg_lss*0.95 + 0.05*lss
-        avg_acc = avg_acc == 0 ? train_acc : avg_acc*0.95 + 0.05*train_acc
+        avg_acc = avg_acc == 0 ? tst_acc : avg_acc*0.95 + 0.05*tst_acc
 
-        info("BatchNum: $i , Loss: $lss , Acc: $(train_acc)")
+        info("BatchNum: $i , Loss: $lss , Acc: $(tst_acc)")
 
         push!(df, (i, avg_lss, avg_acc))
 
         info("$(df[i,:])")
         info("Item counts: $(itmcnts) \n")
 
-        if avg_lss < 1e-3
+        if (1.0 - avg_acc) < 1e-3
             break
         end
     end
 
-    writtable(args["save"], df)
+    writetable(args["save"], df)
 end
 
 function get_maps()
-	fname = "data/maps/map-grid.json"
-	grid = getmap(fname)
+    fname = "data/maps/map-grid.json"
+    grid = getmap(fname)
 
-	fname = "data/maps/map-jelly.json"
-	jelly = getmap(fname)
+    fname = "data/maps/map-jelly.json"
+    jelly = getmap(fname)
 
-	fname = "data/maps/map-l.json"
-	l = getmap(fname)
+    fname = "data/maps/map-l.json"
+    l = getmap(fname)
 
-	maps = Dict("Grid" => grid, "Jelly" => jelly, "L" => l)
-	return maps
+    maps = Dict("Grid" => grid, "Jelly" => jelly, "L" => l)
+    return maps
 end
 
 function mainpretraining()
-	Logging.configure(filename=args["log"])
+    Logging.configure(filename=args["log"])
     if args["level"] == "info"
-	    Logging.configure(level=INFO)
+        Logging.configure(level=INFO)
     else
-	    Logging.configure(level=DEBUG)
+        Logging.configure(level=DEBUG)
     end
-	srand(args["seed"])
-	info("*** Parameters ***")
-	for k in keys(args); info("$k -> $(args[k])"); end
-	
-	grid, jelly, l = getallinstructions()
-	lg = length(grid)
-	lj = length(jelly)
-	ll = length(l)
-	dg = floor(Int, lg*0.5)
-	dj = floor(Int, lj*0.5)
-	dl = floor(Int, ll*0.5)
+    srand(args["seed"])
+    info("*** Parameters ***")
+    for k in keys(args); info("$k -> $(args[k])"); end
 
-	maps = get_maps()
+    grid, jelly, l = getallinstructions()
+    lg = length(grid)
+    lj = length(jelly)
+    ll = length(l)
+    dg = floor(Int, lg*0.5)
+    dj = floor(Int, lj*0.5)
+    dl = floor(Int, ll*0.5)
 
-	vocab = build_dict(vcat(grid, jelly, l))
-	emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
-	info("\nVocab: $(length(vocab))")
+    maps = get_maps()
+
+    vocab = build_dict(vcat(grid, jelly, l))
+    emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
+    info("\nVocab: $(length(vocab))")
 
     pretrain(vocab, emb, args)
 end
