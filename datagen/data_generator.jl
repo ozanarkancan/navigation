@@ -4,7 +4,6 @@ include("maze.jl")
 include("path_generator.jl")
 include("lang_generator.jl")
 
-@enum LangTask turnToX=1 moveToX=2
 CHARS = collect("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 items = filter(x->x!="", collect(keys(Items)))
 floors = collect(keys(Floors))
@@ -104,22 +103,22 @@ function turn_to_x(name, id)
 end
 
 """
-stage: number of actions except the stop action
+Available task functions:
+
+turn_to_x
 """
-function generatedata(task::LangTask; numins=100)
+function generatedata(taskf; numins=100)
     data = Any[]
     mps = Dict()
-
+    
     inscount = 0
     while inscount < numins
         inscount += 1
         name = string("artificial_", inscount)
 
-        if task == turnToX
-            ins, mp = turn_to_x(name, inscount)
-            push!(data, ins)
-            mps[mp.name] = mp
-        end
+        ins, mp = taskf(name, inscount)
+        push!(data, ins)
+        mps[mp.name] = mp
     end
 
     return data, mps

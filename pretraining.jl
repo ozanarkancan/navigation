@@ -52,11 +52,11 @@ function pretrain(vocab, emb, args)
     df = DataFrame(Batch=Int[], Loss=Any[], Acc=Any[])
 
     for i=1:args["numbatch"]
-        dat, maps = generatedata(turnToX)
+        dat, maps = generatedata(turn_to_x)
         data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dat)
         trn_data = minibatch(data;bs=args["bs"])
         
-        dat2, maps2 = generatedata(turnToX)
+        dat2, maps2 = generatedata(turn_to_x)
         tst_data = map(ins-> (ins, ins_arr(vocab, ins.text)), dat2)
         
         vdims = size(trn_data[1][2][1])
