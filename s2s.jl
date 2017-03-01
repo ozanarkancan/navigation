@@ -1,14 +1,10 @@
+# TODO: dropout, training limit, external embeddings (under data)
+
 using Knet, ArgParse, JLD
 
 # Using Int[] for input/output sequences.
 # Will rethink when we do minibatching.
 
-# Some special tokens
-const EOS=1
-const EOSSTR=" S "
-# const UNK=2
-# const UNKSTR=" U "
-# spaces ensure they won't match regular tokens which are stripped
 
 """
     lstm(weight,bias,hidden,cell,input) => (newhidden,newcell)
@@ -52,7 +48,7 @@ end
 * `input`: an integer representing an input token
 * `state[2k-1,2k]`: hidden and cell for the k'th lstm layer
 * `param[2k-1,2k]`: weight and bias for k'th lstm layer
-* `param[end-2]`: input embeddings (array of row vectors)
+* `param[end-2]`: input embeddings (Vector of row vectors)
 * `param[end-1,end]`: weight and bias for final prediction
 """
 function decode(param, state, input)
@@ -63,16 +59,16 @@ end
 
 
 """
-    s2s(params,state,inputs,outputs)
+    s2s(params,state,inputs,outputs,EOS)
 
 Return loss for the [sequence-to-sequence model](https://arxiv.org/abs/1409.3215).
 
 * `params`: a pair with encoder and decoder parameters.
 * `state`: initial hidden and cell states.
-* `inputs`: input sequence for the encoder. Int array, no start/end tokens.
-* `outputs`: output sequence for the decoder. Int array, no start/end tokens.
+* `inputs::Vector{Int}`: Input sequence for the encoder. No start/end tokens.
+* `outputs::Vector{Int}`: Output sequence for the decoder. No start/end tokens.
 """
-function s2s(params,state,inputs,outputs)
+function s2s(params,state,inputs,outputs; EOS=1)
     encoder,decoder = params
     for input in reverse(inputs)
         state = encode(encoder, state, input)
@@ -116,7 +112,7 @@ input sequence.  The sequences are Array{Int} and do not contain EOS
 tokens.
 
 """
-function predict(params,state,inputs)
+function predict(params,state,inputs; EOS=1)
     encoder,decoder = params
     for input in reverse(inputs)
         state = encode(encoder, state, input)
@@ -151,7 +147,7 @@ function accuracy(params,data)
 end
 
 
-function readdata2(file; vocab1=nothing, vocab2=nothing, o...)
+function readdata2(file, widx1, widx2)
     data = []
     for line in eachline(file)
         line = chomp(line)
@@ -159,11 +155,11 @@ function readdata2(file; vocab1=nothing, vocab2=nothing, o...)
         isempty(input) && isempty(output) && continue
         x = Int[]
         for w in split(input)
-            push!(x, get!(vocab1, w, 1+length(vocab1)))
+            push!(x, get!(widx1, w, 1+length(widx1)))
         end
         y = Int[]
         for w in split(output)
-            push!(y, get!(vocab2, w, 1+length(vocab2)))
+            push!(y, get!(widx2, w, 1+length(widx2)))
         end
         push!(data, (x,y))
     end
@@ -174,19 +170,38 @@ end
 # `param[end-2]`: input embedding matrix
 # `param[end-1,end]`: weight and bias for final prediction
 function initweights(; hidden=nothing, embed1=nothing, embed2=nothing,
-                     vocab1=nothing, vocab2=nothing, atype=nothing, o...)
+                       atype=nothing,  vocab1=nothing, vocab2=nothing, o...)
+    function mkemb(emb,voc)
+        a = Array(atype,length(voc))
+        if isa(emb,Dict)
+            length(emb) == length(voc) || error("Embedding and vocab sizes mismatch")
+            for k in keys(emb)
+                haskey(voc,k) || error("Embedding and vocab keys mismatch")
+                a[voc[k]] = atype(reshape(emb[k],1,length(emb[k])))
+            end
+        elseif isa(emb,Int)
+            for i=1:length(a)
+                a[i] = atype(xavier(1,emb))
+            end
+        else
+            error("Unrecognized embedding $(summary(emb))")
+        end
+        return a
+    end
     nlayer = length(hidden)
     encoder = Array(Any, 2*nlayer+1)
     decoder = Array(Any, 2*nlayer+3)
-    input1,input2 = embed1,embed2 # TODO: do we really need embeddings?
+    encoder[2*nlayer+1] = mkemb(embed1,vocab1)
+    decoder[2*nlayer+1] = mkemb(embed2,vocab2)
+    input1 = length(encoder[2*nlayer+1][1])
+    input2 = length(decoder[2*nlayer+1][1])
     for k = 1:nlayer
         encoder[2k-1] = atype(xavier(input1 + hidden[k], 4*hidden[k]))
         decoder[2k-1] = atype(xavier(input2 + hidden[k], 4*hidden[k]))
         encoder[2k] = atype(zeros(1, 4*hidden[k]))
         decoder[2k] = atype(zeros(1, 4*hidden[k])) # TODO: do we really need biases?
+        input1 = input2 = hidden[k]
     end
-    encoder[2*nlayer+1] = [ atype(xavier(1,embed1)) for i=1:length(vocab1) ]
-    decoder[2*nlayer+1] = [ atype(xavier(1,embed2)) for i=1:length(vocab2) ]
     decoder[2*nlayer+2] = atype(xavier(hidden[end],length(vocab2)))
     decoder[2*nlayer+3] = atype(zeros(1, length(vocab2)))
     return (encoder, decoder)
@@ -228,15 +243,16 @@ function main(args=ARGS)
         ("--atype"; default=(gpu()>=0 ? "KnetArray{Float32}" : "Array{Float32}"); help="Array and element type.")
         ("--train"; nargs='+'; help="If provided, use first file for training, second for dev, others for eval.")
         ("--hidden"; nargs='+'; arg_type=Int; default=[64]; help="Sizes of one or more LSTM layers.")
-        ("--vocab1"; help="Load input vocab (Dict{WordStr,WordIdx}) from file.")
-        ("--vocab2"; help="Load input vocab (Dict{WordStr,WordIdx}) from file.")
         ("--embed1"; arg_type=Int; default=512; help="Size of the input embedding vector.")
-        ("--embed2"; arg_type=Int; default=32; help="Size of the output embedding vector.")
+        ("--embed2"; arg_type=Int; default=32;  help="Size of the output embedding vector.")
         ("--epochs"; arg_type=Int; default=5; help="Number of epochs for training.")
         ("--fast"; action=:store_true; help="skip loss printing for faster run")
+        ("--loadfile"; help="Initialize model, vocab, and/or embeddings from file")
         # TODO:
+        # vocab::Vector{WordString}, embed::Vector{WordVector}
+        # ("--vocab1"; help="Size or dictionary file")
+        # ("--vocab2"; help="Size or dictionary file")
         # ("--test"; help="Apply model to input sequences in test file.")
-        # ("--loadfile"; help="Initialize model from file")
         # ("--savefile"; help="Save final model to file")
         # ("--bestfile"; help="Save best model to file")
         # ("--embeddings1"; help="Load input embeddings from file")
@@ -252,10 +268,18 @@ function main(args=ARGS)
     println("opts=",[(k,v) for (k,v) in o]...)
     o[:seed] > 0 && srand(o[:seed])
     o[:atype] = eval(parse(o[:atype]))
-    o[:vocab1] = o[:vocab1]!=nothing ? load(o[:vocab1], "vocab") : Dict(EOSSTR=>EOS)
-    o[:vocab2] = o[:vocab2]!=nothing ? load(o[:vocab2], "vocab") : Dict(EOSSTR=>EOS)
-    o[:datas] = [readdata2(file; o...) for file in o[:train]] # yes I know data is already plural :)
-    o[:model] = initweights(; o...)
+    o[:vocab1] = Dict(); o[:vocab2] = Dict(" <S> "=>1) # TODO: handle unk, eos, restricted vocab size
+    if o[:loadfile] != nothing
+        for (k,v) in load(o[:loadfile])
+            o[Symbol(k)] = v
+        end
+    end
+    o[:datas] = [readdata2(file,o[:vocab1],o[:vocab2]) for file in o[:train]]
+    if !haskey(o,:model); o[:model] = initweights(; o...); end
+    @printf("vocab1=%d vocab2=%d embed1=%d embed2=%d\n",
+            length(o[:vocab1]), length(o[:vocab2]),
+            length(o[:model][1][end][1]), length(o[:model][2][end-2][1]))
+    @show (emsize1,emsize2)
     o[:models] = [ deepcopy(o[:model]) ]
     o[:opt] = oparams(o[:model])
     report(t,p,d)=println((t,[ avgloss(p,di) for di in d ]...))
@@ -343,3 +367,23 @@ end
 # (3,0.48766702f0,0.62641555f0), accuracy: 0.6167048054919908
 # Significant, adapted.
 
+# Initializing with one-hot input embeddings:
+#    onehot(n,i)=(x=zeros(1,n);x[i]=1;x)
+#    encoder[2*nlayer+1] = [ atype(onehot(length(vocab1),i)) for i=1:length(vocab1) ]
+# (3,0.49662954f0,0.6173695f0)
+# Using xavier with embed1=vocabsize instead:
+# (3,0.47787347f0,0.62890613f0)
+# Initializing onehot embeddings for both encoder and decoder inputs:
+#    decoder[2*nlayer+1] = [ atype(onehot(length(vocab2),i)) for i=1:length(vocab2) ]
+# (3,0.5062695f0,0.6270728f0)
+# Always using onehot embeddings:
+# (2,0.5919869f0,0.65982556f0)
+#    i = input; input = similar(param[1+length(state)][i])
+#    fill!(input,0); input[i]=1
+# This does not really generalize, not worth it.
+
+# Load pretrained word embeddings:
+# o = main("--train trn tst --load embed1.jld --seed 1");
+# best epoch=3 avgloss=0.6041012f0 accuracy=0.62128
+# compared to random embeddings:
+# best epoch=3 avgloss=0.6253560f0 accuracy=0.61670
