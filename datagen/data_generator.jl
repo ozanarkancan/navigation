@@ -102,6 +102,101 @@ function turn_to_x(name, id)
     return ins, navimap
 end
 
+function move_to_x(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+
+        r = rand(1:3)#1:item, #2:ordinal, #3: end
+        if r == 1
+            navimap = generate_navi_map(maze, ""; iprob=-1.0)
+        else
+            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.05 0.3 0.65], iprob=0.15)
+        end
+
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        prefx = "move "
+        
+        for i=1:length(segments)
+            tp, path = segments[i]
+            if tp == "turn"
+                continue
+            end
+
+            mname = join(rand(CHARS, 20))
+            navimap.name = mname
+            nbs = nodes_visible(navimap, path[1][1:2])#Array of arrays
+            tid = 0
+            tl = getlocation(navimap, path[end], 1)#target location
+            for j=1:length(nbs)
+                if nbs[j][1] == tl[1:2]
+                    tid = j
+                end
+            end
+
+            if r == 1
+                sits = shuffle(items)
+                n1 = path[1]
+
+                navimap.nodes[n1[1:2]] = Items[rand(sits[2:end])]#put an item on the current node
+                
+                for j=1:length(nbs)
+                    curr = path[1][1:2]
+                    trg = 0
+                    if j == tid
+                        trg = rand(1:length(nbs[j]))
+                        navimap.nodes[nbs[j][trg]] = Items[sits[1]]
+                    end
+                    for nb in nbs[j]
+                        if j == tid && nb == nbs[j][trg]
+                            continue
+                        end
+                        navimap.nodes[nb] = Items[rand(sits[2:end])]
+                    end
+                end
+                
+                ins = Instruction(name, split(string(prefx, sits[1])), path, mname, id)
+            else 
+                if r == 2#floor
+                    sflrs = shuffle(floors)
+                    for j=1:length(nbs)
+                        curr = path[1][1:2]
+                        for nb in nbs[j]
+                            w,f = navimap.edges[curr][nb]
+                            navimap.edges[curr][nb] = (w, Floors[sflrs[j]])
+                            navimap.edges[nb][curr] = (w, Floors[sflrs[j]])
+                            curr = nb
+                        end
+                    end
+
+                    ins = Instruction(name, split(string(prefx, sflrs[tid], " hall")), path, mname, id)
+                elseif r == 3#wall
+                    swlls = shuffle(walls)
+                    for j=1:length(nbs)
+                        curr = path[1][1:2]
+                        for nb in nbs[j]
+                            w,f = navimap.edges[curr][nb]
+                            rw = Walls[swlls[rand(2:3)]]
+                            navimap.edges[curr][nb] = j == tid ? (Walls[swlls[1]], f) : (rw, f)
+                            navimap.edges[nb][curr] = j == tid ? (Walls[swlls[1]], f) : (rw, f)
+                            curr = nb
+                        end
+                    end
+                    
+                    ins = Instruction(name, split(string(prefx, swlls[1])), path, mname, id)
+                end
+            end
+            break
+        end
+    end
+    return ins, navimap
+end
+
+
 """
 Available task functions:
 
