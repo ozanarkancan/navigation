@@ -21,7 +21,7 @@ function turn_to_x(name, id)
         if r == 1
             navimap = generate_navi_map(maze, ""; iprob=-1.0)
         else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.05 0.3 0.65], iprob=0.15)
+            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.5 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         end
 
         nodes, path = generate_path(maze, available)
@@ -80,7 +80,7 @@ function turn_to_x(name, id)
                         end
                     end
 
-                    ins = Instruction(name, split(string(prefx, sflrs[tid], " hall")), path, mname, id)
+                    ins = Instruction(name, split(string(prefx, sflrs[tid])), path, mname, id)
                 elseif r == 3#wall
                     swlls = shuffle(walls)
                     for j=1:length(nbs)
@@ -110,16 +110,16 @@ function move_to_x(name, id)
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
 
-        r = rand(1:3)#1:item, #2:ordinal, #3: end
+        r = rand(1:3)#1:item or end/wall/segment/intersection
         if r == 1
             navimap = generate_navi_map(maze, ""; iprob=-1.0)
         else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.05 0.3 0.65], iprob=0.15)
+            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.5 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         end
 
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        prefx = "move "
+        prefx = "move to the "
         
         for i=1:length(segments)
             tp, path = segments[i]
@@ -131,11 +131,21 @@ function move_to_x(name, id)
             navimap.name = mname
             nbs = nodes_visible(navimap, path[1][1:2])#Array of arrays
             tid = 0
-            tl = getlocation(navimap, path[end], 1)#target location
+            tl = path[end]#target location
             for j=1:length(nbs)
-                if nbs[j][1] == tl[1:2]
-                    tid = j
+                for nb in nbs[j]
+                    if nb == tl[1:2]
+                        tid = j
+                        break
+                    end
                 end
+            end
+            
+            endpoint = map(x->round(Int, x), path[end])
+            d = round(Int, endpoint[3] / 90 + 1)
+                        
+            if r != 1 && !facing_wall(maze, (endpoint[2], endpoint[1], d))
+                continue
             end
 
             if r == 1
@@ -146,13 +156,11 @@ function move_to_x(name, id)
                 
                 for j=1:length(nbs)
                     curr = path[1][1:2]
-                    trg = 0
                     if j == tid
-                        trg = rand(1:length(nbs[j]))
-                        navimap.nodes[nbs[j][trg]] = Items[sits[1]]
+                        navimap.nodes[tl[1:2]] = Items[sits[1]]
                     end
                     for nb in nbs[j]
-                        if j == tid && nb == nbs[j][trg]
+                        if j == tid && nb == tl[1:2]
                             continue
                         end
                         navimap.nodes[nb] = Items[rand(sits[2:end])]
@@ -160,35 +168,9 @@ function move_to_x(name, id)
                 end
                 
                 ins = Instruction(name, split(string(prefx, sits[1])), path, mname, id)
-            else 
-                if r == 2#floor
-                    sflrs = shuffle(floors)
-                    for j=1:length(nbs)
-                        curr = path[1][1:2]
-                        for nb in nbs[j]
-                            w,f = navimap.edges[curr][nb]
-                            navimap.edges[curr][nb] = (w, Floors[sflrs[j]])
-                            navimap.edges[nb][curr] = (w, Floors[sflrs[j]])
-                            curr = nb
-                        end
-                    end
-
-                    ins = Instruction(name, split(string(prefx, sflrs[tid], " hall")), path, mname, id)
-                elseif r == 3#wall
-                    swlls = shuffle(walls)
-                    for j=1:length(nbs)
-                        curr = path[1][1:2]
-                        for nb in nbs[j]
-                            w,f = navimap.edges[curr][nb]
-                            rw = Walls[swlls[rand(2:3)]]
-                            navimap.edges[curr][nb] = j == tid ? (Walls[swlls[1]], f) : (rw, f)
-                            navimap.edges[nb][curr] = j == tid ? (Walls[swlls[1]], f) : (rw, f)
-                            curr = nb
-                        end
-                    end
-                    
-                    ins = Instruction(name, split(string(prefx, swlls[1])), path, mname, id)
-                end
+            else
+                suffx = r == 2 ? "end" : "wall"
+                ins = Instruction(name, split(string(prefx, suffx)), path, mname, id)
             end
             break
         end

@@ -609,8 +609,6 @@ function finalins(navimap, maze, curr)
             push!(cands, "and stop")
         end
 
-
-
         push!(insl, ([curr_s[end]], rand(cands)))
         return insl
     end
