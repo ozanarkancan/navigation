@@ -35,6 +35,7 @@ function parse_commandline()
         ("--attout"; help = "direct connection from attention to output"; action = :store_true)
         ("--level"; help = "log level"; default="info")
         ("--numbatch"; help = "number of batches"; default=100; arg_type=Int)
+        ("--taskf"; help = "task function"; default="turn_to_x")
     end
     return parse_args(s)
 end		
@@ -50,13 +51,15 @@ function pretrain(vocab, emb, args)
     avg_acc = 0
 
     df = DataFrame(Batch=Int[], Loss=Any[], Acc=Any[])
+    taskf = eval(parse(args["taskf"]))
 
+    data, dat2, maps, maps2 = (nothing, nothing, nothing, nothing)
     for i=1:args["numbatch"]
-        dat, maps = generatedata(turn_to_x)
+        dat, maps = dat2 == nothing ? generatedata(taskf) : (dat2, maps2)
         data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dat)
         trn_data = minibatch(data;bs=args["bs"])
         
-        dat2, maps2 = generatedata(turn_to_x)
+        dat2, maps2 = generatedata(taskf)
         tst_data = map(ins-> (ins, ins_arr(vocab, ins.text)), dat2)
         
         vdims = size(trn_data[1][2][1])
