@@ -30,6 +30,7 @@ function parse_commandline()
         ("--percp"; help = "use perception"; action = :store_false)
         ("--preva"; help = "use previous action"; action = :store_true)
         ("--att"; help = "use attention"; action = :store_true)
+        ("--worldatt"; help = "world attention"; arg_type = Int; default = 0)
         ("--inpout"; help = "direct connection from input to output"; action = :store_false)
         ("--prevaout"; help = "direct connection from prev action to output"; action = :store_true)
         ("--attout"; help = "direct connection from attention to output"; action = :store_true)
@@ -98,8 +99,8 @@ function pretrain(vocab, emb, args)
         @time lss = train(w, prms, trn_data; args=args)
         @time tst_acc = test([w], tst_data, maps2; args=args)
 
-        avg_lss = avg_lss == 0 ? lss : avg_lss*0.9 + 0.1*lss
-        avg_acc = avg_acc == 0 ? tst_acc : avg_acc*0.9 + 0.1*tst_acc
+        avg_lss = avg_lss == 0 ? lss : avg_lss*0.99 + 0.01*lss
+        avg_acc = avg_acc == 0 ? tst_acc : avg_acc*0.99 + 0.01*tst_acc
 
         info("BatchNum: $i , Loss: $lss , Acc: $(tst_acc)")
 

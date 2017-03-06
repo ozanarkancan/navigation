@@ -110,7 +110,7 @@ function move_to_x(name, id)
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
 
-        r = rand(1:3)#1:item or end/wall/segment/intersection
+        r = rand(1:4)#1:item or end/wall/segment/intersection
         if r == 1
             navimap = generate_navi_map(maze, ""; iprob=-1.0)
         else
@@ -143,8 +143,9 @@ function move_to_x(name, id)
             
             endpoint = map(x->round(Int, x), path[end])
             d = round(Int, endpoint[3] / 90 + 1)
-                        
-            if r != 1 && !facing_wall(maze, (endpoint[2], endpoint[1], d))
+            steps = length(path)-1
+            
+            if (r > 1 && r < 4 && !facing_wall(maze, (endpoint[2], endpoint[1], d)) || (r == 4 && steps > 4))
                 continue
             end
 
@@ -168,9 +169,13 @@ function move_to_x(name, id)
                 end
                 
                 ins = Instruction(name, split(string(prefx, sits[1])), path, mname, id)
-            else
+            elseif r < 4
                 suffx = r == 2 ? "end" : "wall"
                 ins = Instruction(name, split(string(prefx, suffx)), path, mname, id)
+            else
+                ord = steps == 1 ? rand(["next", "first"]) : ordinals[steps]
+                suffx = " segment"
+                ins = Instruction(name, split(string(prefx, ord, suffx)), path, mname, id)
             end
             break
         end
@@ -178,11 +183,15 @@ function move_to_x(name, id)
     return ins, navimap
 end
 
+to_x(name, id) = rand() < 0.5 ? turn_to_x(name, id) : move_to_x(name, id)
+
 
 """
 Available task functions:
 
 turn_to_x
+move_to_x
+to_x : generate data using turn_to_x and move_to_x
 """
 function generatedata(taskf; numins=100)
     data = Any[]

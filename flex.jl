@@ -20,7 +20,11 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
     
     #decoder
     if args["percp"] && args["encoding"] == "grid"
-        worldfeats = (worldsize[1] - sum(window) + length(window)) * (worldsize[2] - sum(window) + length(window)) * numfilters[end]
+        if args["worldatt"] != 0 && length(numfilters) == 1
+            worldfeats = (worldsize[1] - window[1] + 1) * (worldsize[2] - window[1] + 1)
+        else
+            worldfeats = (worldsize[1] - sum(window) + length(window)) * (worldsize[2] - sum(window) + length(window)) * numfilters[end]
+        end
         
         weights["emb_world"] = xavier(Float32, worldfeats, embed)
 
@@ -29,8 +33,16 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
 
         for i=1:length(numfilters)
             inpch = i == 1 ? onehotworld : numfilters[i-1]
+            if args["worldatt"] != 0 && i == 2
+                inpch = 1
+            end
             push!(fs, xavier(Float32, window[i], window[i], inpch, numfilters[i]))
             push!(bs, zeros(Float32, 1, 1, numfilters[i], 1))
+        end
+
+        if args["worldatt"] != 0
+            weights["wa1"] = xavier(Float32, 2*hidden, args["worldatt"])
+            weights["wa2"] = xavier(Float32, args["worldatt"], numfilters[1])
         end
         weights["filters_w"] = fs
         weights["filters_b"] = bs
@@ -102,12 +114,34 @@ function cnn(filters, bias, x)
     return transpose(mat(inp))
 end
 
-function spatial(emb, x)
+function cnn(filters, bias, worldatt, x)
+    inp = x
+    for i=1:length(filters)-1
+        inp = relu(conv4(filters[i], inp; padding=0) .+ bias[i])
+        if i == 1
+            inp = conv4(worldatt, inp; padding=0)
+            #inp = relu(conv4(worldatt, inp; padding=0))
+        end
+    end
+    inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
+    if length(filters) == 1
+        inp = conv4(worldatt, inp; padding=0)
+        #inp = relu(conv4(worldatt, inp; padding=0))
+    end
+    return transpose(mat(inp))
+end
+
+function spatial(emb, x) #multihot
     return x * emb
 end
 
-function spatial(filters, bias, emb, x)
+function spatial(filters, bias, emb, x) #grid
     h = cnn(filters, bias, x)
+    return h * emb
+end
+
+function spatial(filters, bias, emb, worldatt, x) # world att
+    h = cnn(filters, bias, worldatt, x)
     return h * emb
 end
 
@@ -140,6 +174,13 @@ function attention(states, attention_w, attention_v)
     att = att_s .* h
 
     return sum(att, 1), att_s
+end
+
+function worldattention(prevh, wa1, wa2)
+    h = tanh(prevh * wa1) * wa2
+    att_p = exp(h)
+    att_p = att_p ./ sum(att_p)
+    return reshape(att_p, 1, 1, size(wa2, 2), 1)
 end
 
 #dropout before the loop might accelerate the execution
@@ -239,8 +280,16 @@ function loss(w, state, words, ys; lss=nothing, views=nothing, as=nothing, dropo
 
     #decode
     for i=1:length(ys)
-        x = !args["percp"] ? spatial(w["emb_world"], as[i]) : 
-            args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i]) : spatial(w["emb_world"], views[i])
+        if !args["percp"]
+            x = spatial(w["emb_world"], as[i])
+        elseif args["encoding"] == "grid" && args["worldatt"] != 0
+            worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+            x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, views[i]) # world att
+        elseif args["encoding"] == "grid" 
+            x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i])
+        else
+            x = spatial(w["emb_world"], views[i])
+        end
         
         soft_inp = args["inpout"] ? w["soft_inp"] : nothing
         soft_att = args["attout"] ? w["soft_att"] : nothing
@@ -407,9 +456,18 @@ function test(models, data, maps; args=nothing)
             for ind=1:length(models)
                 w = models[ind]
                 state = states[ind]
-                x = !args["percp"] ? spatial(w["emb_world"], preva) : 
-                    args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], view) : spatial(w["emb_world"], view)
-
+                
+                if !args["percp"]
+                    x = spatial(w["emb_world"], preva)
+                elseif args["encoding"] == "grid" && args["worldatt"] != 0
+                    worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                    x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
+                elseif args["encoding"] == "grid" 
+                    x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
+                else
+                    x = spatial(w["emb_world"], view)
+                end
+                
                 soft_inp = args["inpout"] ? w["soft_inp"] : nothing
                 soft_att = args["attout"] ? w["soft_att"] : nothing
                 soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
@@ -418,7 +476,7 @@ function test(models, data, maps; args=nothing)
 
                 att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
                 ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
-                            soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
+                soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
 
                 cum_ps += probs(Array(ypred))
             end
