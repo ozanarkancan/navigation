@@ -240,7 +240,14 @@ function state_agent_centric(map, loc; vdims = [39 39])
         end
     end
 
-    return view
+    nv = zeros(Float32, 5, 20, size(view, 3), 1)
+    nv[1, :, :, 1] = view[1:20, 20, :, :]
+    nv[2, :, :, 1] = view[20, 20:end, :, :]
+    nv[3, :, :, 1] = view[20:end, 20, :, :]
+    nv[4, :, :, 1] = view[20, 1:20, :, :]
+    nv[5, :, :, 1] = view[1:20, 20, :, :]
+    #return view
+    return nv
 end
 
 function state_agent_centric_multihot(map, loc)

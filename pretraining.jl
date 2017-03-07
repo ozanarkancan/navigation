@@ -11,7 +11,8 @@ function parse_commandline()
         ("--hidden"; help = "hidden size"; default = 100; arg_type = Int)
         ("--embed"; help = "embedding size"; default = 100; arg_type = Int)
         ("--limactions"; arg_type = Int; default = 35)
-        ("--window"; help = "size of the filter"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
+        ("--window1"; help = "first dimension of the filters"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
+        ("--window2"; help = "second dimension of the filters"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
         ("--filters"; help = "number of filters"; default = [200, 100, 50]; arg_type = Int; nargs = '+')
         ("--model"; help = "model file"; default = "flex.jl")
         ("--encdrops"; help = "dropout rates"; nargs = '+'; default = [0.0, 0.0]; arg_type = Float64)
@@ -137,6 +138,8 @@ function mainpretraining()
     else
         Logging.configure(level=DEBUG)
     end
+
+    args["window"] = collect(zip(args["window1"], args["window2"]))
     srand(args["seed"])
     info("*** Parameters ***")
     for k in keys(args); info("$k -> $(args[k])"); end

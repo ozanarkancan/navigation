@@ -2,7 +2,7 @@ using Knet, AutoGrad, Logging
 
 include("inits.jl")
 
-function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[39, 39], args=nothing, premb=nothing)
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[5, 20], args=nothing, premb=nothing)
     weights = Dict()
     input = premb == nothing ? embed : size(premb, 2)
 
@@ -21,11 +21,13 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
     #decoder
     if args["percp"] && args["encoding"] == "grid"
         if args["worldatt"] != 0 && length(numfilters) == 1
-            worldfeats = (worldsize[1] - window[1] + 1) * (worldsize[2] - window[1] + 1)
+            win1, win2 = window[1]
+            worldfeats = (worldsize[1] - win1 + 1) * (worldsize[2] - win2 + 1)
         else
-            worldfeats = (worldsize[1] - sum(window) + length(window)) * (worldsize[2] - sum(window) + length(window)) * numfilters[end]
+            sw1 = sum(map(x->x[1], window))
+            sw2 = sum(map(x->x[2], window))
+            worldfeats = (worldsize[1] - sw1 + length(window)) * (worldsize[2] - sw2 + length(window)) * numfilters[end]
         end
-        
         weights["emb_world"] = xavier(Float32, worldfeats, embed)
 
         fs = Any[]
@@ -36,7 +38,9 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
             if args["worldatt"] != 0 && i == 2
                 inpch = 1
             end
-            push!(fs, xavier(Float32, window[i], window[i], inpch, numfilters[i]))
+
+            win1, win2 = window[i]
+            push!(fs, xavier(Float32, win1, win2, inpch, numfilters[i]) * 5)
             push!(bs, zeros(Float32, 1, 1, numfilters[i], 1))
         end
 
@@ -119,14 +123,14 @@ function cnn(filters, bias, worldatt, x)
     for i=1:length(filters)-1
         inp = relu(conv4(filters[i], inp; padding=0) .+ bias[i])
         if i == 1
-            inp = conv4(worldatt, inp; padding=0)
-            #inp = relu(conv4(worldatt, inp; padding=0))
+            #inp = conv4(worldatt, inp; padding=0)
+            inp = relu(conv4(worldatt, inp; padding=0))
         end
     end
     inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
     if length(filters) == 1
-        inp = conv4(worldatt, inp; padding=0)
-        #inp = relu(conv4(worldatt, inp; padding=0))
+        #inp = conv4(worldatt, inp; padding=0)
+        inp = sigm(conv4(worldatt, inp; padding=0))
     end
     return transpose(mat(inp))
 end

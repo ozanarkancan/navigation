@@ -14,7 +14,8 @@ function parse_commandline()
         ("--epoch"; help = "number of epochs"; default = 2; arg_type = Int)
         ("--trainfiles"; help = "built training jld file"; default = ["grid_jelly.jld", "grid_l.jld", "l_jelly.jld"]; nargs = '+')
         ("--testfiles"; help = "test file as regular instruction file(json)"; default = ["l", "jelly", "grid"]; nargs = '+')
-        ("--window"; help = "size of the filter"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
+        ("--window1"; help = "first dimension of the filters"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
+        ("--window2"; help = "second dimension of the filters"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
         ("--filters"; help = "number of filters"; default = [300, 150, 50]; arg_type = Int; nargs = '+')
         ("--model"; help = "model file"; default = "flex.jl")
         ("--encdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
@@ -164,6 +165,7 @@ function mainflex()
     else
         Logging.configure(level=DEBUG)
     end
+    args["window"] = collect(zip(args["window1"], args["window2"]))
     srand(args["seed"])
     info("*** Parameters ***")
     for k in keys(args); info("$k -> $(args[k])"); end
