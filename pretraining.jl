@@ -19,6 +19,7 @@ function parse_commandline()
         ("--decdrops"; help = "dropout rates"; nargs = '+'; default = [0.0, 0.0]; arg_type = Float64)
         ("--bs"; help = "batch size"; default = 1; arg_type = Int)
         ("--gclip"; help = "gradient clip"; default = 5.0; arg_type = Float64)
+        ("--winit"; help = "scale the xavier"; default = 1.0; arg_type = Float64)
         ("--log"; help = "name of the log file"; default = "test.log")
         ("--save"; help = "model path"; default = "")
         ("--savecsv"; help = "csv path"; default = "")
@@ -81,7 +82,7 @@ function pretrain(vocab, emb, args)
                 end
             end
 
-            w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb)
+            w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
 
             info("Model Prms:")
             for k in keys(w)

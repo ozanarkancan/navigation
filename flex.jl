@@ -2,7 +2,7 @@ using Knet, AutoGrad, Logging
 
 include("inits.jl")
 
-function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[5, 20], args=nothing, premb=nothing)
+function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilters; worldsize=[5, 20], args=nothing, premb=nothing, winit=1.0)
     weights = Dict()
     input = premb == nothing ? embed : size(premb, 2)
 
@@ -40,7 +40,7 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
             end
 
             win1, win2 = window[i]
-            push!(fs, xavier(Float32, win1, win2, inpch, numfilters[i]) * 5)
+            push!(fs, xavier(Float32, win1, win2, inpch, numfilters[i]) * winit)
             push!(bs, zeros(Float32, 1, 1, numfilters[i], 1))
         end
 
@@ -568,8 +568,17 @@ function test_paragraph(models, groups, maps; args=nothing)
                 for ind=1:length(models)
                     w = models[ind]
                     state = states[ind]
-                    x = !args["percp"] ? spatial(w["emb_world"], preva) : 
-                    args["encoding"] == "grid" ? spatial(w["filters_w"], w["filters_b"], w["emb_world"], view) : spatial(w["emb_world"], view)
+                    
+                    if !args["percp"]
+                        x = spatial(w["emb_world"], preva)
+                    elseif args["encoding"] == "grid" && args["worldatt"] != 0
+                        worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                        x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
+                    elseif args["encoding"] == "grid" 
+                        x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
+                    else
+                        x = spatial(w["emb_world"], view)
+                    end
 
                     soft_inp = args["inpout"] ? w["soft_inp"] : nothing
                     soft_att = args["attout"] ? w["soft_att"] : nothing

@@ -22,6 +22,7 @@ function parse_commandline()
         ("--decdrops"; help = "dropout rates"; nargs = '+'; default = [0.5, 0.5]; arg_type = Float64)
         ("--bs"; help = "batch size"; default = 1; arg_type = Int)
         ("--gclip"; help = "gradient clip"; default = 5.0; arg_type = Float64)
+        ("--winit"; help = "scale the xavier"; default = 1.0; arg_type = Float64)
         ("--log"; help = "name of the log file"; default = "test.log")
         ("--save"; help = "model path"; default = "")
         ("--patience"; help = "patience param"; default = 10; arg_type = Int)
@@ -70,7 +71,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
         end
     end
 
-    w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb)
+    w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
 
     info("Model Prms:")
     for k in keys(w)
@@ -130,11 +131,11 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
         end
 
         if args["vDev"]
-            info("Epoch: $(i), trn loss: $(lss) , single acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
-            info("TestIt: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
+            info("Epoch: $(i), trn loss: $(lss) , single dev acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
+            info("TestIt: $(i), trn loss: $(lss) , single tst acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
             info("Losses: $(i), trn loss: $(trnloss) , dev loss: $(dev_loss) , $(dev_ins[1].map)")
         else
-            info("Epoch: $(i), trn loss: $(lss) , single acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
+            info("Epoch: $(i), trn loss: $(lss) , single tst acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
         end
         info("Train: $(i) , trn acc: $(train_acc)")
 
