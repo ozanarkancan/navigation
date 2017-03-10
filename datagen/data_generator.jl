@@ -21,7 +21,7 @@ function turn_to_x(name, id)
         if r == 1
             navimap = generate_navi_map(maze, ""; iprob=-1.0)
         else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.5 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
+            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         end
 
         nodes, path = generate_path(maze, available)
@@ -114,7 +114,7 @@ function move_to_x(name, id)
         if r == 1
             navimap = generate_navi_map(maze, ""; iprob=-1.0)
         else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.5 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
+            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         end
 
         nodes, path = generate_path(maze, available)
@@ -197,7 +197,7 @@ function turn_and_move_to_x(name, id)
         if r == 1
             navimap = generate_navi_map(maze, ""; iprob=-1.0)
         else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.5 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
+            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         end
 
         nodes, path = generate_path(maze, available)
@@ -273,6 +273,97 @@ function turn_and_move_to_x(name, id)
                     ins = Instruction(name, split(string(prefx, swlls[1])), path, mname, id)
                 end
             end
+            break
+        end
+    end
+    return ins, navimap
+end
+
+function lang_only(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+
+        r = rand(1:4)#1:turn, move, turn and move, move and turn
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.3], iprob=0.4)
+
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+
+        for i=1:length(segments)
+            tp, path = segments[i]
+            if (r == 1 || r == 3) && tp == "move"
+                continue
+            elseif (r == 2 || r == 4) && tp == "turn"
+                continue
+            end
+
+            mname = join(rand(CHARS, 20))
+            navimap.name = mname
+
+            function turncands(p)
+                steps = length(p)-1
+                a = action(p[1], p[2])
+                cands = Any[]
+                d = a == 2 ? "right" : "left"
+                if steps == 1
+                    push!(cands, string("turn ", d))
+                    push!(cands, string("turn ", d, " one time"))
+                    push!(cands, string("turn ", d, " once"))
+                else
+                    push!(cands, string("turn ", d, " two times"))
+                    push!(cands, string("turn ", d, " twice"))
+                end
+                return cands
+            end
+
+            function movecands(p)
+                steps = length(p)-1
+                cands = Any[]
+                for prfx in ["move ", "go ", "walk "]
+                    for d in ["","forward "]
+                        for t in numbers[steps]
+                            for b in (steps == 1 ? [" step", " segment", " block"] : [" steps", " segments", " blocks"])
+                                push!(cands, string(prfx, d, t, b))
+                            end
+                        end
+                    end
+                end
+                return cands
+            end
+
+            if r == 1
+                cands = turncands(path)
+            elseif r == 2
+                cands = movecands(path)
+            elseif r == 3 && i != length(segments)
+                tcands = turncands(path)
+                mcands = movecands(segments[i+1][2])
+                cands = Any[]
+                for tc in tcands
+                    for mc in mcands
+                        push!(cands, string(tc, " and ", mc))
+                    end
+                end
+                append!(path, segments[i+1][2][2:end])
+            elseif r == 4 && i != length(segments)
+                mcands = movecands(path)
+                tcands = turncands(segments[i+1][2])
+                cands = Any[]
+                for mc in mcands
+                    for tc in tcands
+                        push!(cands, string(mc, " and ", tc))
+                    end
+                end
+                append!(path, segments[i+1][2][2:end])
+            else
+                continue
+            end
+            text = rand(cands)
+            ins = Instruction(name, split(text), path, mname, id)
             break
         end
     end
