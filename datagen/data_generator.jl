@@ -370,6 +370,8 @@ function lang_only(name, id)
     return ins, navimap
 end
 
+combined_1245(name, id) = rand([turn_to_x, move_to_x, turn_and_move_to_x, lang_only])(name, id)
+
 """
 Available task functions:
 
@@ -377,6 +379,7 @@ turn_to_x
 move_to_x
 to_x : generate data using turn_to_x and move_to_x
 turn_and_move_to_x
+lang_only
 """
 function generatedata(taskf; numins=100)
     data = Any[]
