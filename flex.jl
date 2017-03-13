@@ -182,6 +182,7 @@ end
 
 function worldattention(prevh, wa1, wa2)
     h = tanh(prevh * wa1) * wa2
+    h = h .- maximum(h)
     att_p = exp(h)
     att_p = att_p ./ sum(att_p)
     return reshape(att_p, 1, 1, size(wa2, 2), 1)

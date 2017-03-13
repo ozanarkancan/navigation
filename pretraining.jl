@@ -53,7 +53,7 @@ function pretrain(vocab, emb, args)
     avg_lss = 0
     avg_acc = 0
 
-    df = DataFrame(Batch=Int[], Loss=Any[], Acc=Any[])
+    df = DataFrame(Batch=Int[], AvgLoss=Any[], AvgAcc=Any[], CLoss=Any[], CAcc=Any[])
     taskf = eval(parse(args["taskf"]))
 
     data, dat2, maps, maps2 = (nothing, nothing, nothing, nothing)
@@ -106,7 +106,7 @@ function pretrain(vocab, emb, args)
 
         info("BatchNum: $i , Loss: $lss , Acc: $(tst_acc)")
 
-        push!(df, (i, avg_lss, avg_acc))
+        push!(df, (i, avg_lss, avg_acc, lss, tst_acc))
 
         info("$(df[i,:])")
 
