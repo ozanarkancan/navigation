@@ -2,6 +2,7 @@ using ArgParse, DataFrames
 
 include("io.jl")
 include("datagen/data_generator.jl")
+include("gsection.jl")
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -39,6 +40,7 @@ function parse_commandline()
         ("--level"; help = "log level"; default="info")
         ("--numbatch"; help = "number of batches"; default=100; arg_type=Int)
         ("--taskf"; help = "task function"; default="turn_to_x")
+        ("--hopt"; help = "hyper parameter optimization"; action = :store_true)
     end
     return parse_args(s)
 end		
@@ -57,6 +59,8 @@ function pretrain(vocab, emb, args)
     taskf = eval(parse(args["taskf"]))
 
     data, dat2, maps, maps2 = (nothing, nothing, nothing, nothing)
+    average = 0.0
+    count = 0.0
     for i=1:args["numbatch"]
         dat, maps = dat2 == nothing ? generatedata(taskf) : (dat2, maps2)
         data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dat)
@@ -110,12 +114,68 @@ function pretrain(vocab, emb, args)
 
         info("$(df[i,:])")
 
+        average += tst_acc * 100.0
+        count += 100.0
+
         if (1.0 - avg_acc) < 1e-3
             break
         end
     end
 
-    writetable(args["savecsv"], df)
+    if !args["hopt"]
+        writetable(args["savecsv"], df)
+    end
+    return 1 - (average / count)
+end
+
+function hyperopt(vocab, emb, args)
+    function xform_grid(x)
+        winit,hidden,embl,f1,f2,watt = exp(x) .* [5, 100.0, 100.0, 50, 5, 100]
+        hidden = ceil(Int, hidden)
+        embl = ceil(Int, embl)
+        f1 = ceil(Int, f1)
+        f2 = ceil(Int, f2)
+        watt = floor(Int, watt)
+        (winit,hidden,embl,f1,f2,watt)
+    end
+    
+    function xform_other(x)
+        hidden,embl = exp(x) .* [100.0, 100.0,]
+        hidden = ceil(Int, hidden)
+        embl = ceil(Int, embl)
+        (hidden,embl)
+    end
+
+    function f(x)
+        if args["percp"] && args["encoding"] == "grid"
+            winit, hidden, embl, f1, f2, watt = xform_grid(x)
+            args["winit"] = winit
+            args["hidden"] = hidden
+            args["embed"] = embl
+            args["filters"] = [f1, f2]
+            args["worldatt"] = att
+        else
+            hidden, embl = xform_other(x)
+            args["hidden"] = hidden
+            args["embed"] = embl
+        end
+
+        if args["hidden"] > 300 || args["embed"] > 500
+            return NaN # prevent out of gpu
+        end
+        lss = pretrain(vocab, emb, args)
+        info("Config Loss: $lss")
+        return lss
+    end
+
+    if args["percp"] && args["encoding"] == "grid"
+        f0, x0 = goldensection(f, 6)
+        xbest = xform_grid(x0)
+    else
+        f0, x0 = goldensection(f, 2)
+        xbest = xform_other(x0)
+    end
+    return f0, xbest
 end
 
 function get_maps()
@@ -159,7 +219,13 @@ function mainpretraining()
     emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
     info("\nVocab: $(length(vocab))")
 
-    pretrain(vocab, emb, args)
+    if args["hopt"]
+        f0, x0 = hyperopt(vocab, emb, args)
+        info("Best loss: $f0")
+        info("Best args: $x0")
+    else
+        pretrain(vocab, emb, args)
+    end
 end
 
 mainpretraining()
