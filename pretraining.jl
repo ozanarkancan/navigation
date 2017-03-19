@@ -153,7 +153,7 @@ function hyperopt(vocab, emb, args)
             args["hidden"] = hidden
             args["embed"] = embl
             args["filters"] = [f1, f2]
-            args["worldatt"] = att
+            args["worldatt"] = watt
         else
             hidden, embl = xform_other(x)
             args["hidden"] = hidden
