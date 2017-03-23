@@ -842,6 +842,8 @@ function move_to_x_turn_to_y(name, id)
     return ins, navimap
 end
 
+combined_1011(name, id) = rand([turn_to_x_move_to_y, move_to_x_turn_to_y])(name, id)
+
 """
 Available task functions:
 
@@ -856,7 +858,7 @@ t8: move_to_x_and_turn : the turn part is lang only
 t9: combined_78 : generate data using turn_to_x_and_move and move_to_x_and_turn
 t10: turn_to_x_move_to_y(name, id)
 t11: move_to_x_turn_to_y(name, id)
-t12: combined_1112
+t12: combined_1011
 """
 
 function generatedata(taskf; numins=100)
