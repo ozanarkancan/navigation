@@ -190,7 +190,7 @@ function mainflex()
 
     base_s = args["save"]
     base_l = args["load"]
-    for i in [1,2,3]
+    for i in [3,2,1]
         for j=1:2
             args["save"] = string(base_s, "_", j, "_", args["trainfiles"][i])
             if base_l != ""

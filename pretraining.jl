@@ -41,6 +41,7 @@ function parse_commandline()
         ("--numbatch"; help = "number of batches"; default=100; arg_type=Int)
         ("--taskf"; help = "task function"; default="turn_to_x")
         ("--hopt"; help = "hyper parameter optimization"; action = :store_true)
+        ("--limit"; help = "the error limit"; default=0.0; arg_type=Float64)
     end
     return parse_args(s)
 end		
@@ -59,9 +60,12 @@ function pretrain(vocab, emb, args)
     taskf = eval(parse(args["taskf"]))
 
     data, dat2, maps, maps2 = (nothing, nothing, nothing, nothing)
-    average = 0.0
+    average_l = 0.0
+    average_a = 0.0
     count = 0.0
+    numins = 0
     for i=1:args["numbatch"]
+        numins=i
         dat, maps = dat2 == nothing ? generatedata(taskf) : (dat2, maps2)
         data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dat)
         trn_data = minibatch(data;bs=args["bs"])
@@ -104,20 +108,21 @@ function pretrain(vocab, emb, args)
         end
         @time lss = train(w, prms, trn_data; args=args)
         @time tst_acc = test([w], tst_data, maps2; args=args)
+        
+        average_l += lss
+        average_a += tst_acc * 100.0
+        count += 100.0
 
-        avg_lss = avg_lss == 0 ? lss : avg_lss*0.99 + 0.01*lss
-        avg_acc = avg_acc == 0 ? tst_acc : avg_acc*0.99 + 0.01*tst_acc
+        avg_lss = i < 50 ? average_l / count : avg_lss*0.99 + 0.01*lss
+        avg_acc = avg_acc == 0 ? average_a / count : avg_acc*0.99 + 0.01*tst_acc
 
         info("BatchNum: $i , Loss: $lss , Acc: $(tst_acc)")
 
         push!(df, (i, avg_lss, avg_acc, lss, tst_acc))
 
         info("$(df[i,:])")
-
-        average += tst_acc * 100.0
-        count += 100.0
-
-        if (1.0 - avg_acc) < 1e-3
+        
+        if (1.0 - avg_acc) < args["limit"]
             break
         end
     end
@@ -125,7 +130,7 @@ function pretrain(vocab, emb, args)
     if !args["hopt"]
         writetable(args["savecsv"], df)
     end
-    return 1 - (average / count)
+    return numins
 end
 
 function hyperopt(vocab, emb, args)
