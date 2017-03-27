@@ -695,16 +695,17 @@ function test_beam(models, data, maps; args=nothing)
         states = map(weights->initstate(KnetArray{Float32}, args["hidden"], 1, length(words)), models)
 
         for i=1:length(models)
-            weights = models[i]
+            w = models[i]
             state = states[i]
-            encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], 
-            weights["emb_word"], state, words)
+            encode(w["enc_w_f"], w["enc_b_f"], w["enc_w_b"], w["enc_b_b"], w["emb_word"], state, words; dropout=false)
 
             state[5] = hcat(state[1][end], state[3][end])
             state[6] = hcat(state[2][end], state[4][end])
         end
+        
         cstate5 = Any[]
         cstate6 = Any[]
+        
         for m=1:length(models)
             push!(cstate5, copy(states[m][5]))
             push!(cstate6, copy(states[m][6]))
@@ -716,7 +717,7 @@ function test_beam(models, data, maps; args=nothing)
         nactions = 0
         stop = false
         stopsearch = false
-        araw = reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4)
+        araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
         while !stopsearch
             newcands = Any[]
             newcand = false
@@ -730,33 +731,52 @@ function test_beam(models, data, maps; args=nothing)
                 prevActions = cand[end]
                 lastAction = prevActions[end]
                 stopped = cand[6]
-                araw[:] = 0.0
-                araw[1, lastAction] = 1.0
+
+                if araw != nothing
+                    araw[:] = 0.0
+                    araw[1, lastAction] = 1.0
+                end
 
                 if stopped
                     push!(newcands, cand)
                     continue
                 end
 
-                view = state_agent_centric(maps[instruction.map], current)
-                view = convert(KnetArray{Float32}, view)
-                preva = convert(KnetArray{Float32}, araw)
+                view = !args["percp"] ? nothing : args["encoding"] == "grid" ? 
+                    state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(maps[instruction.map], current)
+                view = args["percp"] ? convert(KnetArray{Float32}, view) : nothing
+                preva = araw != nothing ? convert(KnetArray{Float32}, araw)  : araw
 
                 cum_ps = zeros(Float32, 1, 4)
 
-                for i=1:length(models)
-                    weights = models[i]
-                    state = states[i]
+                for ind=1:length(models)
+                    w = models[ind]
+                    state = states[ind]
+                    if !args["percp"]
+                        x = spatial(w["emb_world"], preva)
+                    elseif args["encoding"] == "grid" && args["worldatt"] != 0
+                        worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                        x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
+                    elseif args["encoding"] == "grid" 
+                        x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
+                    else
+                        x = spatial(w["emb_world"], view)
+                    end
 
-                    x = spatial(weights["filters_w1"], weights["filters_b1"], weights["filters_w2"], weights["filters_b2"],
-                    weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
-                    ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"], 
-                    weights["soft_w3"], weights["soft_b"], state, x, preva, mask)
+                    soft_inp = args["inpout"] ? w["soft_inp"] : nothing
+                    soft_att = args["attout"] ? w["soft_att"] : nothing
+                    soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
+                    preva = !args["preva"] ? nothing : preva
+                    prevainp = args["preva"] && args["percp"]
+
+                    att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                    ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
+                    soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
                     cum_ps += probs(Array(ypred))
                 end
 
                 cum_ps = cum_ps ./ length(models)
-                info("Probs: $(cum_ps)")
+                debug("Probs: $(cum_ps)")
 
                 for i=1:4
                     mystop = stopped
@@ -795,19 +815,19 @@ function test_beam(models, data, maps; args=nothing)
         end
         current = cands[1][4]
         actions = cands[1][end]
-        info("$(instruction.text)")
-        info("Path: $(instruction.path)")
-        info("Filename: $(instruction.fname)")
+        debug("$(instruction.text)")
+        debug("Path: $(instruction.path)")
+        debug("Filename: $(instruction.fname)")
 
-        info("Actions: $(reshape(collect(actions), 1, length(actions)))")
-        info("Current: $(current)")
-        info("Prob: $(cands[1][1])")
+        debug("Actions: $(reshape(collect(actions), 1, length(actions)))")
+        debug("Current: $(current)")
+        debug("Prob: $(cands[1][1])")
 
         if current == instruction.path[end]
             scss += 1
-            info("SUCCESS\n")
+            debug("SUCCESS\n")
         else
-            info("FAILURE\n")
+            debug("FAILURE\n")
         end
     end
 
@@ -821,7 +841,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
     mask = convert(KnetArray, ones(Float32, 1,1))
 
     for data in groups
-        info("\nNew paragraph")
+        debug("\nNew paragraph")
         current = data[1][1].path[1]
         cands = Any[]
         for indx=1:length(data)
@@ -829,11 +849,10 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
             words = map(v->convert(KnetArray{Float32},v), words)
             states = map(weights->initstate(KnetArray{Float32}, args["hidden"], 1, length(words)), models)
 
-            for i=1:length(models)
-                weights = models[i]
-                state = states[i]
-                encode(weights["enc_w1_f"], weights["enc_b1_f"], weights["enc_w1_b"], weights["enc_b1_b"], 
-                weights["emb_word"], state, words)
+            for ind=1:length(models)
+                w = models[ind]
+                state = states[ind]
+                encode(w["enc_w_f"], w["enc_b_f"], w["enc_w_b"], w["enc_b_b"], w["emb_word"], state, words; dropout=false)
 
                 state[5] = hcat(state[1][end], state[3][end])
                 state[6] = hcat(state[2][end], state[4][end])
@@ -855,7 +874,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
             stop = false
             stopsearch = false
 
-            araw = reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4)
+            araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
             while !stopsearch
                 newcands = Any[]
                 newcand = false
@@ -869,7 +888,10 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
                     prevActions = cand[end]
                     lastAction = prevActions[end]
                     stopped = cand[6]
-                    araw[:] = 0.0
+                    if araw != nothing
+                        araw[:] = 0.0
+                        araw[1, lastAction] = 1.0
+                    end
 
                     if stopped || !cand[7]
                         c = (cand[1], cand[2], cand[3], cand[4], cand[5], true, cand[7], cand[end])
@@ -877,25 +899,43 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
                         continue
                     end
 
-                    view = state_agent_centric(maps[instruction.map], current)
-                    view = convert(KnetArray{Float32}, view)
-                    preva = convert(KnetArray{Float32}, araw)
+                    preva = araw != nothing ? convert(KnetArray{Float32}, araw)  : araw
+
+                    view = !args["percp"] ? nothing : args["encoding"] == "grid" ? 
+                    state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(maps[instruction.map], current)
+                    view = args["percp"] ? convert(KnetArray{Float32}, view) : nothing
 
                     cum_ps = zeros(Float32, 1, 4)
 
-                    for i=1:length(models)
-                        weights = models[i]
-                        state = states[i]
-                        x = spatial(weights["filters_w1"], weights["filters_b1"], 
-                        weights["filters_w2"], weights["filters_b2"],
-                        weights["filters_w3"], weights["filters_b3"], weights["emb_world"], view)
-                        ypred = decode(weights["dec_w1"], weights["dec_b1"], weights["soft_w1"], weights["soft_w2"],
-                        weights["soft_w3"], weights["soft_b"], state, x, preva, mask)
+                    for ind=1:length(models)
+                        w = models[ind]
+                        state = states[ind]
+
+                        if !args["percp"]
+                            x = spatial(w["emb_world"], preva)
+                        elseif args["encoding"] == "grid" && args["worldatt"] != 0
+                            worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                            x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
+                        elseif args["encoding"] == "grid" 
+                            x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
+                        else
+                            x = spatial(w["emb_world"], view)
+                        end
+
+                        soft_inp = args["inpout"] ? w["soft_inp"] : nothing
+                        soft_att = args["attout"] ? w["soft_att"] : nothing
+                        soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
+                        preva = !args["preva"] ? nothing : preva
+                        prevainp = args["preva"] && args["percp"]
+
+                        att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                        ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
+                        soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
                         cum_ps += probs(Array(ypred))
                     end
 
                     cum_ps = cum_ps ./ length(models)
-                    info("Probs: $(cum_ps)")
+                    debug("Probs: $(cum_ps)")
                     for i=1:4
                         mystop = stopped
                         legitimate = true
@@ -937,27 +977,27 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
                 end
             end
 
-            info("$(instruction.text)")
-            info("Path: $(instruction.path)")
-            info("Filename: $(instruction.fname)")
+            debug("$(instruction.text)")
+            debug("Path: $(instruction.path)")
+            debug("Filename: $(instruction.fname)")
 
             if indx == length(data)
                 current = cands[1][4]
                 actions = cands[1][end]
-                info("Actions: $(reshape(collect(actions), 1, length(actions)))")
-                info("Current: $(current)")
-                info("Prob: $(cands[1][1])")
+                debug("Actions: $(reshape(collect(actions), 1, length(actions)))")
+                debug("Current: $(current)")
+                debug("Prob: $(cands[1][1])")
 
                 if actions[end] != 4
-                info("FAILURE")
+                    debug("FAILURE")
                 break
             end
 
             if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
                 scss += 1
-                info("SUCCESS\n")
+                debug("SUCCESS\n")
             else
-                info("FAILURE\n")
+                debug("FAILURE\n")
             end
         end
     end

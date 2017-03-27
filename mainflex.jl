@@ -42,6 +42,8 @@ function parse_commandline()
         ("--prevaout"; help = "direct connection from prev action to output"; action = :store_true)
         ("--attout"; help = "direct connection from attention to output"; action = :store_true)
         ("--level"; help = "log level"; default="info")
+        ("--beamsize"; help = "world attention"; arg_type = Int; default = 10)
+        ("--beam"; help = "activate beam search"; action = :store_true)
     end
     return parse_args(s)
 end		
@@ -103,6 +105,11 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
         @time tst_acc = test([w], test_data, maps; args=args)
         @time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)
         @time trnloss = train_loss(w, trn_data; args=args)
+        
+        if args["beam"]
+            @time tst_acc_beam = test_beam([w], test_data, maps; args=args)
+            @time tst_prg_acc_beam = test_paragraph_beam([w], test_data_grp, maps; args=args)
+        end
 
         dev_acc = 0
         dev_prg_acc = 0
@@ -112,6 +119,10 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
             @time dev_acc = test([w], dev_data, maps; args=args)
             @time dev_prg_acc = test_paragraph([w], dev_data_grp, maps; args=args)
             @time dev_loss = train_loss(w, dev_d; args=args)
+            if args["beam"]
+                @time dev_acc_beam = test_beam([w], dev_data, maps; args=args)
+                @time dev_prg_acc_beam = test_paragraph_beam([w], dev_data_grp, maps; args=args)
+            end
         end
 
         tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
@@ -132,6 +143,9 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
 
         if args["vDev"]
             info("Epoch: $(i), trn loss: $(lss) , single dev acc: $(dev_acc) , paragraph acc: $(dev_prg_acc) , $(dev_ins[1].map)")
+            if args["beam"]
+                info("Beam: $(i), single dev: $(dev_acc_beam) , paragraph acc: $(dev_prg_acc_beam) , single tst: $(tst_acc_beam) , paragraph tst: $(tst_prg_acc_beam) $(dev_ins[1].map)")
+            end
             info("TestIt: $(i), trn loss: $(lss) , single tst acc: $(tst_acc) , paragraph acc: $(tst_prg_acc) , $(test_ins[1].map)")
             info("Losses: $(i), trn loss: $(trnloss) , dev loss: $(dev_loss) , $(dev_ins[1].map)")
         else
