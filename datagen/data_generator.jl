@@ -843,6 +843,7 @@ function move_to_x_turn_to_y(name, id)
 end
 
 combined_1011(name, id) = rand([turn_to_x_move_to_y, move_to_x_turn_to_y])(name, id)
+combined_781011(name, id) = rand([turn_to_x_and_move, move_to_x_and_turn, turn_to_x_move_to_y, move_to_x_turn_to_y])(name, id)
 
 """
 Available task functions:
@@ -856,9 +857,10 @@ t6: combined_1245 : generate data using turn_to_x, move_to_x, turn_and_move_to_x
 t7: turn_to_x_and_move : the move part is lang only
 t8: move_to_x_and_turn : the turn part is lang only
 t9: combined_78 : generate data using turn_to_x_and_move and move_to_x_and_turn
-t10: turn_to_x_move_to_y(name, id)
-t11: move_to_x_turn_to_y(name, id)
+t10: turn_to_x_move_to_y
+t11: move_to_x_turn_to_y
 t12: combined_1011
+t13: combined_781011
 """
 
 function generatedata(taskf; numins=100)
