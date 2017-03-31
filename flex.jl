@@ -171,6 +171,7 @@ function attention(states, attention_w, attention_v)
     end
 
     raw_att = tanh(hu * attention_w) * attention_v
+    raw_att = raw_att .- maximum(raw_att)
 
     att_s = exp(raw_att)
     att_s = att_s ./ sum(att_s)
