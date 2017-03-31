@@ -200,7 +200,6 @@ function encode(weight1_f, bias1_f, weight1_b, bias1_b, emb, state, words; dropo
 
         state[1][i+1], state[2][i+1] = lstm(weight1_f, bias1_f, state[1][i], state[2][i], x)
 
-
         x = words[end-i+1] * emb
 
         if dropout && pdrops[1] > 0.0

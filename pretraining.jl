@@ -90,7 +90,7 @@ function pretrain(vocab, emb, args)
                 end
             end
 
-            w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
+            w = args["load"] != "" ? loadmodel(args["load"]; flex=true) : initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
 
             info("Model Prms:")
             for k in keys(w)
@@ -130,7 +130,7 @@ function pretrain(vocab, emb, args)
     if !args["hopt"]
         writetable(args["savecsv"], df)
     end
-    return numins
+    return (numins, w)
 end
 
 function hyperopt(vocab, emb, args)
@@ -168,7 +168,7 @@ function hyperopt(vocab, emb, args)
         if args["hidden"] > 300 || args["embed"] > 500
             return NaN # prevent out of gpu
         end
-        lss = pretrain(vocab, emb, args)
+        lss,_ = pretrain(vocab, emb, args)
         info("Config Loss: $lss")
         return lss
     end
@@ -229,7 +229,10 @@ function mainpretraining()
         info("Best loss: $f0")
         info("Best args: $x0")
     else
-        pretrain(vocab, emb, args)
+        _,w = pretrain(vocab, emb, args)
+        if args["save"] != ""
+            savemodel(w, args["save"]; flex=true)
+        end
     end
 end
 

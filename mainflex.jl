@@ -8,8 +8,8 @@ function parse_commandline()
 
     @add_arg_table s begin
         ("--lr"; help = "learning rate"; default = 0.001; arg_type = Float64)
-        ("--hidden"; help = "hidden size"; default = 50; arg_type = Int)
-        ("--embed"; help = "embedding size"; default = 50; arg_type = Int)
+        ("--hidden"; help = "hidden size"; default = 100; arg_type = Int)
+        ("--embed"; help = "embedding size"; default = 100; arg_type = Int)
         ("--limactions"; arg_type = Int; default = 35)
         ("--epoch"; help = "number of epochs"; default = 2; arg_type = Int)
         ("--trainfiles"; help = "built training jld file"; default = ["grid_jelly.jld", "grid_l.jld", "l_jelly.jld"]; nargs = '+')
@@ -28,6 +28,7 @@ function parse_commandline()
         ("--patience"; help = "patience param"; default = 10; arg_type = Int)
         ("--tunefor"; help = "tune for (single or paragraph)"; default = "single")
         ("--load"; help = "model path"; default = "")
+        ("--pretrain"; help = "model path"; default = "")
         ("--vDev"; help = "vDev or vTest"; action = :store_false)
         ("--charenc"; help = "charecter embedding"; action = :store_true)
         ("--encoding"; help = "grid or multihot"; default = "grid")
@@ -73,7 +74,8 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
         end
     end
 
-    w = initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
+    ptr = args["pretrain"]
+    w = ptr != "" ? loadmodel(ptr; flex=true) : initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
 
     info("Model Prms:")
     for k in keys(w)
