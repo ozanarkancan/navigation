@@ -373,7 +373,7 @@ function moveins(navimap, maze, curr, next)
                             push!(cors, " carpet")
                         end
                         for cor in cors
-                            for d in [" to your right", " on your right"]
+                            for d in [" on your right"]
                                 push!(cands, string(m, adv, "until you see the ",
                                 flr, cor, d))
                             end
@@ -390,7 +390,7 @@ function moveins(navimap, maze, curr, next)
                             push!(cors, " carpet")
                         end
                         for cor in cors
-                            for d in [" to your left", " on your left"]
+                            for d in [" on your left"]
                                 push!(cands, string(m, adv, "until you see the ",
                                 flr, cor, d))
                             end
