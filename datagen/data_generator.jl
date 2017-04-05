@@ -844,6 +844,8 @@ end
 
 combined_1011(name, id) = rand([turn_to_x_move_to_y, move_to_x_turn_to_y])(name, id)
 combined_781011(name, id) = rand([turn_to_x_and_move, move_to_x_and_turn, turn_to_x_move_to_y, move_to_x_turn_to_y])(name, id)
+combined_45781011(name, id) = rand([turn_and_move_to_x, lang_only, turn_to_x_and_move, move_to_x_and_turn, turn_to_x_move_to_y, move_to_x_turn_to_y])(name, id)
+combined_1245781011(name, id) = rand([turn_to_x_move_to_y, move_to_x_turn_to_y, turn_and_move_to_x, lang_only, turn_to_x_and_move, move_to_x_and_turn, turn_to_x_move_to_y, move_to_x_turn_to_y])(name, id)
 
 """
 Available task functions:

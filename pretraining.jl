@@ -135,7 +135,7 @@ end
 
 function hyperopt(vocab, emb, args)
     function xform_grid(x)
-        winit,hidden,embl,f1,f2,watt = exp(x) .* [5, 100.0, 100.0, 50, 5, 100]
+        winit,hidden,embl,f1,f2,watt = exp(x) .* [5, 200.0, 200.0, 50, 5, 100]
         hidden = ceil(Int, hidden)
         embl = ceil(Int, embl)
         f1 = ceil(Int, f1)
@@ -165,7 +165,7 @@ function hyperopt(vocab, emb, args)
             args["embed"] = embl
         end
 
-        if args["hidden"] > 300 || args["embed"] > 500
+        if args["hidden"] > 500 || args["embed"] > 500
             return NaN # prevent out of gpu
         end
         lss,_ = pretrain(vocab, emb, args)
