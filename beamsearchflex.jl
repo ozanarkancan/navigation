@@ -34,7 +34,7 @@ function parse_commandline()
         ("--wvecs"; help = "use word vectors"; action= :store_true)
         ("--greedy"; help = "deterministic or stochastic policy"; action = :store_false)
         ("--seed"; help = "seed number"; arg_type = Int; default = 123)
-        ("--test"; help = "1,2 or 3 (l, jelly, grid)"; arg_type = Int)
+        ("--test"; help = "0,1,2,3,4,5,6 (all, l[1], l[2], jelly[1], jelly[2], grid[1], grid[2])"; arg_type = Int)
         ("--percp"; help = "use perception"; action = :store_false)
         ("--preva"; help = "use previous action"; action = :store_true)
         ("--worldatt"; help = "world attention"; arg_type = Int; default = 0)
@@ -204,13 +204,15 @@ function mainflex()
     models = Any[]
     for mfile in args["load"]; push!(models, loadmodel(mfile; flex=true)); end
 
-    test_ins = testins[args["test"]]
+    test_ins = args["test"] != 0 ? testins[args["test"]] : vcat(grid, jelly, l)
     test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
     test_data_grp = map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
-    @time tst_acc = test_beam(models, test_data, maps; args=args)
-    @time tst_prg_acc = test_paragraph_beam(models, test_data_grp, maps; args=args)
+    @time tst_acc = test(models, test_data, maps; args=args)
+    @time tst_prg_acc = test_paragraph(models, test_data_grp, maps; args=args)
+    @time tst_acc_beam = test_beam(models, test_data, maps; args=args)
+    @time tst_prg_acc_beam = test_paragraph_beam(models, test_data_grp, maps; args=args)
 
-    info("Single: $tst_acc , Paragraph: $tst_prg_acc")
+    info("Single: $tst_acc , Paragraph: $tst_prg_acc , Beam Single: $tst_acc_beam , Beam Paragraph: $tst_prg_acc_beam")
 end
 
 mainflex()

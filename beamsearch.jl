@@ -113,7 +113,7 @@ end
 
 function main()
 	Logging.configure(filename=args["log"])
-	Logging.configure(level=INFO)
+	Logging.configure(level=DEBUG)
 	srand(args["seed"])
 	info("*** Parameters ***")
 	for k in keys(args); info("$k -> $(args[k])"); end
