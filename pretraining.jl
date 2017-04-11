@@ -152,6 +152,7 @@ function hyperopt(vocab, emb, args)
     end
 
     function f(x)
+        srand(args["seed"])
         if args["percp"] && args["encoding"] == "grid"
             winit, hidden, embl, f1, f2, watt = xform_grid(x)
             args["winit"] = winit
@@ -174,10 +175,10 @@ function hyperopt(vocab, emb, args)
     end
 
     if args["percp"] && args["encoding"] == "grid"
-        f0, x0 = goldensection(f, 6)
+        f0, x0 = goldensection(f, 6; verbose=true)
         xbest = xform_grid(x0)
     else
-        f0, x0 = goldensection(f, 2)
+        f0, x0 = goldensection(f, 2; verbose=true)
         xbest = xform_other(x0)
     end
     return f0, xbest
