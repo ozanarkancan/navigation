@@ -205,7 +205,7 @@ function to_string_html(generation)
     for (s, ins) in generation
         i += 1
         push!(l, plaintext(string(s)))
-        push!(l, plaintext(string(ins)))
+        push!(l, plaintext(string(ins[1])))
 
         if i > 1 && i % 5 == 0
             push!(hs, vbox(l))
