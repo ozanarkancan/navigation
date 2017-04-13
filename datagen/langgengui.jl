@@ -204,8 +204,9 @@ function to_string_html(generation)
     l = Any[]
     for (s, ins) in generation
         i += 1
-        push!(l, plaintext(string(s)))
+        push!(l, plaintext(string("-> ", s)))
         push!(l, plaintext(string(ins[1])))
+        push!(l, plaintext(string(ins[2:end])))
 
         if i > 1 && i % 5 == 0
             push!(hs, vbox(l))

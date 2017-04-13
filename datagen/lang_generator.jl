@@ -587,7 +587,7 @@ function finalins(navimap, maze, curr)
         num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
         push!(cands, (string(lasti[1], " and that is the ", rand(["target ", "final "]), "position"),lasti[2]))
         push!(cands, (string(lasti[1], " and that is the position ", num), lasti[2]))
-        push!(cands, (string(lasti[1], " and there should be the position ", num), lsti[2]))
+        push!(cands, (string(lasti[1], " and there should be the position ", num), lasti[2]))
 
         insl[end] = (lasts, rand(cands))
         return insl
@@ -595,8 +595,8 @@ function finalins(navimap, maze, curr)
         num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
         push!(cands, (string("that is the ", rand(["target ", "final "]), "position"), description))
         push!(cands, (string("that is the position ", num), description))
-        push!(cands, (string("there should be the position ", num)), description)
-        push!(cands, (string("position ", num, " should be there")), description)
+        push!(cands, (string("there should be the position ", num), description))
+        push!(cands, (string("position ", num, " should be there"), description))
 
         if navimap.nodes[curr_s[end][1:2]] != 7
             push!(cands, (string(rand(["this intersection contains a ", "there is a ", "there should be a "]),
