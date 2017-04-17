@@ -463,11 +463,11 @@ function turnins(navimap, maze, curr, next)
     d = a == 2 ? "right" : "left"
 
     for v in ["turn ", "go ", "turn to the ", "make a ", "take a "]
-        push!(cands, (string(v, d), langonly))
+        push!(cands, (string(v, d), langonly_t))
     end
 
     if is_corner(maze, (curr_s[1][2], curr_s[1][1], round(Int, curr_s[1][3]/90 + 1)))
-        push!(cands, (string("at the corner turn ", d), langonly))
+        push!(cands, (string("at the corner turn ", d), langonly_t))
     end
 
     diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
