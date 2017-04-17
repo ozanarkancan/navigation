@@ -83,9 +83,9 @@ function startins(navimap, maze, curr, next)
                 dir = lefts[curr_s[1][3]]
                 d = "left"
             end
-            push!(cands, (string("turn ", d), langonly-t))
+            push!(cands, (string("turn ", d), langonly_t))
         else
-            push!(cands, ("turn around", langonly-t))
+            push!(cands, ("turn around", langonly_t))
             dir = opposites[curr_s[1][3]]
         end
 
