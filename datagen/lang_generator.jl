@@ -129,7 +129,7 @@ function startins(navimap, maze, curr, next)
         end
 
         if is_deadend(maze, p1)
-            push!(cands, ("you should leave the dead end", visual-t))
+            push!(cands, ("you should leave the dead end", visual_t))
             for w in ["way ", "direction "]
                 for g in ["go", "move", "travel"]
                     push!(cands, (string("only one ", w, "to ", g), visual_t))
@@ -244,7 +244,7 @@ function moveins(navimap, maze, curr, next)
 
     if is_deadend(maze, p2)
         for m in ["move ", "go ", "walk "]
-            for adv in [" forward", " straight", ""]
+            for adv in ["forward", "straight", ""]
                 push!(cands, (string(m, adv, " into the dead end"), visual_m))
             end
         end
@@ -291,7 +291,7 @@ function moveins(navimap, maze, curr, next)
 
     if navimap.nodes[curr_s[end][1:2]] != 7
         for m in ["go ", "move ", "walk "]
-            for adv in ["forward ", "straight ", " "]
+            for adv in ["forward ", "straight ", ""]
                 for num in numbers[steps]
                     for st in sts
                         for tow in [" to", " towards"]
@@ -317,7 +317,7 @@ function moveins(navimap, maze, curr, next)
 
     if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_on_this_segment(navimap, curr_s)
         for m in ["go ", "move ", "walk "]
-            for adv in ["forward ", "straight ", " "]
+            for adv in ["forward ", "straight ", ""]
                 for cond in ["until the ", "towards the "]
                     push!(cands, (string(m, adv, cond, item_names[navimap.nodes[curr_s[end][1:2]]]), visual_m))
                 end
@@ -454,6 +454,10 @@ function moveins(navimap, maze, curr, next)
     return [(curr_s, rand(cands))]
 end
 
+"""
+TODO
+Add item condition
+"""
 function turnins(navimap, maze, curr, next)
     curr_t, curr_s = curr
     next_t, next_s = next
@@ -532,8 +536,8 @@ function turnmoveins(navimap, maze, curr, next, next2)
     curr_t, curr_s = curr
     next_t, next_s = next
 
-    segm = copy(curr[2])
-    append!(segm, next[2:end])
+    segm = copy(curr_s)
+    append!(segm, next_s[2:end])
 
 
     if navimap.nodes[next_s[end][1:2]] != 7 && item_single_on_this_segment(navimap, next_s)

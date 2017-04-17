@@ -24,79 +24,21 @@ function turn_to_x(name, id)
             navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         end
 
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        prefx = "turn to the "
-        
-        for i=1:length(segments)
-            tp, path = segments[i]
-            if tp == "move"
-                continue
+        gen = generate_lang(navimap, maze, segments; combine=0.0)
+
+        for (s, inst) in gen
+            println(typeof(inst))
+            println(inst)
+            cats = inst[2:end]
+            if length(cats) == 1 && cats[1] == visual_t
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
             end
-
-            mname = join(rand(CHARS, 20))
-            navimap.name = mname
-            nbs = nodes_visible(navimap, path[1][1:2])#Array of arrays
-            tid = 0
-            tl = getlocation(navimap, path[end], 1)#target location
-            for j=1:length(nbs)
-                if nbs[j][1] == tl[1:2]
-                    tid = j
-                end
-            end
-
-            if r == 1
-                sits = shuffle(items)
-                n1 = path[1]
-
-                navimap.nodes[n1[1:2]] = Items[rand(sits[2:end])]#put an item on the current node
-                
-                for j=1:length(nbs)
-                    curr = path[1][1:2]
-                    trg = 0
-                    if j == tid
-                        trg = rand(1:length(nbs[j]))
-                        navimap.nodes[nbs[j][trg]] = Items[sits[1]]
-                    end
-                    for nb in nbs[j]
-                        if j == tid && nb == nbs[j][trg]
-                            continue
-                        end
-                        navimap.nodes[nb] = Items[rand(sits[2:end])]
-                    end
-                end
-                
-                ins = Instruction(name, split(string(prefx, sits[1])), path, mname, id)
-            else 
-                if r == 2#floor
-                    sflrs = shuffle(floors)
-                    for j=1:length(nbs)
-                        curr = path[1][1:2]
-                        for nb in nbs[j]
-                            w,f = navimap.edges[curr][nb]
-                            navimap.edges[curr][nb] = (w, Floors[sflrs[j]])
-                            navimap.edges[nb][curr] = (w, Floors[sflrs[j]])
-                            curr = nb
-                        end
-                    end
-
-                    ins = Instruction(name, split(string(prefx, sflrs[tid])), path, mname, id)
-                elseif r == 3#wall
-                    swlls = shuffle(walls)
-                    for j=1:length(nbs)
-                        curr = path[1][1:2]
-                        for nb in nbs[j]
-                            w,f = navimap.edges[curr][nb]
-                            navimap.edges[curr][nb] = j == tid ? (Walls[swlls[1]], f) : (Walls[swlls[rand(2:3)]], f)
-                            navimap.edges[nb][curr] = j == tid ? (Walls[swlls[1]], f) : (Walls[swlls[rand(2:3)]], f)
-                            curr = nb
-                        end
-                    end
-                    
-                    ins = Instruction(name, split(string(prefx, swlls[1])), path, mname, id)
-                end
-            end
-            break
         end
     end
     return ins, navimap
@@ -119,67 +61,25 @@ function move_to_x(name, id)
 
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        prefx = "move to the "
-        
-        for i=1:length(segments)
-            tp, path = segments[i]
-            if tp == "turn"
-                continue
-            end
 
-            mname = join(rand(CHARS, 20))
-            navimap.name = mname
-            nbs = nodes_visible(navimap, path[1][1:2])#Array of arrays
-            tid = 0
-            tl = path[end]#target location
-            for j=1:length(nbs)
-                for nb in nbs[j]
-                    if nb == tl[1:2]
-                        tid = j
-                        break
-                    end
-                end
-            end
-            
-            endpoint = map(x->round(Int, x), path[end])
-            d = round(Int, endpoint[3] / 90 + 1)
-            steps = length(path)-1
-            
-            if (r > 1 && r < 4 && !facing_wall(maze, (endpoint[2], endpoint[1], d)) || (r == 4 && steps > 4))
-                continue
-            end
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
 
-            if r == 1
-                sits = shuffle(items)
-                n1 = path[1]
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        gen = generate_lang(navimap, maze, segments; combine=0.0)
 
-                navimap.nodes[n1[1:2]] = Items[rand(sits[2:end])]#put an item on the current node
-                
-                for j=1:length(nbs)
-                    curr = path[1][1:2]
-                    if j == tid
-                        navimap.nodes[tl[1:2]] = Items[sits[1]]
-                    end
-                    for nb in nbs[j]
-                        if j == tid && nb == tl[1:2]
-                            continue
-                        end
-                        navimap.nodes[nb] = Items[rand(sits[2:end])]
-                    end
-                end
-                
-                ins = Instruction(name, split(string(prefx, sits[1])), path, mname, id)
-            elseif r < 4
-                suffx = r == 2 ? "end" : "wall"
-                ins = Instruction(name, split(string(prefx, suffx)), path, mname, id)
-            else
-                ord = steps == 1 ? rand(["next", "first"]) : ordinals[steps]
-                suffx = " segment"
-                ins = Instruction(name, split(string(prefx, ord, suffx)), path, mname, id)
+        for (s, inst) in gen
+            println(typeof(inst))
+            println(inst)
+            cats = inst[2:end]
+            if length(cats) == 1 && cats[1] == visual_m
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
             end
-            break
         end
     end
+
     return ins, navimap
 end
 
@@ -200,80 +100,21 @@ function turn_and_move_to_x(name, id)
             navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         end
 
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        prefx = "turn and move to the "
-        
-        for i=1:length(segments)
-            tp, path = segments[i]
-            if tp == "move"
-                continue
+        gen = generate_lang(navimap, maze, segments; combine=1.0)
+
+        for (s, inst) in gen
+            println(typeof(inst))
+            println(inst)
+            cats = inst[2:end]
+            if length(cats) == 1 && cats[1] == visual_tm
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
             end
-
-            mname = join(rand(CHARS, 20))
-            navimap.name = mname
-            nbs = nodes_visible(navimap, path[1][1:2])#Array of arrays
-            tid = 0
-            tl = getlocation(navimap, path[end], 1)#target location
-            for j=1:length(nbs)
-                if nbs[j][1] == tl[1:2]
-                    tid = j
-                end
-            end
-
-            if r == 1
-                sits = shuffle(items)
-                n1 = path[1]
-
-                navimap.nodes[n1[1:2]] = Items[rand(sits[2:end])]#put an item on the current node
-                
-                for j=1:length(nbs)
-                    curr = path[1][1:2]
-                    trg = 0
-                    if j == tid
-                        trg = rand(1:length(nbs[j]))
-                        navimap.nodes[nbs[j][trg]] = Items[sits[1]]
-                        append!(path, map(x->(x[1], x[2], tl[3]), nbs[tid][1:trg]))
-                    end
-                    for nb in nbs[j]
-                        if j == tid && nb == nbs[j][trg]
-                            continue
-                        end
-                        navimap.nodes[nb] = Items[rand(sits[2:end])]
-                    end
-                end
-
-                ins = Instruction(name, split(string(prefx, sits[1])), path, mname, id)
-            else
-                push!(path, tl)
-                if r == 2#floor
-                    sflrs = shuffle(floors)
-                    for j=1:length(nbs)
-                        curr = path[1][1:2]
-                        for nb in nbs[j]
-                            w,f = navimap.edges[curr][nb]
-                            navimap.edges[curr][nb] = (w, Floors[sflrs[j]])
-                            navimap.edges[nb][curr] = (w, Floors[sflrs[j]])
-                            curr = nb
-                        end
-                    end
-                    ins = Instruction(name, split(string(prefx, sflrs[tid])), path, mname, id)
-                elseif r == 3#wall
-                    swlls = shuffle(walls)
-                    for j=1:length(nbs)
-                        curr = path[1][1:2]
-                        for nb in nbs[j]
-                            w,f = navimap.edges[curr][nb]
-                            navimap.edges[curr][nb] = j == tid ? (Walls[swlls[1]], f) : (Walls[swlls[rand(2:3)]], f)
-                            navimap.edges[nb][curr] = j == tid ? (Walls[swlls[1]], f) : (Walls[swlls[rand(2:3)]], f)
-                            curr = nb
-                        end
-                    end
-                    
-                    ins = Instruction(name, split(string(prefx, swlls[1])), path, mname, id)
-                end
-            end
-            break
         end
     end
     return ins, navimap
@@ -323,49 +164,30 @@ function lang_only(name, id)
 
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
+        
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
 
-        for i=1:length(segments)
-            tp, path = segments[i]
-            if (r == 1 || r == 3) && tp == "move"
-                continue
-            elseif (r == 2 || r == 4) && tp == "turn"
-                continue
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        gen = generate_lang(navimap, maze, segments; combine=0.4)
+
+        for (s, inst) in gen
+            println(typeof(inst))
+            println(inst)
+            cats = inst[2:end]
+            langvalid = true
+            for c in cats
+                if !(c == langonly_t || c == langonly_m)
+                    langvalid = false
+                end
             end
 
-            mname = join(rand(CHARS, 20))
-            navimap.name = mname
-
-            if r == 1
-                cands = turncands(path)
-            elseif r == 2
-                cands = movecands(path)
-            elseif r == 3 && i != length(segments)
-                tcands = turncands(path)
-                mcands = movecands(segments[i+1][2])
-                cands = Any[]
-                for tc in tcands
-                    for mc in mcands
-                        push!(cands, string(tc, " and ", mc))
-                    end
-                end
-                append!(path, segments[i+1][2][2:end])
-            elseif r == 4 && i != length(segments)
-                mcands = movecands(path)
-                tcands = turncands(segments[i+1][2])
-                cands = Any[]
-                for mc in mcands
-                    for tc in tcands
-                        push!(cands, string(mc, " and ", tc))
-                    end
-                end
-                append!(path, segments[i+1][2][2:end])
-            else
-                continue
+            if langvalid
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
             end
-            text = rand(cands)
-            ins = Instruction(name, split(text), path, mname, id)
-            break
-        end
+        end 
     end
     return ins, navimap
 end
