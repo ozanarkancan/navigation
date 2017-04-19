@@ -81,6 +81,38 @@ function item_single_on_this_segment(navimap, segment)
     return cnt == 1
 end
 
+function item_single_in_visible(navimap, item, node)
+    cnt = 0
+
+    nbs = nodes_visible(navimap, node)
+    for ns in nbs
+        for n in ns
+            if item == navimap.nodes[n]
+                cnt += 1
+            end
+        end
+    end
+    println("Count: $cnt")
+    return cnt == 1
+end
+
+function find_single_item_in_visible(navimap, node, nextloc)
+    item = 7#empty
+
+    curr = node[1:2]
+
+    while haskey(navimap.edges, curr) && haskey(navimap.edges[curr], nextloc[1:2])
+        item = navimap.nodes[nextloc[1:2]]
+        if item != 7 && item_single_in_visible(navimap, item, node)
+            break
+        end
+        item = 7
+        curr = nextloc[1:2]
+        nextloc = getlocation(navimap, nextloc, 1)
+    end
+    return item
+end
+
 function is_floor_unique(navimap, maze, segment, target)
     """
     0: not unique
