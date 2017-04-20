@@ -45,6 +45,7 @@ function parse_commandline()
         ("--level"; help = "log level"; default="info")
         ("--beamsize"; help = "world attention"; arg_type = Int; default = 10)
         ("--beam"; help = "activate beam search"; action = :store_true)
+        ("--globalloss"; help = "use global loss"; action = :store_true)
     end
     return parse_args(s)
 end		
@@ -102,7 +103,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
     sofarbest = 0.0
     for i=1:args["epoch"]
         shuffle!(trn_data)
-        @time lss = train(w, prms_sp, trn_data; args=args)
+        @time lss = !args["globalloss"] ? train(w, prms_sp, trn_data; args=args) : train_global(w, prms_sp, train_data, maps; args=args)
         @time train_acc = test([w], train_data, maps; args=args)
         @time tst_acc = test([w], test_data, maps; args=args)
         @time tst_prg_acc = test_paragraph([w], test_data_grp, maps; args=args)

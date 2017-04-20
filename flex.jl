@@ -319,7 +319,218 @@ function loss(w, state, words, ys; lss=nothing, views=nothing, as=nothing, dropo
     return nll
 end
 
+function loss_global(w, words, goldactions, instruction, maps, state; dropout=false, encpdrops=[0.5, 0.5], decpdrops=[0.5, 0.5], args=nothing, lss=nothing)
+    nll = 0.0
+    beamsize = args["beamsize"]
+    
+    encode(w["enc_w_f"], w["enc_b_f"], w["enc_w_b"], w["enc_b_b"], w["emb_word"], state, words; dropout=dropout, pdrops=encpdrops)
+
+    state[5] = hcat(state[1][end], state[3][end])
+    state[6] = hcat(state[2][end], state[4][end])
+        
+    cstate5 = copy(state[5])
+    cstate6 = copy(state[6])
+        
+    current = instruction.path[1]
+    #1: score
+    #2: prev hidden
+    #3: prev cell
+    #4: current location
+    #5: depth
+    #6: stopped
+    #7: isgold
+    #8: prev actions
+    cands = Array{Tuple{Float64, Any, Any, Any, Any, Any, Any, Any}, 1}()
+    push!(cands, (0.0, cstate5, cstate6, current, 0, false, true, Any[4]))
+
+    nactions = 0
+    stop = false
+    stopsearch = false
+    araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
+    goldindex = 0
+
+    while !stopsearch
+        newcands = Array{Tuple{Any, Any, Any, Any, Any, Any, Any, Any}, 1}()
+        newcand = false
+        for cand in cands
+            current = cand[4]
+            state[5] = cand[2]
+            state[6] = cand[3]
+            depth = cand[5]
+            prevActions = cand[end]
+            lastAction = prevActions[end]
+            stopped = cand[6]
+            isgold = cand[7]
+
+            if araw != nothing
+                araw[:] = 0.0
+                araw[1, lastAction] = 1.0
+            end
+
+            if stopped
+                push!(newcands, cand)
+                continue
+            end
+
+            view = !args["percp"] ? nothing : args["encoding"] == "grid" ? 
+            state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(maps[instruction.map], current)
+            view = args["percp"] ? convert(KnetArray{Float32}, view) : nothing
+            preva = araw != nothing ? convert(KnetArray{Float32}, araw)  : araw
+
+            if !args["percp"]
+                x = spatial(w["emb_world"], preva)
+            elseif args["encoding"] == "grid" && args["worldatt"] != 0
+                worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
+            elseif args["encoding"] == "grid" 
+                x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
+            else
+                x = spatial(w["emb_world"], view)
+            end
+
+            soft_inp = args["inpout"] ? w["soft_inp"] : nothing
+            soft_att = args["attout"] ? w["soft_att"] : nothing
+            soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
+            preva = !args["preva"] ? nothing : preva
+            prevainp = args["preva"] && args["percp"]
+
+            att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+            ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
+            soft_preva=soft_preva, preva=preva, att=att, dropout=dropout, pdrops=decpdrops, prevainp=prevainp)
+
+            for i=1:4
+                myisgold = isgold
+                mystop = stopped
+                nactions = depth + 1
+                actcopy = copy(prevActions)
+                
+                if isgold
+                    myisgold = i == goldactions[nactions]
+                end
+
+                if nactions >= length(goldactions) && i < 4
+                    mystop = true
+                end
+                push!(actcopy, i)
+                cur = identity(current)
+
+                if i < 4
+                    cur = getlocation(maps[instruction.map], cur, i)
+                end
+
+                if (i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))) || i==4
+                    mystop = true
+                end
+
+                newscore = cand[1] + ypred[1, i]
+
+                push!(newcands, (newscore, state[5], state[6], cur, nactions, mystop, myisgold, actcopy))
+                newcand = true
+            end
+        end
+        stopsearch = !newcand
+        if newcand
+            sort!(newcands; by=x->x[1], rev=true)
+            l = length(newcands) < beamsize ? length(newcands) : beamsize
+            goldindex = findfirst(x->x[7], newcands)
+            cands = newcands[1:l]
+            debug("l: $l")
+            for index=1:l
+                debug("Beam #$index : $(AutoGrad.getval(newcands[index][1])) - $(newcands[index][end])")
+            end
+
+            if goldindex > beamsize || newcands[goldindex][5] == length(goldactions)
+                stopsearch = true
+                glob = vcat(first(cands[1]))
+                for ind=2:l
+                    glob = vcat(glob, first(cands[ind]))
+                end
+
+                if goldindex > beamsize
+                    debug("gind: $goldindex")
+                    glob = vcat(glob, first(newcands[goldindex]))
+                    ynorm = logp(glob)
+                    debug("ynorm: $(Array(AutoGrad.getval(ynorm)))")
+                    nll = -ynorm[end]
+                else
+                    debug("gind: $goldindex")
+                    ynorm = logp(glob)
+                    debug("ynorm: $(Array(AutoGrad.getval(ynorm)))")
+                    nll = -ynorm[goldindex]
+                end
+
+                debug("nll: $(AutoGrad.getval(nll))")
+                debug("gold: $(AutoGrad.getval(newcands[goldindex][1]))")
+                debug("goldactions: $(goldactions)")
+                #=
+                debug("glob: $(AutoGrad.getval(glob))")
+                z = log(sum(exp(glob)))
+                debug("z: $(AutoGrad.getval(z))")
+                nll = -newcands[goldindex][1] + z
+                debug("gold: $(AutoGrad.getval(newcands[goldindex][1]))")
+                debug("nll: $(AutoGrad.getval(nll))")
+                debug("goldactions: $(goldactions)")
+                debug("beam-gold: $(newcands[goldindex][end])")
+                for index=1:l
+                    debug("Beam #$index : $(newcands[index][end])")
+                end
+                =#
+            end
+        end
+    end
+    debug("Exiting nll: $(AutoGrad.getval(nll))")
+    lss[1] = AutoGrad.getval(nll)
+    return nll
+end
+
 lossgradient = grad(loss)
+lossglobalgradient = grad(loss_global)
+
+function clip_grad(g; args=args)
+    gclip = args["gclip"]
+    if gclip > 0
+        gnorm = 0
+        for k in keys(g)
+            if startswith(k, "filter")
+                for el in g[k]
+                    gnorm += sumabs2(el)
+                end
+            else
+                gnorm += sumabs2(g[k])
+            end
+        end
+        gnorm = sqrt(gnorm)
+
+        debug("Gnorm: $gnorm")
+
+        if gnorm > gclip
+            for k in keys(g)
+                if startswith(k, "filter")
+                    gs = Any[]
+                    for el in g[k]
+                        push!(gs, el * gclip / gnorm)
+                    end
+                    g[k] = gs
+                else
+                    g[k] = g[k] * gclip / gnorm
+                end
+            end
+        end
+    end
+end
+
+function updatew(w,g,prms)
+    #update weights
+    for k in keys(g)
+        if startswith(k, "filter")
+            for ind=1:length(g[k])
+                Knet.update!(w[k][ind], g[k][ind], prms[k][ind])
+            end
+        else
+            Knet.update!(w[k], g[k], prms[k])
+        end
+    end
+end
 
 function train(w, prms, data; args=nothing, updatelimit=0)
     lss = 0.0
@@ -344,49 +555,9 @@ function train(w, prms, data; args=nothing, updatelimit=0)
         end
 
         g = lossgradient(w, state, words, ys; lss=nll, views=views, as=acts, dropout=true, encpdrops=args["encdrops"], decpdrops=args["decdrops"], args=args)
-
-        gclip = args["gclip"]
-        if gclip > 0
-            gnorm = 0
-            for k in keys(g)
-                if startswith(k, "filter")
-                    for el in g[k]
-                        gnorm += sumabs2(el)
-                    end
-                else
-                    gnorm += sumabs2(g[k])
-                end
-            end
-            gnorm = sqrt(gnorm)
-
-            debug("Gnorm: $gnorm")
-
-            if gnorm > gclip
-                for k in keys(g)
-                    if startswith(k, "filter")
-                        gs = Any[]
-                        for el in g[k]
-                            push!(gs, el * gclip / gnorm)
-                        end
-                        g[k] = gs
-                    else
-                        g[k] = g[k] * gclip / gnorm
-                    end
-                end
-            end
-        end
-
-        #update weights
-        for k in keys(g)
-            if startswith(k, "filter")
-                for ind=1:length(g[k])
-                    Knet.update!(w[k][ind], g[k][ind], prms[k][ind])
-                end
-            else
-                Knet.update!(w[k], g[k], prms[k])
-            end
-        end
-
+        clip_grad(g;args=args)
+        updatew(w,g,prms)
+        
         lss += nll[1] * nll[2]
         cnt += nll[2]
 
@@ -396,6 +567,29 @@ function train(w, prms, data; args=nothing, updatelimit=0)
     end
     return lss / cnt
 end
+
+function train_global(w, prms, data, maps; args=nothing)
+    lss = 0.0
+    cnt = 0.0
+    nll = Float64[0, 0]
+
+    for (instruction, words) in data
+        words = map(t->convert(KnetArray{Float32}, t), words)
+        goldactions = getactions(instruction.path)
+        bs = size(words[1], 1)
+        state = initstate(KnetArray{Float32}, args["hidden"], bs, length(words))
+
+        g = lossglobalgradient(w, words, goldactions, instruction, maps, state; dropout=true, encpdrops=args["encdrops"], decpdrops=args["decdrops"], args=args, lss=nll)
+        clip_grad(g;args=args)
+        updatew(w,g,prms)
+
+        lss += nll[1]
+        cnt += 1.0
+    end
+
+    return lss / cnt
+end
+
 
 function train_loss(w, data; args=nothing)
     lss = 0.0
@@ -688,7 +882,6 @@ function test_beam(models, data, maps; args=nothing)
     beamsize = args["beamsize"]
 
     scss = 0.0
-    mask = convert(KnetArray, ones(Float32, 1,1))
 
     for (instruction, words) in data
         words = map(v->convert(KnetArray{Float32},v), words)
@@ -748,6 +941,7 @@ function test_beam(models, data, maps; args=nothing)
                 preva = araw != nothing ? convert(KnetArray{Float32}, araw)  : araw
 
                 cum_ps = zeros(Float32, 1, 4)
+                #score = KnetArray(zeros(Float32, 1, 4))
 
                 for ind=1:length(models)
                     w = models[ind]
@@ -773,10 +967,13 @@ function test_beam(models, data, maps; args=nothing)
                     ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
                     soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
                     cum_ps += probs(Array(ypred))
+                    #score += ypred
                 end
 
                 cum_ps = cum_ps ./ length(models)
+                #score = score ./ length(models)
                 debug("Probs: $(cum_ps)")
+                #debug("Score: $(Array(score))")
 
                 for i=1:4
                     mystop = stopped
@@ -803,6 +1000,7 @@ function test_beam(models, data, maps; args=nothing)
                     end
 
                     push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, mystop, actcopy))
+                    #push!(newcands, (cand[1] + score[1, i], cstate5, cstate6, cur, nactions, mystop, actcopy))
                     newcand = true
                 end
             end
@@ -822,6 +1020,7 @@ function test_beam(models, data, maps; args=nothing)
         debug("Actions: $(reshape(collect(actions), 1, length(actions)))")
         debug("Current: $(current)")
         debug("Prob: $(cands[1][1])")
+        #debug("Score: $(cands[1][1])")
 
         if current == instruction.path[end]
             scss += 1
@@ -838,7 +1037,6 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
     beamsize = args["beamsize"]
 
     scss = 0.0
-    mask = convert(KnetArray, ones(Float32, 1,1))
 
     for data in groups
         debug("\nNew paragraph")
