@@ -16,17 +16,9 @@ function turn_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r = rand(1:3)#1:item, #2:floor, #3:wall
-        if r == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.0)
@@ -51,20 +43,11 @@ function move_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r = rand(1:4)#1:item or end/wall/segment/intersection
-        if r == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.0)
@@ -92,17 +75,9 @@ function turn_and_move_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r = rand(1:3)#1:item, #2:floor, #3:wall
-        if r == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=1.0)
@@ -128,15 +103,11 @@ function lang_only(name, id)
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
 
-        r = rand(1:4)#1:turn, move, turn and move, move and turn
         navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.3], iprob=0.4)
-
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.4)
@@ -170,13 +141,7 @@ function turn_to_x_and_move(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r = rand(1:3)#1:item, #2:floor, #3:wall
-        if r == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
 
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
@@ -207,20 +172,11 @@ function move_to_x_and_turn(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r = rand(1:4)#1:item or end/wall/segment/intersection
-        if r == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-        
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         gen = generate_lang(navimap, maze, segments; combine=1.0)
 
         for (s, inst) in gen
@@ -246,21 +202,11 @@ function turn_to_x_move_to_y(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r1 = rand(1:3)#1:item, #2:floor, #3:wall
-        r2 = rand(1:4)#1:item or end/wall/segment/intersection
-        if r1 == 1 || r2 == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         gen = generate_lang(navimap, maze, segments; combine=1.0)
 
         for (s, inst) in gen
@@ -284,19 +230,9 @@ function move_to_x_turn_to_y(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r1 = rand(1:3)#1:item, #2:floor, #3:wall
-        r2 = rand(1:4)#1:item or end/wall/segment/intersection
-        
-        if r1 == 1 || r2 == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
@@ -328,22 +264,11 @@ function move_until(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r1 = rand(1:3)#1:item, #2:floor, #3:wall
-        r2 = rand(1:4)#1:item or end/wall/segment/intersection
-        
-        if r1 == 1 || r2 == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         gen = generate_lang(navimap, maze, segments; combine=1.0)
 
         for (s, inst) in gen
@@ -367,17 +292,9 @@ function orient(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r = rand(1:3)#1:item, #2:floor, #3:wall
-        if r == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.0)
@@ -402,26 +319,17 @@ function describe(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-
-        r = rand(1:3)#1:item, #2:floor, #3:wall
-        if r == 1
-            navimap = generate_navi_map(maze, ""; iprob=-1.0)
-        else
-            navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
-        end
-
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.0)
 
         for (s, inst) in gen
-            println(typeof(inst))
             println(inst)
             cats = inst[2:end]
-            if length(cats) == 1 && cats[1] == describe
+            if length(cats) == 1 && cats[1] == description
                 ins = Instruction(name, split(inst[1]), s, mname, id)
                 break
             end

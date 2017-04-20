@@ -1,10 +1,3 @@
-#=
-TODO
-
-check floor pattern with the turn direction
-floor pattern intersection
-=#
-
 facing_wall(maze, p) = maze[p[1], p[2], p[3]] == 0
 is_intersection(maze, p) = sum(maze[p[1], p[2], :]) >= 3
 is_deadend(maze, p) = sum(maze[p[1], p[2], :]) == 1
@@ -92,7 +85,6 @@ function item_single_in_visible(navimap, item, node)
             end
         end
     end
-    println("Count: $cnt")
     return cnt == 1
 end
 
