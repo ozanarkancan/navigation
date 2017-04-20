@@ -11,9 +11,10 @@ times = Dict(1=>"once", 2=>"twice")
 numbers = Dict(1=>["one", "a"],2=>["two"],3=>["three"],4=>["four"],5=>["five"],
     6=>["six"],7=>["seven"],8=>["eight"],9=>["nine"],10=>["ten"])
 wall_names = Dict(1=>"butterflies",2=>"fish",3=>"towers")
-floor_names = Dict(1=>["octagon", "blue-tiled"],2=>["brick"],3=>["concrete"],4=>["flower", "flowered", "pink-flowered"],
-    5=>["grass"],6=>["gravel", "stone"],7=>["wood", "wooden"],8=>["yellow"])
-item_names = Dict(1=>["stool"], 2=>["chair"], 3=>["easel"], 4=>["hatrack"],
+floor_names = Dict(1=>["octagon", "blue-tiled"],2=>["brick"],3=>["bare concrete", "concrete", "plain cement"],
+    4=>["flower", "flowered", "pink-flowered", "rose"], 5=>["grass", "grassy"],6=>["gravel", "stone"],
+    7=>["wood", "wooden"],8=>["yellow", "yellow-tiled", "honeycomb yellow"])
+item_names = Dict(1=>["stool"], 2=>["chair"], 3=>["easel"], 4=>["hatrack", "hat rack", "coatrack", "coat rack"],
     5=>["lamp"], 6=>["sofa", "bench"])
 
 function action(curr, next)
@@ -131,7 +132,7 @@ function startins(navimap, maze, curr, next)
         item = find_single_item_in_visible(navimap, curr_s[1][1:2], next_s[2])
         if item != 7
             for prefx in ["at this intersection ", ""]
-                for body in ["look for the ", "face the ", "turn your face to the ", "turn until you see the ", "turn to the "]
+                for body in ["look for the ", "face the ", "face the intersection containing the ", "turn your face to the ", "turn until you see the ", "turn to the "]
                     push!(cands, (string(prefx, body, rand(item_names[item])), visual_t))
                 end
             end
@@ -154,17 +155,20 @@ function startins(navimap, maze, curr, next)
 
             if rightwall && !backwall && !leftwall
                 push!(cands, ("turn so that the wall is on your right", orient_t))
+                push!(cands, ("turn so that the wall is on your right side", orient_t))
             elseif rightwall && backwall && !leftwall
                 push!(cands, ("turn so that the wall is on your right and back", orient_t))
                 push!(cands, ("turn so that the wall is on your back and right", orient_t))
             elseif !rightwall && !backwall && leftwall
                 push!(cands, ("turn so that the wall is on your left", orient_t))
+                push!(cands, ("turn so that the wall is on your left side", orient_t))
             elseif !rightwall && backwall && leftwall
                 push!(cands, ("turn so that the wall is on your left and back", orient_t))
                 push!(cands, ("turn so that the wall is on your back and left", orient_t))
             elseif !rightwall && backwall && !leftwall
                 push!(cands, ("turn so that your back is to the wall", orient_t))
                 push!(cands, ("turn so that your back faces the wall", orient_t))
+                push!(cands, ("turn so that your back side faces the wall", orient_t))
                 for r in [" to", " against"]
                     push!(cands, (string("place your back", r, " the wall"), orient_t))
                 end
@@ -234,7 +238,16 @@ function moveins(navimap, maze, curr, next)
     if is_corner(maze, p2)
         for m in ["move ", "go ", "walk "]
             for adv in [" forward", " straight", ""]
-                push!(cands, (string(m, adv, " into the corner"), visual_m))
+                for prep in [" into the corner", " to the corner"]
+                    for suffix in ["", " you see in front of you"]
+                        push!(cands, (string(m, adv, prep, suffix), visual_m))
+                        for st in sts
+                            for num in numbers[steps]
+                                push!(cands, (string(m, adv, num, st, prep, suffix), visual_m))
+                            end
+                        end
+                    end
+                end
             end
         end
     end
@@ -262,6 +275,7 @@ function moveins(navimap, maze, curr, next)
             for cor in ["hall", "hallway", "path", "corridor", "alley"]
                 for sufx in ["hall", "hallway", "path", "corridor", "alley", ""]
                     if sufx != ""
+                        push!(cands, (string(m, " all the way to the end of the ", sufx), visual_m))
                         push!(cands, (string(m, " to the end of the ", sufx), visual_m))
                     else
                         push!(cands, (string(m, " to the end"), visual_m))
@@ -466,6 +480,7 @@ function turnins(navimap, maze, curr, next)
 
     if is_corner(maze, (curr_s[1][2], curr_s[1][1], round(Int, curr_s[1][3]/90 + 1)))
         push!(cands, (string("at the corner turn ", d), langonly_t))
+        push!(cands, (string("turn ", d, " at the corner"), langonly_t))
     end
 
     diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
