@@ -9,7 +9,7 @@ type Instruction
 end
 
 function getallinstructions(;fname="data/pickles/databag3.pickle")
-	raw_data = load("data/pickles/databag3.jld", "raw_data")
+	raw_data = load(fname, "raw_data")
 
 	grid = Instruction[]
 	jelly = Instruction[]
