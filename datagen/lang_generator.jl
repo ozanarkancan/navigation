@@ -374,7 +374,25 @@ function moveins(navimap, maze, curr, next)
             end
         end
 
-        push!(cands, (string("one block pass the ", rand(item_names[navimap.nodes[curr_s[end-1][1:2]]])), condition_m))
+        for prefx in ["one block pass the ", "pass the ", "move past the "]
+            push!(cands, (string(prefx, rand(item_names[navimap.nodes[curr_s[end-1][1:2]]])), condition_m))
+        end
+
+        for num in numbers[steps]
+            for st in sts
+                for body in [" past ", " passing ", " passing the ", " passing a "]
+                    push!(cands, (string(num, st, body,
+                        rand(item_names[navimap.nodes[curr_s[end-1][1:2]]])), condition_m))
+
+                    for m in ["go ", "move ", "walk "]
+                        for adv in ["forward ", "straight ", ""]
+                            push!(cands, (string(m, adv, num, st, body,
+                                rand(item_names[navimap.nodes[curr_s[end-1][1:2]]])), condition_m))
+                        end
+                    end
+                end
+            end
+        end
     end
 
     if steps >= 3 && next != nothing
@@ -556,8 +574,28 @@ end
 function moveturnins(navimap, maze, curr, next, next2)
     steps = length(curr)-1
     cands = Any[]
+    
+    curr_t, curr_s = curr
+    next_t, next_s = next
 
-    if length(cands) == 0
+    segm = copy(curr_s)
+    append!(segm, next_s[2:end])
+
+
+    p1 = (curr_s[1][2], curr_s[1][1], -1)
+    p2 = (curr_s[end][2], curr_s[end][1], -1)
+   
+    a = action(next_s[1], next_s[2])
+    d = a == 2 ? "right" : "left"
+
+    if is_intersection(maze, p2)
+        alleycnt = count_alleys(maze, curr_s)
+        if alleycnt == 1
+            push!(cands, (string("make the first ", d), condition_m, langonly_t))
+        end
+    end
+
+    if length(cands) == 0 || rand() < 0.5
         mins = moveins(navimap, maze, curr, next)
         tins = turnins(navimap, maze, next, next2)
 
@@ -568,6 +606,8 @@ function moveturnins(navimap, maze, curr, next, next2)
         newins = string(mi[1], rand([" and ", " then ", " and then ", " "]), ti[1])
         return [(ms, (newins, mi[2], ti[2]))]
     end
+
+    return [(segm, rand(cands))]
 end
 
 function turnmoveins(navimap, maze, curr, next, next2)
@@ -579,6 +619,8 @@ function turnmoveins(navimap, maze, curr, next, next2)
     segm = copy(curr_s)
     append!(segm, next_s[2:end])
 
+    steps = length(next_s)-1
+    sts = steps > 1 ? [" steps", " blocks", " segments", " times"] : [" step", " block", " segment"]
 
     if navimap.nodes[next_s[end][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[next_s[end][1:2]], curr_s[1][1:2]) == 1
         for tv in ["turn and ", "face and "]
@@ -597,7 +639,41 @@ function turnmoveins(navimap, maze, curr, next, next2)
             rand(item_names[navimap.nodes[next_s[end][1:2]]])), visual_tm))
     end
 
-    if length(cands) == 0
+    if navimap.nodes[next_s[end][1:2]] == 7 && navimap.nodes[next_s[end-1][1:2]] != 7 &&
+        length(next_s) > 2 && item_single_in_visible(navimap, navimap.nodes[next_s[end-1][1:2]], next_s[1][1:2]) == 1
+        
+        tprefx = "turn and "
+        for m in ["move ", "go ", "walk "]
+            for one in ["a", "one"]
+                for step in [" step", " block", " segment"]
+                    push!(cands, (string(tprefx, m, one, step, " beyond the ",
+                        rand(item_names[navimap.nodes[next_s[end-1][1:2]]])), langonly_t, condition_m))
+                end
+            end
+        end
+
+        for prefx in ["one block pass the ", "pass the ", "move past the "]
+            push!(cands, (string(tprefx, prefx, rand(item_names[navimap.nodes[next_s[end-1][1:2]]])), langonly_t, condition_m))
+        end
+
+        for num in numbers[steps]
+            for st in sts
+                for body in [" past ", " passing ", " passing the ", " passing a "]
+                    push!(cands, (string(tprefx, num, st, body,
+                        rand(item_names[navimap.nodes[next_s[end-1][1:2]]])), langonly_t, condition_m))
+
+                    for m in ["go ", "move ", "walk "]
+                        for adv in ["forward ", "straight ", ""]
+                            push!(cands, (string(tprefx, m, adv, num, st, body,
+                                rand(item_names[navimap.nodes[next_s[end-1][1:2]]])), langonly_t, condition_m))
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if length(cands) == 0 || rand() < 0.5
         tins = turnins(navimap, maze, curr, next)
         mins = moveins(navimap, maze, next, next2)
 

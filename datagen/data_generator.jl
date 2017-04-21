@@ -373,6 +373,114 @@ function describe(name, id)
     return ins, navimap
 end
 
+function turn_move_until(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0)
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && cats[1] == langonly_t && cats[2] == condition_m
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+function turn_to_x_move_until(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0)
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && cats[1] == visual_t && cats[2] == condition_m
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+function move_until_turn(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0)
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && cats[1] == condition_m && cats[2] == langonly_t
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+function move_until_turn_to_x(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0)
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && cats[1] == condition_m && cats[2] == visual_t
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
 """
 Available task functions:
 
