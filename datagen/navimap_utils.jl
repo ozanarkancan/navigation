@@ -85,7 +85,7 @@ function item_single_in_visible(navimap, item, node)
             end
         end
     end
-    return cnt == 1
+    return cnt
 end
 
 function find_single_item_in_visible(navimap, node, nextloc)
@@ -95,7 +95,7 @@ function find_single_item_in_visible(navimap, node, nextloc)
 
     while haskey(navimap.edges, curr) && haskey(navimap.edges[curr], nextloc[1:2])
         item = navimap.nodes[nextloc[1:2]]
-        if item != 7 && item_single_in_visible(navimap, item, node)
+        if item != 7 && item_single_in_visible(navimap, item, node) == 1
             break
         end
         item = 7

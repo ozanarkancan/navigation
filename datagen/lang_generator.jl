@@ -170,9 +170,23 @@ function startins(navimap, maze, curr, next)
                 push!(cands, ("turn so that your back faces the wall", orient_t))
                 push!(cands, ("turn so that your back side faces the wall", orient_t))
                 for r in [" to", " against"]
-                    push!(cands, (string("place your back", r, " the wall"), orient_t))
+                    for suffix in [" of the 't' intersection", ""]
+                        push!(cands, (string("place your back", r, " the wall", suffix), orient_t))
+                    end
                 end
             end
+            
+            if length(curr_s) == 2 && sum(maze[p1[1], p1[2], :]) == 3
+                p = (curr_s[1][2], curr_s[1][1], round(Int, 1+curr_s[1][3] / 90))
+                rightwall = maze[p[1], p[2], rightof(p[3])] == 0
+                leftwall = maze[p[1], p[2], leftof(p[3])] == 0
+                backwall = maze[p[1], p[2], backof(p[3])] == 0
+            
+                if !rightwall && backwall && !leftwall
+                    push!(cands, (string("with your back to the wall turn ", d), orient_t))
+                end
+            end
+
         end
 
         return  [(curr_s, rand(cands))]
@@ -300,7 +314,7 @@ function moveins(navimap, maze, curr, next)
         end
     end
 
-    if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[curr_s[end][1:2]], curr_s[1][1:2])
+    if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[curr_s[end][1:2]], curr_s[1][1:2]) == 1
         for m in ["go ", "move ", "walk "]
             for adv in ["forward ", "straight ", ""]
                 for num in numbers[steps]
@@ -350,7 +364,7 @@ function moveins(navimap, maze, curr, next)
             end
         end
     elseif navimap.nodes[curr_s[end][1:2]] == 7 && navimap.nodes[curr_s[end-1][1:2]] != 7 && 
-        length(curr_s) > 2 && item_single_in_visible(navimap, navimap.nodes[curr_s[end-1][1:2]], curr_s[1][1:2])
+        length(curr_s) > 2 && item_single_in_visible(navimap, navimap.nodes[curr_s[end-1][1:2]], curr_s[1][1:2]) == 1
         for m in ["move ", "go ", "walk "]
             for one in ["a", "one"]
                 for step in [" step", " block", " segment"]
@@ -487,7 +501,7 @@ function turnins(navimap, maze, curr, next)
     wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 
     if diff_w
-        for prefx in ["at this intersection ", ""]
+        for prefx in ["at this intersection ", "", "here "]
             for cor in ["corridor ", "hall ", "alley "]
                 for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the "]
                     for sufx in ["", " on the wall", " on both sides of the walls"]
@@ -499,7 +513,7 @@ function turnins(navimap, maze, curr, next)
     end
 
     if diff_f
-        for prefx in ["at this intersection ", ""]
+        for prefx in ["at this intersection ", "", "here "]
             for cor in [" corridor", " hall", " alley", " hallway", " path"]
                 for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the "]
                     for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
@@ -509,7 +523,7 @@ function turnins(navimap, maze, curr, next)
             end
         end
 
-        for prefx in ["at this intersection ", ""]
+        for prefx in ["at this intersection ", "", "here "]
             for cor in [" corridor", " hall", " alley", " hallway", " path"]
                 for v in ["facing the ", "seeing the "]
                     for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
@@ -522,12 +536,20 @@ function turnins(navimap, maze, curr, next)
 
     item = find_single_item_in_visible(navimap, curr_s[1][1:2], next_s[2])
     if item != 7
-        for prefx in ["at this intersection ", ""]
+        for prefx in ["at this intersection ", "", "here "]
             for body in ["look for the ", "face the ", "turn your face to the ", "turn until you see the ", "turn to the "]
                 push!(cands, (string(prefx, body, rand(item_names[item])), visual_t))
             end
         end
     end
+
+    if navimap.nodes[curr_s[1][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[curr_s[1][1:2]], curr_s[1][1:2]) == 0
+        prefx = "at the "
+        for suffix in [" turn ", " take a ", " turn to ", " make a ", " go ", " move "]
+            push!(cands, (string(prefx, rand(item_names[navimap.nodes[curr_s[1][1:2]]]), suffix, d), visual_t))
+        end
+    end
+
     return [(curr_s, rand(cands))]
 end
 
@@ -543,7 +565,7 @@ function moveturnins(navimap, maze, curr, next, next2)
         ms, mi = mins[1]
 
         append!(ms, ts[2:end])
-        newins = string(mi[1], rand([" and ", " then ", " and then "]), ti[1])
+        newins = string(mi[1], rand([" and ", " then ", " and then ", " "]), ti[1])
         return [(ms, (newins, mi[2], ti[2]))]
     end
 end
@@ -558,7 +580,7 @@ function turnmoveins(navimap, maze, curr, next, next2)
     append!(segm, next_s[2:end])
 
 
-    if navimap.nodes[next_s[end][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[next_s[end][1:2]], curr_s[1][1:2])
+    if navimap.nodes[next_s[end][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[next_s[end][1:2]], curr_s[1][1:2]) == 1
         for tv in ["turn and ", "face and "]
             for mv in ["move ", "go ", "walk "]
                 push!(cands, (string(tv, mv, rand(["forward ", "straight ", ""]),
@@ -583,7 +605,7 @@ function turnmoveins(navimap, maze, curr, next, next2)
         ms, mi = mins[1]
 
         append!(ts, ms[2:end])
-        newins = string(ti[1], rand([" and ", " then ", " and then "]), mi[1])
+        newins = string(ti[1], rand([" and ", " then ", " and then ", " "]), mi[1])
         return [(ts, (newins, ti[2], mi[2]))]
     end
 
