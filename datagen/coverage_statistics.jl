@@ -2,12 +2,13 @@ using Logging, DataFrames, ProgressMeter
 
 include("data_generator.jl")
 
-function coverage(taskf, unmatched, freq; limit=1e5)
+function coverage(taskf, unmatched, freq; limit=1e6)
     matched = Set()
     patience = 0
     ind = 0
-    patlim = 2000
+    patlim = 50000
     prevtext = ""
+    limit = string(taskf) == "turn_and_move_to_x" && limit > 5e4 ? 5e4 : limit
     @showprogress 1 "$(taskf) ... " for i in 1:Int(limit)
         ins, mp = taskf("temp", 1)
         ind += 1

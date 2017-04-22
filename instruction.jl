@@ -8,7 +8,7 @@ type Instruction
 	id 
 end
 
-function getallinstructions(;fname="data/pickles/databag3.pickle")
+function getallinstructions(;fname="data/pickles/databag3.jld")
 	raw_data = load(fname, "raw_data")
 
 	grid = Instruction[]

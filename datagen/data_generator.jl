@@ -21,7 +21,7 @@ function turn_to_x(name, id)
         navimap.name = mname
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        gen = generate_lang(navimap, maze, segments; combine=0.0)
+        gen = generate_lang(navimap, maze, segments; combine=0.0, cons=[visual_t])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -48,7 +48,7 @@ function move_to_x(name, id)
         navimap.name = mname
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        gen = generate_lang(navimap, maze, segments; combine=0.0)
+        gen = generate_lang(navimap, maze, segments; combine=0.0, cons=[visual_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -76,7 +76,7 @@ function turn_and_move_to_x(name, id)
         navimap.name = mname
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_tm])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -104,7 +104,7 @@ function lang_only(name, id)
         navimap.name = mname
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        gen = generate_lang(navimap, maze, segments; combine=0.5)
+        gen = generate_lang(navimap, maze, segments; combine=0.5, cons=[langonly_t, langonly_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -141,7 +141,7 @@ function turn_to_x_and_move(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, langonly_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -170,7 +170,7 @@ function turn_move_to_x(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_m, langonly_t])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -196,7 +196,7 @@ function move_to_x_and_turn(name, id)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_m, langonly_t])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -222,7 +222,7 @@ function move_turn_to_x(name, id)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, langonly_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -251,7 +251,7 @@ function turn_to_x_move_to_y(name, id)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, visual_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -278,7 +278,7 @@ function move_to_x_turn_to_y(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, visual_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -309,7 +309,7 @@ function move_until(name, id)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[condition_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -335,7 +335,7 @@ function orient(name, id)
         navimap.name = mname
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        gen = generate_lang(navimap, maze, segments; combine=0.0)
+        gen = generate_lang(navimap, maze, segments; combine=0.0, cons=[orient_t])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -360,7 +360,7 @@ function describe(name, id)
         navimap.name = mname
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        gen = generate_lang(navimap, maze, segments; combine=0.0)
+        gen = generate_lang(navimap, maze, segments; combine=0.0, cons=[description])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -386,7 +386,7 @@ function turn_move_until(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[langonly_t, condition_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -413,7 +413,7 @@ function turn_to_x_move_until(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, condition_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -440,7 +440,7 @@ function move_until_turn(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[langonly_t, condition_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -467,7 +467,7 @@ function move_until_turn_to_x(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=1.0)
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, condition_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
