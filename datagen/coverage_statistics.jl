@@ -2,10 +2,12 @@ using Logging, DataFrames, ProgressMeter
 
 include("data_generator.jl")
 
-function coverage(taskf, unmatched, freq; limit=1e7)
+function coverage(taskf, unmatched, freq; limit=1e5)
     matched = Set()
     patience = 0
     ind = 0
+    patlim = 2000
+    prevtext = ""
     @showprogress 1 "$(taskf) ... " for i in 1:Int(limit)
         ins, mp = taskf("temp", 1)
         ind += 1
@@ -14,11 +16,15 @@ function coverage(taskf, unmatched, freq; limit=1e7)
         if instext in unmatched
             push!(matched, instext)
             delete!(unmatched, instext)
+            patlim += patience
             patience = 0
         else
-            patience += 1
+            if instext != prevtext
+                patience += 1
+            end
         end
-        if length(unmatched) == 0 || patience >= 200000
+        prevtext = instext
+        if length(unmatched) == 0 || patience >= patlim
             break
         end
     end
@@ -66,10 +72,14 @@ function main()
         move_turn_to_x, turn_and_move_to_x, turn_move_until,
         turn_to_x_move_until, move_until_turn, move_until_turn_to_x]
 
+    total = 0.0
     for taskf in tasklist
         ratio = coverage(taskf, copy(allins), freq)
         push!(df, (taskf, ratio*100))
+        total += ratio
     end
+
+    info("Total coverage: $(total * 100)%")
     writetable("taskcov.csv", df)
 end
 

@@ -71,7 +71,7 @@ function turn_and_move_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.5)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         nodes, path = generate_path(maze, available)

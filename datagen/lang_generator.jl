@@ -13,7 +13,7 @@ numbers = Dict(1=>["one", "a"],2=>["two"],3=>["three"],4=>["four"],5=>["five"],
 wall_names = Dict(1=>"butterflies",2=>"fish",3=>"towers")
 floor_names = Dict(1=>["octagon", "blue-tiled"],2=>["brick"],3=>["bare concrete", "concrete", "plain cement"],
     4=>["flower", "flowered", "pink-flowered", "rose"], 5=>["grass", "grassy"],6=>["gravel", "stone"],
-    7=>["wood", "wooden"],8=>["yellow", "yellow-tiled", "honeycomb yellow"])
+    7=>["wood", "wooden", "wooden-floored"],8=>["yellow", "yellow-tiled", "honeycomb yellow"])
 item_names = Dict(1=>["stool"], 2=>["chair"], 3=>["easel"], 4=>["hatrack", "hat rack", "coatrack", "coat rack"],
     5=>["lamp"], 6=>["sofa", "bench"])
 
@@ -107,7 +107,7 @@ function startins(navimap, maze, curr, next)
             for prefx in ["look for the ", "face the ", "turn your face to the ", "turn until you see the ", "turn to the "]
                 for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                     cors = [" path", " hall", " hallway", " alley", " corridor"]
-                    if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered"
+                    if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
                         push!(cors, " carpet")
                     end
                     for cor in cors
@@ -119,7 +119,7 @@ function startins(navimap, maze, curr, next)
             for verb in ["facing the ", "seeing the "]
                 for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                     cors = [" path", " hall", " hallway", " alley", " corridor"]
-                    if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered"
+                    if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
                         push!(cors, " carpet")
                     end
                     for cor in cors
@@ -169,6 +169,7 @@ function startins(navimap, maze, curr, next)
                 push!(cands, ("turn so that your back is to the wall", orient_t))
                 push!(cands, ("turn so that your back faces the wall", orient_t))
                 push!(cands, ("turn so that your back side faces the wall", orient_t))
+                push!(cands, ("stand with your back to the wall of the 't' intersection", orient_t))
                 for r in [" to", " against"]
                     for suffix in [" of the 't' intersection", ""]
                         push!(cands, (string("place your back", r, " the wall", suffix), orient_t))
@@ -239,6 +240,7 @@ function moveins(navimap, maze, curr, next)
 
         for m in ["move ", "go ", "walk "]
             for adv in ["forwards ", "straight ", ""]
+                push!(cands, (string(m, adv, "as far as you can"), visual_m))
                 for unt in ["until ", "until you get to ", " until you reach "]
                     push!(cands, (string(m, adv, unt, "the wall"), visual_m))
                 end
@@ -257,7 +259,7 @@ function moveins(navimap, maze, curr, next)
                         push!(cands, (string(m, adv, prep, suffix), visual_m))
                         for st in sts
                             for num in numbers[steps]
-                                push!(cands, (string(m, adv, num, st, prep, suffix), visual_m))
+                                push!(cands, (string(m, adv, " ", num, st, prep, suffix), visual_m))
                             end
                         end
                     end
@@ -355,7 +357,7 @@ function moveins(navimap, maze, curr, next)
         for v in ["follow the ", "along the "]
             for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                 cors = [" path", " hall", " hallway", " alley", " corridor"]
-                if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered"
+                if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
                     push!(cors, " carpet")
                 end
                 for cor in cors
@@ -374,7 +376,8 @@ function moveins(navimap, maze, curr, next)
             end
         end
 
-        for prefx in ["one block pass the ", "pass the ", "move past the "]
+        det = navimap.nodes[curr_s[end-1][1:2]] == 3 ? "an" : "a"
+        for prefx in ["one block pass the ", "pass the ", "move past the ", "you will pass $det "]
             push!(cands, (string(prefx, rand(item_names[navimap.nodes[curr_s[end-1][1:2]]])), condition_m))
         end
 
@@ -406,7 +409,7 @@ function moveins(navimap, maze, curr, next)
                 for adv in ["forward ", "straight ", ""]
                     for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                         cors = [" path", " hall", " hallway", " alley", " corridor"]
-                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered"
+                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
                             push!(cors, " carpet")
                         end
                         for cor in cors
@@ -423,7 +426,7 @@ function moveins(navimap, maze, curr, next)
                 for adv in ["forward ", "straight ", ""]
                     for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                         cors = [" path", " hall", " hallway", " alley", " corridor"]
-                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered"
+                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
                             push!(cors, " carpet")
                         end
                         for cor in cors
@@ -440,7 +443,7 @@ function moveins(navimap, maze, curr, next)
                 for adv in ["forward ", "straight ", ""]
                     for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                         cors = [" path", " hall", " hallway", " alley", " corridor"]
-                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered"
+                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
                             push!(cors, " carpet")
                         end
                         for cor in cors
@@ -723,11 +726,12 @@ function finalins(navimap, maze, curr)
         push!(cands, (string("position ", num, " should be there"), description))
 
         if navimap.nodes[curr_s[end][1:2]] != 7
-            push!(cands, (string(rand(["this intersection contains a ", "there is a ", "there should be a "]),
+            det = navimap.nodes[curr_s[end][1:2]] == 3 ? "an" : "a"
+            push!(cands, (string(rand(["this intersection contains $det ", "there is $det ", "there should be $det "]),
                 rand(item_names[navimap.nodes[curr_s[end][1:2]]])), description))
-            push!(cands, ("that's it", description))
-            push!(cands, ("and stop", description))
         end
+        push!(cands, ("that's it", description))
+        push!(cands, ("and stop", description))
 
         push!(insl, ([curr_s[end]], rand(cands)))
         return insl
