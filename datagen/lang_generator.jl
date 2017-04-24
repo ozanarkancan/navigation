@@ -182,7 +182,7 @@ function startins(navimap, maze, curr, next; cons=[])
             elseif !rightwall && !backwall && leftwall
                 push!(cands, ("turn so that the wall is on your left", orient_t))
                 push!(cands, ("turn so that the wall is on your left side", orient_t))
-                push!(cands, ("turn so the wall is on your left side", orient_t))
+                push!(cands, ("turn so the wall is on your left", orient_t))
                 push!(cands, ("turn so the wall is on your left side", orient_t))
             elseif !rightwall && backwall && leftwall
                 push!(cands, ("turn so that the wall is on your left and back", orient_t))
