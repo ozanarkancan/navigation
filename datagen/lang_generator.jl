@@ -551,7 +551,7 @@ function turnins(navimap, maze, curr, next; cons=[])
     if diff_f && (length(cons) == 0 || visual_t in cons)
         for prefx in ["at this intersection ", "", "here "]
             for cor in [" corridor", " hall", " alley", " hallway", " path"]
-                for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the "]
+                for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the ", "turn onto the ", "turn into the "]
                     for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                         push!(cands, (string(prefx, v, flr, cor), visual_t))
                     end
@@ -564,6 +564,20 @@ function turnins(navimap, maze, curr, next; cons=[])
                 for v in ["facing the ", "seeing the "]
                     for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                         push!(cands, (string(prefx, "you should be ", v, flr, cor), visual_t))
+                    end
+                end
+            end
+        end
+    end
+
+    if (length(cons) == 0 || langonly_t in cons)
+        for prefx in ["at this intersection ", "", "here "]
+            for cor in [" corridor", " hall", " alley", " hallway", " path"]
+                for v in ["take a $d into ", "make a $d into ", "take a $d onto ", "make a $d onto ","turn $d into ", "turn $d onto "]
+                    for det in ["the ", ""]
+                        for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+                            push!(cands, (string(prefx, v, det, flr, cor), langonly_t))
+                        end
                     end
                 end
             end
@@ -763,8 +777,11 @@ function finalins(navimap, maze, curr; cons=[])
 
         if navimap.nodes[curr_s[end][1:2]] != 7
             det = navimap.nodes[curr_s[end][1:2]] == 3 ? "an" : "a"
-            push!(cands, (string(rand(["this intersection contains $det ", "there is $det ", "there should be $det "]),
-                rand(item_names[navimap.nodes[curr_s[end][1:2]]])), description))
+            for prefx in ["this intersection contains $det ", "there is $det ", "there should be $det "]
+                push!(cands, (string(prefx, rand(item_names[navimap.nodes[curr_s[end][1:2]]])), description))
+            end
+            
+            push!(cands, (string("there is $det ", rand(item_names[navimap.nodes[curr_s[end][1:2]]]), " in this intersection"), description))
         end
         push!(cands, ("that's it", description))
         push!(cands, ("and stop", description))
