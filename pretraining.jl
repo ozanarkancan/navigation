@@ -127,6 +127,17 @@ function pretrain(vocab, emb, args)
         end
     end
 
+    info("***Weight Norms***")
+    for k in keys(w)
+        if startswith(k, "filter")
+            for ind=1:length(w[k])
+                info("$k , $ind : $(norm(vec(Array(w[k][ind])))))")
+            end
+        else
+            info("$k : $(norm(Array(w[k]))) ")
+        end
+    end
+
     if !args["hopt"]
         writetable(args["savecsv"], df)
     end
@@ -153,17 +164,21 @@ function hyperopt(vocab, emb, args)
 
     function f(x)
         srand(args["seed"])
-        if args["percp"] && args["encoding"] == "grid"
+        if args["percp"] && args["encoding"] == "grid" && args["worldatt"] != 0
             winit, hidden, embl, f1, f2, watt = xform_grid(x)
             args["winit"] = winit
             args["hidden"] = hidden
             args["embed"] = embl
             args["filters"] = [f1, f2]
             args["worldatt"] = watt
+            info("Config: ")
+            info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2]) , worldatt: $watt ")
         else
             hidden, embl = xform_other(x)
             args["hidden"] = hidden
             args["embed"] = embl
+            info("Config: ")
+            info("hidden: $hidden , embed: $embl ")
         end
 
         if args["hidden"] > 500 || args["embed"] > 500

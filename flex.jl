@@ -844,10 +844,10 @@ function initparams(ws; args=nothing)
 
     for k in keys(ws)
         if startswith(k, "filter")
-            prms[k] = map(w->Adam(w;lr=args["lr"]), ws[k])
+            prms[k] = map(w->Adam(lr=args["lr"]), ws[k])
             #prms[k] = map(w->Sgd(;lr=args["lr"]), ws[k])
         else
-            prms[k] = Adam(ws[k];lr=args["lr"]) 
+            prms[k] = Adam(lr=args["lr"]) 
             #prms[k] = Sgd(;lr=args["lr"]) 
         end
     end
