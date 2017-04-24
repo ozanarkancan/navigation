@@ -131,7 +131,7 @@ function startins(navimap, maze, curr, next; cons=[])
             end
         end
 
-        if d != "" && (length(cons) == 0 || langonly_t in cons)
+        if d != "" && diff_f && (length(cons) == 0 || langonly_t in cons)
             for prefx in [""]
                 for cor in [" corridor", " hall", " alley", " hallway", " path", "", " floor", "flooring"]
                     for v in ["take a $d into ", "make a $d into ", "take a $d onto ", "make a $d onto ","turn $d into ", "turn $d onto ", "turn $d to face "]
@@ -630,7 +630,7 @@ function turnins(navimap, maze, curr, next; cons=[])
         end
     end
 
-    if (length(cons) == 0 || langonly_t in cons)
+    if diff_f && (length(cons) == 0 || langonly_t in cons)
         for prefx in [""]
             for cor in [" corridor", " hall", " alley", " hallway", " path", "", " floor", " flooring"]
                 for v in ["take a $d into ", "make a $d into ", "take a $d onto ", "make a $d onto ","turn $d into ", "turn $d onto ", "turn $d to face "]
@@ -692,7 +692,7 @@ function moveturnins(navimap, maze, curr, next, next2; cons=[])
         end
     end
 
-    if length(cands) == 0 || rand() < 0.5
+    if length(cands) == 0 || rand() < 0.7
         mins = moveins(navimap, maze, curr, next; cons=cons)
         tins = turnins(navimap, maze, next, next2; cons=cons)
 
