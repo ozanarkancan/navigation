@@ -104,7 +104,10 @@ function lang_only(name, id)
         navimap.name = mname
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
-        gen = generate_lang(navimap, maze, segments; combine=0.5, cons=[langonly_t, langonly_m])
+
+        l = rand(1:3)
+        l = l > 1 ? 2 : 1
+        gen = generate_lang(navimap, maze, segments; combine=(l == 2 ? 1.0 : 0.0), cons=[langonly_t, langonly_m])
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -115,7 +118,7 @@ function lang_only(name, id)
                 end
             end
 
-            if langvalid
+            if langvalid && length(cats) == l
                 ins = Instruction(name, split(inst[1]), s, mname, id)
                 break
             end
@@ -502,7 +505,10 @@ t15: orient : turn so that ...
 t16: describe : describes the final position
 t17: turn_move_to_x
 t18: move_turn_to_x
-
+t19: turn_move_until
+t20: turn_to_x_move_until
+t21: move_until_turn
+t22: move_until_turn_to_x
 """
 
 function generatedata(taskf; numins=100)
