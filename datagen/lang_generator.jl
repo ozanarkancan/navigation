@@ -192,6 +192,7 @@ function startins(navimap, maze, curr, next; cons=[])
             elseif !rightwall && backwall && !leftwall
 
                 push!(cands, ("turn so that the wall is on your back", orient_t))
+                push!(cands, ("turn so the wall is on your back", orient_t))
                 push!(cands, ("turn so that the wall is on your back side", orient_t))
                 push!(cands, ("turn so the wall is on your back side", orient_t))
                 push!(cands, ("turn so that your back is to the wall", orient_t))
@@ -205,7 +206,7 @@ function startins(navimap, maze, curr, next; cons=[])
                 end
             end
             
-            if length(curr_s) == 2 && sum(maze[p1[1], p1[2], :]) == 3 
+            if d != "" && length(curr_s) == 2 && sum(maze[p1[1], p1[2], :]) == 3 
                 p = (curr_s[1][2], curr_s[1][1], round(Int, 1+curr_s[1][3] / 90))
                 rightwall = maze[p[1], p[2], rightof(p[3])] == 0
                 leftwall = maze[p[1], p[2], leftof(p[3])] == 0
