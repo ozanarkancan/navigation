@@ -206,7 +206,8 @@ function startins(navimap, maze, curr, next; cons=[])
                 end
             end
             
-            if d != "" && length(curr_s) == 2 && sum(maze[p1[1], p1[2], :]) == 3 
+            if length(curr_s) == 2 && sum(maze[p1[1], p1[2], :]) == 3 
+                d = a == 2 ? "right" : "left"
                 p = (curr_s[1][2], curr_s[1][1], round(Int, 1+curr_s[1][3] / 90))
                 rightwall = maze[p[1], p[2], rightof(p[3])] == 0
                 leftwall = maze[p[1], p[2], leftof(p[3])] == 0
