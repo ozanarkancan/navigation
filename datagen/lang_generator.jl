@@ -172,16 +172,28 @@ function startins(navimap, maze, curr, next; cons=[])
             if rightwall && !backwall && !leftwall
                 push!(cands, ("turn so that the wall is on your right", orient_t))
                 push!(cands, ("turn so that the wall is on your right side", orient_t))
+                push!(cands, ("turn so the wall is on your right side", orient_t))
+                push!(cands, ("turn so the wall is on your right side", orient_t))
             elseif rightwall && backwall && !leftwall
                 push!(cands, ("turn so that the wall is on your right and back", orient_t))
                 push!(cands, ("turn so that the wall is on your back and right", orient_t))
+                push!(cands, ("turn so the wall is on your back and right", orient_t))
+                push!(cands, ("turn so the wall is on your back and right", orient_t))
             elseif !rightwall && !backwall && leftwall
                 push!(cands, ("turn so that the wall is on your left", orient_t))
                 push!(cands, ("turn so that the wall is on your left side", orient_t))
+                push!(cands, ("turn so the wall is on your left side", orient_t))
+                push!(cands, ("turn so the wall is on your left side", orient_t))
             elseif !rightwall && backwall && leftwall
                 push!(cands, ("turn so that the wall is on your left and back", orient_t))
+                push!(cands, ("turn so the wall is on your left and back", orient_t))
                 push!(cands, ("turn so that the wall is on your back and left", orient_t))
+                push!(cands, ("turn so the wall is on your back and left", orient_t))
             elseif !rightwall && backwall && !leftwall
+
+                push!(cands, ("turn so that the wall is on your back", orient_t))
+                push!(cands, ("turn so that the wall is on your back side", orient_t))
+                push!(cands, ("turn so the wall is on your back side", orient_t))
                 push!(cands, ("turn so that your back is to the wall", orient_t))
                 push!(cands, ("turn so that your back faces the wall", orient_t))
                 push!(cands, ("turn so that your back side faces the wall", orient_t))
