@@ -336,8 +336,8 @@ function moveins(navimap, maze, curr, next; cons=[])
                     for st in sts
                         for num in numbers[steps]
                             if sufx != ""
-                                push!(cands, (string(m, adv, num, st, "all the way to the end of the ", sufx), visual_m))
-                                push!(cands, (string(m, adv, num, st, "to the end of the ", sufx), visual_m))
+                                push!(cands, (string(m, adv, num, st, " all the way to the end of the ", sufx), visual_m))
+                                push!(cands, (string(m, adv, num, st, " to the end of the ", sufx), visual_m))
                             else
                                 push!(cands, (string(m, adv, num, st, " to the end"), visual_m))
                             end
