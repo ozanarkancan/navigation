@@ -183,3 +183,17 @@ function is_floor_unique(navimap, maze, segment, target)
         return 0,0
     end
 end
+
+function hall_front(navimap, curr)
+    dir = Any[]
+
+    prev = curr
+    next = getlocation(navimap, curr, 1)
+
+    while haskey(navimap.edges, prev) && haskey(navimap.edges[prev], next)
+        push!(dir, next)
+        prev = next
+        next = getlocation(navimap, next, 1)
+    end
+    return dir
+end
