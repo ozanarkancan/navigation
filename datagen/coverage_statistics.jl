@@ -6,15 +6,15 @@ function coverage(taskf, unmatched, freq; limit=1e4)
     matched = Set()
     patience = 0
     ind = 0
-    patlim = string(taskf) == "lang_only" ? 5e5 : 1e4
+    patlim = string(taskf) == "lang_only" ? 5e5 : 5e3
     prevtext = ""
-    limit = string(taskf) == "turn_and_move_to_x" && limit > 5e4 ? 5e4 : limit
+    limit = string(taskf) == "turn_and_move_to_x" && limit > 1e5 ? 1e5 : limit
     @showprogress 1 "$(taskf) ... " for i in 1:Int(limit)
         ins, mp = taskf("temp", 1)
         ind += 1
 
         instext = join(ins.text, " ")
-        info(instext)
+        #info(instext)
         if instext in unmatched
             push!(matched, instext)
             delete!(unmatched, instext)
@@ -34,20 +34,29 @@ function coverage(taskf, unmatched, freq; limit=1e4)
     numu = length(unmatched)
     matchedcount = 0
     for t in matched; matchedcount += freq[t]; end;
+
+    matchedcount_nonsingle = 0
+    for t in matched; matchedcount_nonsingle += (freq[t] != 1 ? freq[t] : 0); end;
+
+    total = 0;
+    for t in keys(freq); total += (freq[t] != 1 ? freq[t] : 0); end;
+
     ratio = matchedcount / sum(values(freq))
+    ratio2 = matchedcount_nonsingle / total
 
     info("Task: $taskf")
     info("Total number of generated instances: $ind")
 
-    info("Num of matched: $numm ($matchedcount)")
+    info("Num of matched: $numm ($matchedcount / $(matchedcount_nonsingle)) ")
     for t in matched; info(t); info("Freq: $(freq[t])"); end;
     info("")
-    info("Num of unmatched: $numu ($(sum(values(freq)) - matchedcount))")
+    info("Num of unmatched: $numu ($(sum(values(freq)) - matchedcount) / $(total - matchedcount_nonsingle))")
     for t in unmatched; info(t); info("Freq: $(freq[t])"); end;
     info("")
     info("Coverage of $(taskf): $(100.0 * ratio)%")
     info("Uniq Coverage of $(taskf): $(100.0 * (numm / (numm+numu)))%")
-    return ratio
+    info("NonSingle Coverage of $(taskf): $(100.0 * ratio2)%")
+    return ratio, ratio2
 end
 
 function main(args=ARGS)
@@ -64,9 +73,10 @@ function main(args=ARGS)
         ("--oname"; default="taskcov.csv")
     end
     o = parse_args(args, s)
-    srand(12345)
     Logging.configure(filename=o["lname"])
     Logging.configure(level=INFO)
+
+    srand(123456789)
 
     grid, jelly, l = getallinstructions(;fname="../data/pickles/databag3.jld")
     alltext = map(ins->join(ins.text, " "), vcat(grid, jelly, l))
@@ -85,13 +95,16 @@ function main(args=ARGS)
     tasklist = map(x->eval(parse(x)), o["tasks"])
 
     total = 0.0
+    total2 = 0.0
     for taskf in tasklist
-        ratio = coverage(taskf, copy(allins), freq)
+        ratio, ratio2 = coverage(taskf, copy(allins), freq)
         push!(df, (taskf, ratio*100))
         total += ratio
+        total2 = ratio2
     end
 
     info("Total coverage: $(total * 100)%")
+    info("Total coverage (non single): $(total2 * 100)%")
     writetable(o["oname"], df)
 end
 
