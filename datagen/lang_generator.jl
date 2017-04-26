@@ -701,7 +701,7 @@ function moveins(navimap, maze, curr, next; cons=[])
                 for flr1 in vcat(floor_names[fp], ColorMapping[fp])
                     for flr2 in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                         for cor1 in [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
-                            for cond in [" to the intersection with the ", " until it crosses the ", " until you end up on the ", "to the "]
+                            for cond in [" to the intersection with the ", " until it crosses the ", " until you end up on the ", " to the "]
                                 for cor2 in [" path", " hall", " hallway", " alley", " corridor", " floor", " flooring"]
                                     push!(cands, (string(v, flr1, cor1, cond, flr2, cor2), condition_m))
                                 end
