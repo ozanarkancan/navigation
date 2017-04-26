@@ -1083,11 +1083,11 @@ function finalins(navimap, maze, curr; cons=[])
     r = rand()
     if r <= 0.4
         num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
-        push!(cands, (string(lasti[1], " and that is the ", rand(["target ", "final "]), "position"),lasti[2]))
-        push!(cands, (string(lasti[1], " and stop"),lasti[2]))
-        push!(cands, (string(lasti[1], " then stop"),lasti[2]))
-        push!(cands, (string(lasti[1], " and that is the position ", num), lasti[2]))
-        push!(cands, (string(lasti[1], " and there should be the position ", num), lasti[2]))
+        push!(cands, (string(lasti[1], " and that is the ", rand(["target ", "final "]), "position"),lasti[2], description))
+        push!(cands, (string(lasti[1], " and stop"),lasti[2], langonly_s))
+        push!(cands, (string(lasti[1], " then stop"),lasti[2], langonly_s))
+        push!(cands, (string(lasti[1], " and that is the position ", num), lasti[2], description))
+        push!(cands, (string(lasti[1], " and there should be the position ", num), lasti[2], description))
 
         insl[end] = (lasts, rand(cands))
         return insl
