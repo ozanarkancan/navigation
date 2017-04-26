@@ -1,6 +1,6 @@
 include("navimap_utils.jl")
 
-@enum Category visual_t visual_m visual_tm langonly_t langonly_m orient_t condition_m description empty
+@enum Category visual_t visual_m visual_tm langonly_t langonly_m langonly_s orient_t condition_m description empty
 
 opposites = Dict(0=>"south", 90=>"west", 180=>"north", 270=>"east")
 rights = Dict(0=>"east", 90=>"south", 180=>"west", 270=>"north")
@@ -43,6 +43,9 @@ function generate_lang(navimap, maze, segments; combine=0.6, cons=[])
         if rand() >= combine || ind+2 >= length(segments)
             g = (segments[ind][1] == "turn" ? turnins : moveins)(navimap, maze, segments[ind], segments[ind+1]; cons=cons)
             ind += 1
+            if rand() <= 0.05
+                g[1] = (g[1][1], (string("then ", g[1][2][1]), g[1][2][2:end]...))
+            end
         else
             g = (segments[ind][1] == "turn" ? turnmoveins : moveturnins)(navimap, maze, segments[ind], segments[ind+1], segments[ind+2]; cons=cons)
             ind += 2
@@ -100,7 +103,9 @@ function startins(navimap, maze, curr, next; cons=[])
             for prefx in ["look for the ", "face the ", "turn your face to the ", "turn until you see the ", "turn to the ", "turn to face the ", "orient yourself to face the "]
                 for cor in ["corridor ", "hall ", "alley ", "hallway "]
                     for sufx in ["", " on the wall", " on both sides of the walls"]
-                        push!(cands, (string(prefx, cor, "with the ", wall_names[wpatrn], sufx), visual_t))
+                        for with in ["with the ", "with the pictures of "]
+                            push!(cands, (string(prefx, cor, with, wall_names[wpatrn], sufx), visual_t))
+                        end
                     end
                 end
             end
@@ -119,13 +124,13 @@ function startins(navimap, maze, curr, next; cons=[])
                 end
             end
 
-            for verb in ["facing the ", "seeing the "]
-                for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
-                    cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
-                    if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
-                        push!(cors, " carpet")
-                    end
-                    for cor in cors
+            for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+                cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
+                if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
+                    push!(cors, " carpet")
+                end
+                for cor in cors
+                    for verb in ["facing the ", "seeing the "]
                         push!(cands, (string("you should be ", verb, flr, cor), visual_t))
                     end
                 end
@@ -189,13 +194,35 @@ function startins(navimap, maze, curr, next; cons=[])
                     if body == "look for the "
                         push!(cands, (string(prefx, body, rand(item_names[item])), visual_t))
                     else
+                        det = item == 3 ? "an" : "a"
                         for cor in ["corridor ", "hall ", "alley ", "hallway ", "path ", "intersection ", "segment ", ""]
-                            sfxs = cor == "" ? [""] : ["with a ", "containing the ", "with the "]
+                            sfxs = cor == "" ? [""] : ["with $det ", "containing the ", "with the "]
                             for suffx in sfxs
                                 push!(cands, (string(prefx, body, cor, suffx, rand(item_names[item])), visual_t))
                             end
                         end
+                        
+                        for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+                            cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
+                            if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
+                                push!(cors, " carpet")
+                            end
+                            for cor in cors
+                                sfxs = cor == "" ? [""] : [" with $det ", " containing the ", " with the "]
+                                for suffx in sfxs
+                                    push!(cands, (string(prefx, body, flr, cor, suffx, rand(item_names[item])), visual_t))
+                                end
+                                push!(cands, (string(prefx, body, rand(item_names[item]), " in the ", flr, cor), visual_t))
+                            end
+                        end
+
                     end
+                end
+            end
+
+            for v in ["turn ", "go ", "turn to the ", "make a ", "take a "]
+                for to in [" to the ", " toward the ", " towards the "]
+                    push!(cands, (string(v, d, to, rand(item_names[item])), visual_t))
                 end
             end
         end
@@ -203,7 +230,7 @@ function startins(navimap, maze, curr, next; cons=[])
         if is_deadend(maze, p1) && (length(cons) == 0 || visual_t in cons)
             push!(cands, ("you should leave the dead end", visual_t))
             for w in ["way ", "direction "]
-                for g in ["go", "move", "travel"]
+                for g in ["go", "move", "travel", "walk"]
                     push!(cands, (string("only one ", w, "to ", g), visual_t))
                 end
             end
@@ -218,13 +245,13 @@ function startins(navimap, maze, curr, next; cons=[])
             if rightwall && !backwall && !leftwall
                 push!(cands, ("turn so that the wall is on your right", orient_t))
                 push!(cands, ("turn so that the wall is on your right side", orient_t))
-                push!(cands, ("turn so the wall is on your right side", orient_t))
+                push!(cands, ("turn so the wall is on your right", orient_t))
                 push!(cands, ("turn so the wall is on your right side", orient_t))
             elseif rightwall && backwall && !leftwall
                 push!(cands, ("turn so that the wall is on your right and back", orient_t))
                 push!(cands, ("turn so that the wall is on your back and right", orient_t))
                 push!(cands, ("turn so the wall is on your back and right", orient_t))
-                push!(cands, ("turn so the wall is on your back and right", orient_t))
+                push!(cands, ("turn so the wall is on your right and right", orient_t))
             elseif !rightwall && !backwall && leftwall
                 push!(cands, ("turn so that the wall is on your left", orient_t))
                 push!(cands, ("turn so that the wall is on your left side", orient_t))
@@ -236,15 +263,17 @@ function startins(navimap, maze, curr, next; cons=[])
                 push!(cands, ("turn so that the wall is on your back and left", orient_t))
                 push!(cands, ("turn so the wall is on your back and left", orient_t))
             elseif !rightwall && backwall && !leftwall
-
                 push!(cands, ("turn so that the wall is on your back", orient_t))
+                push!(cands, ("turn so that the wall is to your back", orient_t))
                 push!(cands, ("turn so the wall is on your back", orient_t))
+                push!(cands, ("turn so the wall is to your back", orient_t))
                 push!(cands, ("turn so that the wall is on your back side", orient_t))
                 push!(cands, ("turn so the wall is on your back side", orient_t))
                 push!(cands, ("turn so that your back is to the wall", orient_t))
                 push!(cands, ("turn so that your back faces the wall", orient_t))
                 push!(cands, ("turn so that your back side faces the wall", orient_t))
                 push!(cands, ("stand with your back to the wall of the 't' intersection", orient_t))
+                push!(cands, ("place your back to the 't' intersection", orient_t))
                 for r in [" to", " against"]
                     for suffix in [" of the 't' intersection", ""]
                         push!(cands, (string("place your back", r, " the wall", suffix), orient_t))
@@ -337,9 +366,15 @@ function moveins(navimap, maze, curr, next; cons=[])
     p2 = (curr_s[end][2], curr_s[end][1], -1)
 
     if is_corner(maze, p2) && (length(cons) == 0 || visual_m in cons)
+        for cor in [" path", " hall", " hallway", " alley", " corridor"]
+            for prep in [" into the corner", " to the corner", " to the next corner"]
+                push!(cands, (string("follow the ", cor, prep), visual_m))
+            end
+        end
+
         for m in ["move ", "go ", "walk "]
             for adv in [" forward", " straight", ""]
-                for prep in [" into the corner", " to the corner"]
+                for prep in [" into the corner", " to the corner", " to the next corner"]
                     for suffix in ["", " you see in front of you"]
                         push!(cands, (string(m, adv, prep, suffix), visual_m))
                         for st in sts
@@ -383,6 +418,7 @@ function moveins(navimap, maze, curr, next; cons=[])
             end
         end
     elseif (is_corner(maze, p2) || is_deadend(maze, p2)) && (length(cons) == 0 || visual_m in cons)
+        wpatrn, fpatrn = navimap.edges[(curr_s[1][1], curr_s[1][2])][(curr_s[2][1], curr_s[2][2])]
         for m in ["move ", "go ", "walk "]
             for adv in ["forward ", "straight ", ""]
                 for sufx in ["hall", "hallway", "path", "corridor", "alley", ""]
@@ -404,6 +440,21 @@ function moveins(navimap, maze, curr, next; cons=[])
                         end
                     end
                 end
+                for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+                    cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
+                    if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
+                        push!(cors, " carpet")
+                    end
+                    for cor in cors
+                        push!(cands, (string(m, adv, "to the end of the ", flr, cor), visual_m))
+                        for st in sts
+                            for num in numbers[steps]
+                                push!(cands, (string(m, adv, num, st, " to the end of the ", flr, cor), visual_m))
+                                push!(cands, (string(m, adv, "to the end of the ", flr, cor, " ", num, st), visual_m))
+                            end
+                        end
+                    end
+                end
             end
         end
     elseif is_deadend(maze, p2) && (length(cons) == 0 || visual_m in cons)
@@ -411,6 +462,8 @@ function moveins(navimap, maze, curr, next; cons=[])
             for adv in ["forward ", "straight ", ""]
                 push!(cands, (string(m, adv, "to the deadend"), visual_m))
                 push!(cands, (string(m, adv, "to the dead end"), visual_m))
+                push!(cands, (string(m, adv, "until you get to a deadend"), visual_m))
+                push!(cands, (string(m, adv, "until you get to a dead end"), visual_m))
                     
                 for st in sts
                     for num in numbers[steps]
@@ -438,12 +491,13 @@ function moveins(navimap, maze, curr, next; cons=[])
     end
 
     if navimap.nodes[curr_s[end][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[curr_s[end][1:2]], curr_s[1][1:2]) == 1 && (length(cons) == 0 || visual_m in cons)
+        det = navimap.nodes[curr_s[end][1:2]] == 3 ? "an" : "a"
         for m in ["go ", "move ", "walk "]
-            for adv in ["forward ", "straight ", ""]
+            for adv in ["forward ", "straight ", "", "on the path "]
                 for num in numbers[steps]
                     for st in sts
                         for tow in [" to", " towards", " toward"]
-                            for suffix in [" the intersection containing the ", " the intersection with a ", " the intersection has a "]
+                            for suffix in [" the intersection containing the ", " the intersection with $det ", " the intersection has $det "]
                                 push!(cands, (string(m, adv, num, st, tow, suffix,
                                     rand(item_names[navimap.nodes[curr_s[end][1:2]]])), visual_m))
                             end
@@ -453,7 +507,7 @@ function moveins(navimap, maze, curr, next; cons=[])
             end
         end
 
-        for v in ["take ", ""]
+        for v in ["take ", "", "follow this path ", "follow this hall ", "follow this hallway "]
             for num in numbers[steps]
                 for st in sts
                     for tow in [" to", " towards", " toward"]
@@ -464,9 +518,10 @@ function moveins(navimap, maze, curr, next; cons=[])
             end
         end
 
-        for m in ["go ", "move ", "walk "]
-            for adv in ["forward ", "straight ", ""]
-                for cond in ["until the ", "toward the ", "towards the ", "until you get to ", "until yo get a ", "until you get to the ", "until you reach the ", "till you get to a ", "to the "]
+        for cond in ["until the ", "toward the ", "towards the ", "until you get to ", "until yo get $det ", "until you get to the ", "until you reach the ", "till you get to $det ", "to the "]
+
+            for m in ["go ", "move ", "walk "]
+                for adv in ["forward ", "straight ", ""]
                     push!(cands, (string(m, adv, cond, rand(item_names[navimap.nodes[curr_s[end][1:2]]])), visual_m))
                 end
             end
@@ -479,7 +534,7 @@ function moveins(navimap, maze, curr, next; cons=[])
         end
 
         wpatrn, fpatrn = navimap.edges[(curr_s[1][1], curr_s[1][2])][(curr_s[2][1], curr_s[2][2])]
-        for v in ["follow the ", "along the ", "take the "]
+        for v in ["follow the ", "along the ", "take the ", "follow this "]
             for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                 cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
                 if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
@@ -509,7 +564,7 @@ function moveins(navimap, maze, curr, next; cons=[])
 
         for num in numbers[steps]
             for st in sts
-                for body in [" past ", " passing ", " passing the ", " passing a "]
+                for body in [" past ", " passing ", " passing the ", " passing $det "]
                     push!(cands, (string(num, st, body,
                         rand(item_names[navimap.nodes[curr_s[end-1][1:2]]])), condition_m))
 
@@ -705,7 +760,9 @@ function turnins(navimap, maze, curr, next; cons=[])
             for cor in ["corridor ", "hall ", "alley ", "hallway", "path"]
                 for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the "]
                     for sufx in ["", " on the wall", " on both sides of the walls"]
-                        push!(cands, (string(prefx, v, cor, "with the ", wall_names[wpatrn], sufx), visual_t))
+                        for with in ["with the ", "with the pictures of "]
+                            push!(cands, (string(prefx, cor, with, wall_names[wpatrn], sufx), visual_t))
+                        end
                     end
                 end
             end
@@ -788,6 +845,43 @@ function turnins(navimap, maze, curr, next; cons=[])
     item = find_single_item_in_visible(navimap, curr_s[1][1:2], next_s[2])
     if item != 7 && (length(cons) == 0 || visual_t in cons)
         for prefx in [""]
+            for body in ["look for the ", "face the ", "face toward the ", "turn your face to the ", "turn until you see the ", "turn to the ", "turn to face the ", "orient yourself to face the "]
+                if body == "look for the "
+                    push!(cands, (string(prefx, body, rand(item_names[item])), visual_t))
+                else
+                    det = item == 3 ? "an" : "a"
+                    for cor in ["corridor ", "hall ", "alley ", "hallway ", "path ", "intersection ", "segment ", ""]
+                        sfxs = cor == "" ? [""] : ["with $det ", "containing the ", "with the "]
+                        for suffx in sfxs
+                            push!(cands, (string(prefx, body, cor, suffx, rand(item_names[item])), visual_t))
+                        end
+                    end
+
+                    for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+                        cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
+                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
+                            push!(cors, " carpet")
+                        end
+                        for cor in cors
+                            sfxs = [" with $det ", " containing the ", " with the "]
+                            for suffx in sfxs
+                                push!(cands, (string(prefx, body, flr, cor, suffx, rand(item_names[item])), visual_t))
+                            end
+                            push!(cands, (string(prefx, body, rand(item_names[item]), " in the ", flr, cor), visual_t))
+                        end
+                    end
+
+                end
+            end
+        end
+        
+        for v in ["turn ", "go ", "turn to the ", "make a ", "take a "]
+            for to in [" to the ", " toward the ", " towards the "]
+                push!(cands, (string(v, d, to, rand(item_names[item])), visual_t))
+            end
+        end
+        
+        for prefx in [""]
             for body in ["look for the ", "face the ", "turn your face to the ", "turn until you see the ", "turn to the ", "turn to face the ", "orient yourself to face the "]
                 push!(cands, (string(prefx, body, rand(item_names[item])), visual_t))
             end
@@ -834,7 +928,7 @@ function moveturnins(navimap, maze, curr, next, next2; cons=[])
     end
 
     if is_corner(maze, p2) && (length(cons) == 0 || (visual_m in cons && langonly_t in cons))
-        for cond in ["at the end ", "at the end of this hall ", "at the end of the hall ", "when the hall ends ", "at the corner "]
+        for cond in ["at the end ", "at the end of this hall ", "at the end of the hall ", "when the hall ends ", "at the corner ", "at the next corner "]
             for suffix in ["turn ", "take a ", "turn to the ", "make a ", "go ", "move "]
                 push!(cands, (string(cond, suffix, d), visual_m, langonly_t))
             end
@@ -990,29 +1084,52 @@ function finalins(navimap, maze, curr; cons=[])
     if r <= 0.4
         num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
         push!(cands, (string(lasti[1], " and that is the ", rand(["target ", "final "]), "position"),lasti[2]))
+        push!(cands, (string(lasti[1], " and stop"),lasti[2]))
+        push!(cands, (string(lasti[1], " then stop"),lasti[2]))
         push!(cands, (string(lasti[1], " and that is the position ", num), lasti[2]))
         push!(cands, (string(lasti[1], " and there should be the position ", num), lasti[2]))
 
         insl[end] = (lasts, rand(cands))
         return insl
-    elseif r <= 0.8 && (length(cons) == 0 || description in cons)
-        num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
-        push!(cands, (string("that is the ", rand(["target ", "final "]), "position"), description))
-        push!(cands, (string("that is the position ", num), description))
-        push!(cands, (string("there should be the position ", num), description))
-        push!(cands, (string("position ", num, " should be there"), description))
-
-        if navimap.nodes[curr_s[end][1:2]] != 7
-            det = navimap.nodes[curr_s[end][1:2]] == 3 ? "an" : "a"
-            for prefx in ["this intersection contains $det ", "there is $det ", "there should be $det "]
-                push!(cands, (string(prefx, rand(item_names[navimap.nodes[curr_s[end][1:2]]])), description))
+    elseif r <= 0.8 && (length(cons) == 0 || description in cons || langonly_s in cons)
+        if langonly_s in cons
+            for v in ["that's it", "and stop", "then stop", "stop", "stop here"]
+                push!(cands, (v, langonly_s))
             end
-            
-            push!(cands, (string("there is $det ", rand(item_names[navimap.nodes[curr_s[end][1:2]]]), " in this intersection"), description))
-        end
-        push!(cands, ("that's it", description))
-        push!(cands, ("and stop", description))
+        else
+            num = rand([rand(numbers[rand(2:10)]), rand(2:10)])
+            push!(cands, (string("that is the ", rand(["target ", "final "]), "position"), description))
+            push!(cands, (string("that is the position ", num), description))
+            push!(cands, (string("there should be the position ", num), description))
+            push!(cands, (string("position ", num, " should be there"), description))
 
+            if navimap.nodes[curr_s[end][1:2]] != 7
+                det = navimap.nodes[curr_s[end][1:2]] == 3 ? "an" : "a"
+                for prefx in ["this intersection contains $det ", "there is $det ", "there should be $det ", "this contains $det "]
+                    push!(cands, (string(prefx, rand(item_names[navimap.nodes[curr_s[end][1:2]]])), description))
+                end
+
+                push!(cands, (string("there is $det ", rand(item_names[navimap.nodes[curr_s[end][1:2]]]), " in this intersection"), description))
+            end
+
+
+            next = getlocation(navimap, curr_s[end], 1)
+            if haskey(navimap.edges[(curr_s[end][1], curr_s[end][2])], (next[1], next[2])) && (length(cons) == 0 || description in cons)
+                wpatrn, fpatrn = navimap.edges[(curr_s[end][1], curr_s[end][2])][(next[1], next[2])]
+                for verb in ["you are now facing the ", "you are now seeing the ", "you should see "]
+                    for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
+                        cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
+                        if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
+                            push!(cors, " carpet")
+                        end
+                        for cor in cors
+                            push!(cands, (string(verb, flr, cor), visual_t))
+                        end
+                    end
+                end
+            end
+        end
+        
         push!(insl, ([curr_s[end]], rand(cands)))
         return insl
     end

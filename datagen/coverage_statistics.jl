@@ -2,11 +2,11 @@ using Logging, DataFrames, ProgressMeter, ArgParse
 
 include("data_generator.jl")
 
-function coverage(taskf, unmatched, freq; limit=1e4)
+function coverage(taskf, unmatched, freq; limit=1e8)
     matched = Set()
     patience = 0
     ind = 0
-    patlim = string(taskf) == "lang_only" ? 5e5 : 5e3
+    patlim = string(taskf) == "lang_only" ? 1e6 : 5e5
     prevtext = ""
     limit = string(taskf) == "turn_and_move_to_x" && limit > 1e5 ? 1e5 : limit
     @showprogress 1 "$(taskf) ... " for i in 1:Int(limit)
@@ -14,7 +14,7 @@ function coverage(taskf, unmatched, freq; limit=1e4)
         ind += 1
 
         instext = join(ins.text, " ")
-        #info(instext)
+        info(instext)
         if instext in unmatched
             push!(matched, instext)
             delete!(unmatched, instext)

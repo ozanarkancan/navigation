@@ -22,6 +22,10 @@ function turn_to_x(name, id)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.0, cons=[visual_t])
+        
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -49,7 +53,9 @@ function move_to_x(name, id)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.0, cons=[visual_m])
-
+        if rand() <= 0.3
+            reverse!(gen)
+        end
         for (s, inst) in gen
             cats = inst[2:end]
             if length(cats) == 1 && cats[1] == visual_m
@@ -77,6 +83,9 @@ function turn_and_move_to_x(name, id)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_tm])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -107,13 +116,16 @@ function lang_only(name, id)
 
         l = rand(1:3)
         l = l > 1 ? 2 : 1
-        gen = generate_lang(navimap, maze, segments; combine=(l == 2 ? 1.0 : 0.0), cons=[langonly_t, langonly_m])
+        gen = generate_lang(navimap, maze, segments; combine=(l == 2 ? 1.0 : 0.0), cons=[langonly_t, langonly_m, langonly_s])
+        if rand() <= 0.1
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
             langvalid = true
             for c in cats
-                if !(c == langonly_t || c == langonly_m)
+                if !(c == langonly_t || c == langonly_m || c == langonly_s)
                     langvalid = false
                 end
             end
@@ -145,6 +157,9 @@ function turn_to_x_and_move(name, id)
         navimap.name = mname
 
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, langonly_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -174,6 +189,9 @@ function turn_move_to_x(name, id)
         navimap.name = mname
 
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_m, langonly_t])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -200,6 +218,9 @@ function move_to_x_and_turn(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_m, langonly_t])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -226,6 +247,9 @@ function move_turn_to_x(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, langonly_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -255,6 +279,9 @@ function turn_to_x_move_to_y(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, visual_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -282,6 +309,9 @@ function move_to_x_turn_to_y(name, id)
         navimap.name = mname
 
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, visual_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -313,6 +343,9 @@ function move_until(name, id)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[condition_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -364,6 +397,7 @@ function describe(name, id)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         gen = generate_lang(navimap, maze, segments; combine=0.0, cons=[description])
+        reverse!(gen)
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -390,6 +424,9 @@ function turn_move_until(name, id)
         navimap.name = mname
 
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[langonly_t, condition_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -417,6 +454,9 @@ function turn_to_x_move_until(name, id)
         navimap.name = mname
 
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, condition_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -444,6 +484,9 @@ function move_until_turn(name, id)
         navimap.name = mname
 
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[langonly_t, condition_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -471,6 +514,9 @@ function move_until_turn_to_x(name, id)
         navimap.name = mname
 
         gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, condition_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
 
         for (s, inst) in gen
             cats = inst[2:end]
@@ -558,47 +604,3 @@ function testgeneratedata(argv=ARGS)
 
     info("PASSED")
 end
-
-function test()
-    h,w = (6, 6)
-    maze = generate_maze(h, w)
-    print_maze(maze)
-    nodes, path = generate_path(maze; distance=3)
-
-    for i=1:length(nodes)-1
-        print(nodes[i])
-        print(" => ")
-    end
-    println(nodes[end])
-
-    segments = segment_path(nodes)
-    println("Segments:")
-    for s in segments
-        println(s)
-    end
-
-    navimap = generate_navi_map(maze, "123")
-
-    generation = generate_lang(navimap, maze, segments)
-
-    for (s,ins) in generation
-        println((s, ins))
-    end
-
-    #=
-    map = generate_navi_map(maze, "123")
-
-
-    for k in keys(map.nodes)
-        println("Node: $k , item: $(map.nodes[k])")
-    end
-
-    for n1 in keys(map.edges)
-        for n2 in keys(map.edges[n1])
-            println("$n1 <-> $n2 : $(map.edges[n1][n2])")
-        end
-    end
-    =#
-end
-
-#testgeneratedata()
