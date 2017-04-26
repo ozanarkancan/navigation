@@ -757,7 +757,7 @@ function turnins(navimap, maze, curr, next; cons=[])
 
     if diff_w && (length(cons) == 0 || visual_t in cons)
         for prefx in [""]
-            for cor in ["corridor ", "hall ", "alley ", "hallway", "path"]
+            for cor in ["corridor ", "hall ", "alley ", "hallway ", "path "]
                 for v in ["look for the ", "face the ", "turn your face to the ", "turn to the ", "turn until you see the "]
                     for sufx in ["", " on the wall", " on both sides of the walls"]
                         for with in ["with the ", "with the pictures of "]
