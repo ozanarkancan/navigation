@@ -530,6 +530,181 @@ function move_until_turn_to_x(name, id)
     return ins, navimap
 end
 
+function move_vis_turn_lang(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_m, condition_m, langonly_t])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && (cats[1] == condition_m || cats[1] == visual_m) && cats[2] == langonly_t
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+move_lang_turn_vis = move_turn_to_x
+
+function turn_vis_move_lang(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, orient_t, langonly_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && (cats[1] == visual_t || cats[1] == orient_t) && cats[2] == langonly_m
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+function turn_lang_move_vis(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[langonly_t, visual_m, condition_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && (cats[1] == langonly_t && (cats[2] == visual_m || cats[2] == condition_m))
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+function move_vis_turn_vis(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_m, condition_m, visual_t])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && (cats[1] == condition_m || cats[1] == visual_m) && cats[2] == visual_t
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+function turn_vis_move_vis(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=0.8, cons=[visual_t, orient_t, visual_m, visual_tm, condition_m])
+        if rand() <= 0.3
+            reverse!(gen)
+        end
+
+        for (s, inst) in gen
+            cats = inst[2:end]
+
+            if length(cats) == 2 && (cats[1] == visual_t || cats[1] == orient_t) && (cats[2] == visual_m || cats[2] == condition_m)
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            elseif length(cats) == 1 && (cats[1] == visual_tm)
+                ins = Instruction(name, split(inst[1]), s, mname, id)
+                break
+            end
+        end
+    end
+    return ins, navimap
+end
+
+function all_classes(name, id)
+    h,w = (8,8)
+    ins = nothing
+    navimap = nothing
+
+    while ins == nothing
+        maze, available = generate_maze(h, w; numdel=1)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        nodes, path = generate_path(maze, available)
+        segments = segment_path(nodes)
+        mname = join(rand(CHARS, 20))
+        navimap.name = mname
+
+        gen = generate_lang(navimap, maze, segments; combine=0.4)
+        s, inst = rand(gen)
+        ins = Instruction(name, split(inst[1]), s, mname, id)
+    end
+    return ins, navimap
+end
+
 """
 Available task functions:
 
