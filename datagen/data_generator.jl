@@ -705,6 +705,9 @@ function all_classes(name, id)
     return ins, navimap
 end
 
+combined_9101112(name, id) = rand([move_vis_turn_lang, turn_vis_move_lang, move_lang_turn_vis, turn_lang_move_vis])(name, id)
+combined_59101112(name, id) = rand([lang_only, move_vis_turn_lang, turn_vis_move_lang, move_lang_turn_vis, turn_lang_move_vis])(name, id)
+
 """
 Available task functions:
 
