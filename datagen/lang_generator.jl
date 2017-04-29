@@ -585,7 +585,7 @@ function moveins(navimap, maze, curr, next; cons=[])
                             @inbounds for cond in [" to the intersection with the ", " to the "]
                                 @inbounds for st in sts
                                     @inbounds for num in numbers[steps]
-                                        push!(cands, (string(m, adv, num, st, cond, flr, cor), condition_m))
+                                        push!(cands, (string(m, adv, num, st, cond, flr, cor), visual_m))
                                     end
                                 end
                             end
