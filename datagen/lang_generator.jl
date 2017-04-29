@@ -320,10 +320,16 @@ function moveins(navimap, maze, curr, next; cons=[])
 
     sts = steps > 1 ? [" steps", " blocks", " segments", " times"] : [" step", " block", " segment", " space"]
     if (length(cons) == 0 || langonly_m in cons)
+        if steps == 1
+            push!(cands, ("keep going", langonly_m))
+        end
         @inbounds for g in ["go ", "move ", "walk "]
             @inbounds for m in ["forward ", "straight ", ""]
                 if steps < 3
                     push!(cands, (string(g, m, times[steps]), langonly_m))
+                    if steps == 1
+                        push!(cands, (string(g, m), langonly_m))
+                    end
                 end
                 @inbounds for st in sts
                     @inbounds for num in numbers[steps]
