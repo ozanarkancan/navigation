@@ -1,4 +1,4 @@
-using ArgParse
+using ArgParse, DataFrames
 
 include("util.jl")
 include("io.jl")
@@ -8,8 +8,8 @@ function parse_commandline()
 
     @add_arg_table s begin
         ("--lr"; help = "learning rate"; default = 0.001; arg_type = Float64)
-        ("--hidden"; help = "hidden size"; default = 50; arg_type = Int)
-        ("--embed"; help = "embedding size"; default = 50; arg_type = Int)
+        ("--hidden"; help = "hidden size"; default = 100; arg_type = Int)
+        ("--embed"; help = "embedding size"; default = 100; arg_type = Int)
         ("--limactions"; arg_type = Int; default = 35)
         ("--epoch"; help = "number of epochs"; default = 2; arg_type = Int)
         ("--trainfiles"; help = "built training jld file"; default = ["grid_jelly.jld", "grid_l.jld", "l_jelly.jld"]; nargs = '+')
@@ -45,6 +45,7 @@ function parse_commandline()
         ("--level"; help = "log level"; default="info")
         ("--beamsize"; help = "world attention"; arg_type = Int; default = 10)
         ("--beam"; help = "activate beam search"; action = :store_true)
+        ("--categorical"; help = "dump categorical"; default="")
     end
     return parse_args(s)
 end		
@@ -207,12 +208,36 @@ function mainflex()
     test_ins = args["test"] != 0 ? testins[args["test"]] : vcat(grid, jelly, l)
     test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
     test_data_grp = map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
-    @time tst_acc = test(models, test_data, maps; args=args)
-    @time tst_prg_acc = test_paragraph(models, test_data_grp, maps; args=args)
-    @time tst_acc_beam = test_beam(models, test_data, maps; args=args)
-    @time tst_prg_acc_beam = test_paragraph_beam(models, test_data_grp, maps; args=args)
+    
+    if args["categorical"] != ""
+        df = DataFrame(fname=Any[], text=Any[], actions=Any[], Accuracy=Float64[])
+        info("Model Prms:")
+        w = models[1]
+        for k in keys(w)
+            info("$k : $(size(w[k])) ")
+            if startswith(k, "filter")
+                for i=1:length(w[k])
+                    info("$k , $i : $(size(w[k][i]))")
+                end
+            end
+        end
 
-    info("Single: $tst_acc , Paragraph: $tst_prg_acc , Beam Single: $tst_acc_beam , Beam Paragraph: $tst_prg_acc_beam")
+        for d in test_data
+            acc = test_beam(models, [d], maps; args=args)
+            push!(df, (d[1].fname, join(d[1].text, " "), getactions(d[1].path), acc))
+        end
+
+        writetable(args["categorical"], df)
+    else
+
+        @time tst_acc = test(models, test_data, maps; args=args)
+        @time tst_prg_acc = test_paragraph(models, test_data_grp, maps; args=args)
+        @time tst_acc_beam = test_beam(models, test_data, maps; args=args)
+        @time tst_prg_acc_beam = test_paragraph_beam(models, test_data_grp, maps; args=args)
+
+        info("Single: $tst_acc , Paragraph: $tst_prg_acc , Beam Single: $tst_acc_beam , Beam Paragraph: $tst_prg_acc_beam")
+    end
+    
 end
 
 mainflex()
