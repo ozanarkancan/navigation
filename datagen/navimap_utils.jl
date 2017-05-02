@@ -190,10 +190,51 @@ function hall_front(navimap, curr)
     prev = curr
     next = getlocation(navimap, curr, 1)
 
-    while haskey(navimap.edges, prev) && haskey(navimap.edges[prev], next)
+    while haskey(navimap.edges, prev[1:2]) && haskey(navimap.edges[prev[1:2]], next[1:2])
         push!(dir, next)
         prev = next
         next = getlocation(navimap, next, 1)
     end
     return dir
+end
+
+#edge patterns in the order of front, right, back, left
+function edge_around(navimap, curr)
+    flrs = [-1, -1, -1, -1]
+    wlls = [-1, -1, -1, -1]
+    next = getlocation(navimap, curr, 1)
+
+    if haskey(navimap.edges[curr[1:2]], next[1:2])
+        wc, fc = navimap.edges[curr[1:2]][next[1:2]]
+        flrs[1] = fc
+        wlls[1] = wc
+    end
+
+    tr = getlocation(navimap, curr, 2)
+    next = getlocation(navimap, tr, 1)
+
+    if haskey(navimap.edges[curr[1:2]], next[1:2])
+        wc, fc = navimap.edges[curr[1:2]][next[1:2]]
+        flrs[2] = fc
+        wlls[2] = wc
+    end
+    
+    tr = getlocation(navimap, tr, 2)
+    next = getlocation(navimap, tr, 1)
+
+    if haskey(navimap.edges[curr[1:2]], next[1:2])
+        wc, fc = navimap.edges[curr[1:2]][next[1:2]]
+        flrs[3] = fc
+        wlls[3] = wc
+    end
+    
+    tr = getlocation(navimap, tr, 2)
+    next = getlocation(navimap, tr, 1)
+
+    if haskey(navimap.edges[curr[1:2]], next[1:2])
+        wc, fc = navimap.edges[curr[1:2]][next[1:2]]
+        flrs[4] = fc
+        wlls[4] = wc
+    end
+    return flrs, wlls
 end
