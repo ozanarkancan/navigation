@@ -1003,12 +1003,16 @@ function turnmoveins(navimap, maze, curr, next, next2; cons=[])
     if navimap.nodes[next_s[end][1:2]] != 7 && item_single_in_visible(navimap, navimap.nodes[next_s[end][1:2]], curr_s[1][1:2]) == 1 &&
         (length(cons) == 0 || visual_tm in cons)
         @inbounds for v in ["move ", "go ", "walk "]
-            @inbounds for to in ["towards the ", "toward the ", "to the "]
-                @inbounds for m in ["forward ", "straight ", ""]
-                    push!(cands, (string(v, to, m, rand(item_names[navimap.nodes[next_s[end][1:2]]])), visual_tm))
+            @inbounds for m in ["forward ", "straight ", ""]
+                @inbounds for to in ["towards the ", "toward the ", "to the "]
+                    push!(cands, (string(v, m, to, rand(item_names[navimap.nodes[next_s[end][1:2]]])), visual_tm))
                     @inbounds for tv in ["turn and ", "face and "]
                         push!(cands, (string(tv, v, m, to, rand(item_names[navimap.nodes[next_s[end][1:2]]])), visual_tm))
                     end
+                end
+
+                @inbounds for tv in ["face the ", "turn to the "]
+                    push!(cands, (string(tv, rand(item_names[navimap.nodes[next_s[end][1:2]]]), " and ", v, m, "to it"), visual_tm))
                 end
             end
         end
