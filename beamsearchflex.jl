@@ -210,7 +210,7 @@ function mainflex()
     test_data_grp = map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
     
     if args["categorical"] != ""
-        df = DataFrame(fname=Any[], text=Any[], actions=Any[], Accuracy=Float64[])
+        df = DataFrame(fname=Any[], text=Any[], actions=Any[], Accuracy=Float64[], id=Any[])
         info("Model Prms:")
         w = models[1]
         for k in keys(w)
@@ -224,7 +224,7 @@ function mainflex()
 
         for d in test_data
             acc = test_beam(models, [d], maps; args=args)
-            push!(df, (d[1].fname, join(d[1].text, " "), getactions(d[1].path), acc))
+            push!(df, (d[1].fname, join(d[1].text, " "), getactions(d[1].path), acc, d[1].id))
         end
 
         writetable(args["categorical"], df)
