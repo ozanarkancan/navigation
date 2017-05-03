@@ -332,7 +332,7 @@ Cleaned-EDA_Jelly0_3_5_Dirs_1.txt,265-5,"Any[2,4]",turn right,Turn
 Cleaned-EDA_Jelly0_3_5_Dirs_1.txt,265-6,"Any[1,4]",walk forward once,Move
 Cleaned-EDA_Jelly0_3_6_Dirs_1.txt,845-1,"Any[2,4]",turn so that the wall is on your left,Orient
 Cleaned-EDA_Jelly0_3_6_Dirs_1.txt,845-2,"Any[1,1,4]",wlak forward twice,Move
-Cleaned-EDA_Jelly0_3_6_Dirs_1.txt,845-3,"Any[1,2,4]",turn right onto the pink hallway,TurnToX
+Cleaned-EDA_Jelly0_3_6_Dirs_1.txt,845-3,"Any[1,2,4]",turn right onto the pink hallway,AnyCombination
 Cleaned-EDA_Jelly0_3_6_Dirs_1.txt,845-4,"Any[1,4]",walk forward once,Move
 Cleaned-EDA_Jelly0_3_6_Dirs_1.txt,845-5,"Any[2,4]",turn right,Turn
 Cleaned-EDA_Jelly0_3_6_Dirs_1.txt,845-6,"Any[1,4]",walk forward once,Move
@@ -505,7 +505,7 @@ Cleaned-EDA_Jelly0_7_3_Dirs_1.txt,1359-3,"Any[2,4]",turn right,Turn
 Cleaned-EDA_Jelly0_7_3_Dirs_1.txt,1359-4,"Any[1,4]",walk forward once,Move
 Cleaned-EDA_Jelly0_7_4_Dirs_1.txt,1357-1,"Any[2,4]",turn so that the wall is on your right,Orient
 Cleaned-EDA_Jelly0_7_4_Dirs_1.txt,1357-2,"Any[1,4]",walk forward once,Move
-Cleaned-EDA_Jelly0_7_4_Dirs_1.txt,1357-3,"Any[1,3,4]",turn left to face the yellow hallway,TurnToX
+Cleaned-EDA_Jelly0_7_4_Dirs_1.txt,1357-3,"Any[1,3,4]",turn left to face the yellow hallway,AnyCombination
 Cleaned-EDA_Jelly0_7_4_Dirs_1.txt,1357-4,"Any[1,1,1,4]",walk forward to the far end,MoveToX
 Cleaned-EDA_Jelly0_7_5_Dirs_1.txt,121-1,"Any[2,4]",turn so that your back is to the wall,Orient
 Cleaned-EDA_Jelly0_7_5_Dirs_1.txt,121-2,"Any[1,4]",walk forward once,Move
@@ -724,7 +724,7 @@ Cleaned-EDA_L0_6_7_Dirs_1.txt,569-4,"Any[2,4]",turn right,Turn
 Cleaned-EDA_L0_6_7_Dirs_1.txt,569-5,"Any[1,1,4]",walk forward twice,Move
 Cleaned-EDA_L0_7_1_Dirs_1.txt,589-1,"Any[2,4]",turn so that the wall is on your left side,Orient
 Cleaned-EDA_L0_7_1_Dirs_1.txt,589-2,"Any[1,1,4]",walk forward twice,Move
-Cleaned-EDA_L0_7_1_Dirs_1.txt,589-3,"Any[3,1,1,1,1,4]",turn left and walk down the red hallway four times,CombinationLang
+Cleaned-EDA_L0_7_1_Dirs_1.txt,589-3,"Any[3,1,1,1,1,4]",turn left and walk down the red hallway four times,AnyCombination
 Cleaned-EDA_L0_7_1_Dirs_1.txt,589-4,"Any[3,1,4]",turn left and walk forward once,CombinationLang
 Cleaned-EDA_L0_7_2_Dirs_1.txt,457-1,"Any[2,4]",turn to face the honeycomb yellow hallway,TurnToX
 Cleaned-EDA_L0_7_2_Dirs_1.txt,457-2,"Any[1,1,4]",walk forward once,Move
@@ -806,7 +806,7 @@ Cleaned-EMWC_Grid0_2_7_Dirs_1.txt,117-5,"Any[1,1,1,4]",follow the hall until you
 Cleaned-EMWC_Grid0_2_7_Dirs_1.txt,117-6,Any[4],the intersection you are standing in should also be empty,Describe
 Cleaned-EMWC_Grid0_3_1_Dirs_1.txt,1051-1,"Any[2,4]",follow the blue-tiled hallway away form the bench and hatrack toward the pictures of not-butterflies,AnyCombination
 Cleaned-EMWC_Grid0_3_1_Dirs_1.txt,1051-2,Any[4],i believe they are those lovely yellow fish,Describe
-Cleaned-EMWC_Grid0_3_1_Dirs_1.txt,1051-3,"Any[1,1,1,2,4]",turn right into the hall with pink-flowered carpet,TurnToX
+Cleaned-EMWC_Grid0_3_1_Dirs_1.txt,1051-3,"Any[1,1,1,2,4]",turn right into the hall with pink-flowered carpet,AnyCombination
 Cleaned-EMWC_Grid0_3_1_Dirs_1.txt,1051-4,"Any[1,4]",position 1 is the intersection containing the easel,MoveToX
 Cleaned-EMWC_Grid0_3_2_Dirs_1.txt,580-1,"Any[2,1,1,1,4]",go down the blue-tiled floor until you reach a hall with pink-flowered carpet,Conditional
 Cleaned-EMWC_Grid0_3_2_Dirs_1.txt,580-2,"Any[2,4]",turn right into this hall,TurnToX
@@ -1884,7 +1884,7 @@ Cleaned-KLS_Jelly0_6_5_Dirs_1.txt,58-3,"Any[1,2,4]",at the very next intersectio
 Cleaned-KLS_Jelly0_6_5_Dirs_1.txt,58-4,"Any[1,3,4]",at the end of this hall at the corner go left towards the easel,AnyCombination
 Cleaned-KLS_Jelly0_6_5_Dirs_1.txt,58-5,"Any[1,2,1,4]",take a right at the easel onto the wood path and the first section you come to will be 5,AnyCombination
 Cleaned-KLS_Jelly0_6_7_Dirs_1.txt,1147-1,"Any[2,4]",go towards the pink path intersection,MoveToX
-Cleaned-KLS_Jelly0_6_7_Dirs_1.txt,1147-2,"Any[1,3,4]",once here take a left onto the pink path,TurnToX
+Cleaned-KLS_Jelly0_6_7_Dirs_1.txt,1147-2,"Any[1,3,4]",once here take a left onto the pink path,AnyCombination
 Cleaned-KLS_Jelly0_6_7_Dirs_1.txt,1147-3,"Any[1,3,4]",at the next intersection take a left onto the blue path,AnyCombination
 Cleaned-KLS_Jelly0_6_7_Dirs_1.txt,1147-4,Any[4],take the blue path towards teh chair,Describe
 Cleaned-KLS_Jelly0_6_7_Dirs_1.txt,1147-5,"Any[1,1,2,4]",at the chair take a right,AnyCombination
@@ -1925,7 +1925,7 @@ Cleaned-KLS_L0_1_4_Dirs_1.txt,1276-3,"Any[1,1,1,1,4]",follow it until the inters
 Cleaned-KLS_L0_1_4_Dirs_1.txt,1276-4,"Any[3,4]",take a left onto it,TurnToX
 Cleaned-KLS_L0_1_4_Dirs_1.txt,1276-5,"Any[1,4]",go all the way until you can either go right or left on a blue path,Conditional
 Cleaned-KLS_L0_1_5_Dirs_1.txt,599-1,"Any[2,4]",go towards the intersection of red brick,MoveToX
-Cleaned-KLS_L0_1_5_Dirs_1.txt,599-2,"Any[1,2,4]",take a right onto red brick,TurnToX
+Cleaned-KLS_L0_1_5_Dirs_1.txt,599-2,"Any[1,2,4]",take a right onto red brick,AnyCombination
 Cleaned-KLS_L0_1_5_Dirs_1.txt,599-3,"Any[1,4]",the very next section is 5,MoveToX
 Cleaned-KLS_L0_1_6_Dirs_1.txt,166-1,"Any[2,4]",go towards the red brick intersection,TurnToX
 Cleaned-KLS_L0_1_6_Dirs_1.txt,166-2,"Any[1,2,4]",take a right onto the red brick,TurnToX
@@ -2467,7 +2467,7 @@ Cleaned-TJS_L0_1_6_Dirs_1.txt,705-3,"Any[1,1,1,1,1,1,2,1,4]",then go down the ha
 Cleaned-TJS_L0_1_7_Dirs_1.txt,631-1,"Any[2,1,2,1,1,1,1,2,1,1,4]",at the intersection of the rose floors and the yellow floors,AnyCombination
 Cleaned-TJS_L0_2_1_Dirs_1.txt,1529-1,"Any[2,1,1,4]",go all the way down to the grey hall,TurnMoveToX
 Cleaned-TJS_L0_2_1_Dirs_1.txt,1529-2,"Any[3,4]",then turn onto the red hall,TurnToX
-Cleaned-TJS_L0_2_1_Dirs_1.txt,1529-3,"Any[1,1,1,1,1,1,3,4]",then turn onto the wood hall,TurnToX
+Cleaned-TJS_L0_2_1_Dirs_1.txt,1529-3,"Any[1,1,1,1,1,1,3,4]",then turn onto the wood hall,AnyCombination
 Cleaned-TJS_L0_2_1_Dirs_1.txt,1529-4,"Any[1,4]",there is a bench there,MoveToX
 Cleaned-TJS_L0_2_3_Dirs_1.txt,804-1,"Any[2,1,4]",go straight and all the way down the hall,AnyCombination
 Cleaned-TJS_L0_2_3_Dirs_1.txt,804-2,"Any[2,1,1,2,1,4]",turn a few times and then dead end,AnyCombination
@@ -2576,7 +2576,7 @@ Cleaned-WLH_Grid0_1_5_Dirs_1.txt,1383-4,Any[4],you should see a chair and a hatr
 Cleaned-WLH_Grid0_1_5_Dirs_1.txt,1383-5,"Any[1,1,1,1,1,4]",move to the hatrack,MoveToX
 Cleaned-WLH_Grid0_1_5_Dirs_1.txt,1383-6,"Any[3,4]",turn left,Turn
 Cleaned-WLH_Grid0_1_5_Dirs_1.txt,1383-7,"Any[1,4]",go to the corner,MoveToX
-Cleaned-WLH_Grid0_1_6_Dirs_1.txt,1570-1,"Any[2,1,4]",face the long red-bricked alley and move along it to the wooden flooring,TurnToX
+Cleaned-WLH_Grid0_1_6_Dirs_1.txt,1570-1,"Any[2,1,4]",face the long red-bricked alley and move along it to the wooden flooring,AnyCombination
 Cleaned-WLH_Grid0_1_6_Dirs_1.txt,1570-2,"Any[3,4]",turn right,Turn
 Cleaned-WLH_Grid0_1_6_Dirs_1.txt,1570-3,"Any[1,4]",move one block,Move
 Cleaned-WLH_Grid0_1_7_Dirs_1.txt,796-1,"Any[2,4]",at one face the lamp,TurnToX
@@ -2692,7 +2692,7 @@ Cleaned-WLH_Grid0_5_6_Dirs_1.txt,1155-4,"Any[2,4]",turn right,Turn
 Cleaned-WLH_Grid0_5_6_Dirs_1.txt,1155-5,"Any[1,1,4]",move forward one block,Move
 Cleaned-WLH_Grid0_5_7_Dirs_1.txt,123-1,"Any[2,1,4]",face the hat rack and move to it,TurnMoveToX
 Cleaned-WLH_Grid0_5_7_Dirs_1.txt,123-2,"Any[2,4]",turn right,Turn
-Cleaned-WLH_Grid0_5_7_Dirs_1.txt,123-3,"Any[1,1,2,4]",move one alley past the chair and turn right,Turn
+Cleaned-WLH_Grid0_5_7_Dirs_1.txt,123-3,"Any[1,1,2,4]",move one alley past the chair and turn right,AnyCombination
 Cleaned-WLH_Grid0_5_7_Dirs_1.txt,123-4,"Any[1,4]",move one alley,Move
 Cleaned-WLH_Grid0_5_7_Dirs_1.txt,123-5,Any[4],to the left and right you should see flowered carpet,Describe
 Cleaned-WLH_Grid0_6_1_Dirs_1.txt,516-1,"Any[2,4]",at six place your back to the wall,Orient
@@ -2789,7 +2789,7 @@ Cleaned-WLH_Jelly0_1_7_Dirs_1.txt,282-2,"Any[3,4]",turn left,Turn
 Cleaned-WLH_Jelly0_1_7_Dirs_1.txt,282-3,Any[4],the side alley has stone flooring,Describe
 Cleaned-WLH_Jelly0_1_7_Dirs_1.txt,282-4,"Any[1,2,1,4]",turn down this alley and move to the stool,AnyCombination
 Cleaned-WLH_Jelly0_2_1_Dirs_1.txt,1286-1,"Any[2,4]",from two face towards the hat rack,TurnToX
-Cleaned-WLH_Jelly0_2_1_Dirs_1.txt,1286-2,"Any[1,3,4]",turn onto the green carpet,TurnToX
+Cleaned-WLH_Jelly0_2_1_Dirs_1.txt,1286-2,"Any[1,3,4]",turn onto the green carpet,AnyCombination
 Cleaned-WLH_Jelly0_2_1_Dirs_1.txt,1286-3,"Any[1,1,1,1,3,4]",walk until there is an exit on the left,Conditional
 Cleaned-WLH_Jelly0_2_1_Dirs_1.txt,1286-4,Any[4],you should be standing next to a stool,Describe
 Cleaned-WLH_Jelly0_2_1_Dirs_1.txt,1286-5,"Any[1,4]",walk forward,Move
@@ -2974,7 +2974,7 @@ Cleaned-WLH_Jelly0_6_1_Dirs_1.txt,684-5,"Any[2,1,4]",move one alley along the br
 Cleaned-WLH_Jelly0_6_1_Dirs_1.txt,684-6,Any[4],to your left is grey flooring,Describe
 Cleaned-WLH_Jelly0_6_2_Dirs_1.txt,959-1,"Any[2,1,4]",move forward,Move
 Cleaned-WLH_Jelly0_6_2_Dirs_1.txt,959-2,"Any[3,4]",turn left,Turn
-Cleaned-WLH_Jelly0_6_2_Dirs_1.txt,959-3,"Any[1,2,4]",turn right onto the blue carpet,TurnToX
+Cleaned-WLH_Jelly0_6_2_Dirs_1.txt,959-3,"Any[1,2,4]",turn right onto the blue carpet,AnyCombination
 Cleaned-WLH_Jelly0_6_2_Dirs_1.txt,959-4,"Any[1,3,4]",take the left alley,AnyCombination
 Cleaned-WLH_Jelly0_6_2_Dirs_1.txt,959-5,"Any[1,2,1,1,3,4]",follow it around until you can see a lamp,Conditional
 Cleaned-WLH_Jelly0_6_2_Dirs_1.txt,959-6,"Any[1,2,1,4]",if you continue on you will see a hat rack,Conditional
@@ -3048,7 +3048,7 @@ Cleaned-WLH_Jelly0_7_5_Dirs_2.txt,714-2,"Any[1,3,1,2,4]",turn left at this sofa 
 Cleaned-WLH_Jelly0_7_5_Dirs_2.txt,714-3,"Any[1,1,2,4]",move along the brick flooring and turn right at the end of it,AnyCombination
 Cleaned-WLH_Jelly0_7_5_Dirs_2.txt,714-4,"Any[1,3,4]",move to the easel and turn left,AnyCombination
 Cleaned-WLH_Jelly0_7_5_Dirs_2.txt,714-5,Any[4],you should be facing the longer wooden alley,Describe
-Cleaned-WLH_Jelly0_7_5_Dirs_2.txt,714-6,"Any[1,4]",move one block to the middle of the pictures,Move
+Cleaned-WLH_Jelly0_7_5_Dirs_2.txt,714-6,"Any[1,4]",move one block to the middle of the pictures,MoveToX
 Cleaned-WLH_Jelly0_7_6_Dirs_1.txt,863-1,"Any[2,1,3,4]",with your back to the wall move forward to the chair and turn left,AnyCombination
 Cleaned-WLH_Jelly0_7_6_Dirs_1.txt,863-2,"Any[1,1,2,4]",move to the right side alley with flowered carpet,Conditional
 Cleaned-WLH_Jelly0_7_6_Dirs_1.txt,863-3,"Any[1,4]",move down this and stop at the first alley,Conditional

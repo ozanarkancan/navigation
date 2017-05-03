@@ -16,7 +16,7 @@ function turn_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         nodes, path = generate_path(maze, available)
@@ -45,7 +45,7 @@ function move_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -77,7 +77,7 @@ function turn_and_move_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.3)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         nodes, path = generate_path(maze, available)
@@ -106,7 +106,7 @@ function lang_only(name, id)
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
 
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.3], iprob=0.5)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.3], iprob=0.8)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -117,8 +117,8 @@ function lang_only(name, id)
         l = rand(1:3)
         l = l > 1 ? 2 : 1
         gen = generate_lang(navimap, maze, segments; combine=(l == 2 ? 1.0 : 0.0), cons=[langonly_t, langonly_m, langonly_s])
-        if rand() <= 0.1
-            reverse!(gen)
+        if rand() <= 0.4
+            shuffle!(gen)
         end
 
         for (s, inst) in gen
@@ -148,7 +148,7 @@ function turn_to_x_and_move(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
 
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
@@ -180,7 +180,7 @@ function turn_move_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
 
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
@@ -212,7 +212,7 @@ function move_to_x_and_turn(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -241,7 +241,7 @@ function move_turn_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -273,7 +273,7 @@ function turn_to_x_move_to_y(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -302,7 +302,7 @@ function move_to_x_turn_to_y(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -337,7 +337,7 @@ function move_until(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -366,7 +366,7 @@ function orient(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         nodes, path = generate_path(maze, available)
@@ -391,7 +391,7 @@ function describe(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
         nodes, path = generate_path(maze, available)
@@ -417,7 +417,7 @@ function turn_move_until(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -447,7 +447,7 @@ function turn_to_x_move_until(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -477,7 +477,7 @@ function move_until_turn(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -507,7 +507,7 @@ function move_until_turn_to_x(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -537,7 +537,7 @@ function move_vis_turn_lang(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -569,7 +569,7 @@ function turn_vis_move_lang(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -599,7 +599,7 @@ function turn_lang_move_vis(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -629,7 +629,7 @@ function move_vis_turn_vis(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
@@ -659,13 +659,13 @@ function turn_vis_move_vis(name, id)
 
     while ins == nothing
         maze, available = generate_maze(h, w; numdel=1)
-        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.4)
+        navimap = generate_navi_map(maze, ""; itemcountprobs=[0.0 0.0 0.05 0.05 0.1 0.1 0.1 0.1 0.1 0.2 0.2], iprob=0.6)
         nodes, path = generate_path(maze, available)
         segments = segment_path(nodes)
         mname = join(rand(CHARS, 20))
         navimap.name = mname
 
-        gen = generate_lang(navimap, maze, segments; combine=0.8, cons=[visual_t, orient_t, visual_m, visual_tm, condition_m])
+        gen = generate_lang(navimap, maze, segments; combine=1.0, cons=[visual_t, orient_t, visual_m, condition_m])
         if rand() <= 0.3
             reverse!(gen)
         end
@@ -674,9 +674,6 @@ function turn_vis_move_vis(name, id)
             cats = inst[2:end]
 
             if length(cats) == 2 && (cats[1] == visual_t || cats[1] == orient_t) && (cats[2] == visual_m || cats[2] == condition_m)
-                ins = Instruction(name, split(inst[1]), s, mname, id)
-                break
-            elseif length(cats) == 1 && (cats[1] == visual_tm)
                 ins = Instruction(name, split(inst[1]), s, mname, id)
                 break
             end
@@ -707,6 +704,8 @@ end
 
 combined_9101112(name, id) = rand([move_vis_turn_lang, turn_vis_move_lang, move_lang_turn_vis, turn_lang_move_vis])(name, id)
 combined_59101112(name, id) = rand([lang_only, move_vis_turn_lang, turn_vis_move_lang, move_lang_turn_vis, turn_lang_move_vis])(name, id)
+
+any_combination(name, id) = rand([move_vis_turn_lang, turn_vis_move_lang, move_lang_turn_vis, turn_lang_move_vis, move_vis_turn_vis, turn_vis_move_vis])(name, id)
 
 """
 Available task functions:

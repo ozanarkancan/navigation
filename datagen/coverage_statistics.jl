@@ -2,13 +2,14 @@ using Logging, DataFrames, ProgressMeter, ArgParse
 
 include("data_generator.jl")
 
-function coverage(taskf, unmatched, freq; limit=1e8)
+function coverage(taskf, unmatched, freq, cond; limit=1e6)
     matched = Set()
     patience = 0
     ind = 0
-    patlim = string(taskf) == "lang_only" ? 1e6 : 5e5
+    patlim = string(taskf) == "lang_only" ? 5e4 : 3e4
     prevtext = ""
     limit = string(taskf) == "turn_and_move_to_x" && limit > 1e5 ? 1e5 : limit
+
     @showprogress 1 "$(taskf) ... " for i in 1:Int(limit)
         ins, mp = taskf("temp", 1)
         ind += 1
@@ -30,45 +31,54 @@ function coverage(taskf, unmatched, freq; limit=1e8)
             break
         end
     end
-    numm = length(matched)
-    numu = length(unmatched)
+
     matchedcount = 0
-    for t in matched; matchedcount += freq[t]; end;
+    matchedcount_nonuniq = 0
 
-    matchedcount_nonsingle = 0
-    for t in matched; matchedcount_nonsingle += (freq[t] != 1 ? freq[t] : 0); end;
+    total = 0
+    total_nonuniq = 0
 
-    total = 0;
-    for t in keys(freq); total += (freq[t] != 1 ? freq[t] : 0); end;
+    for t in keys(freq)
+        for cat in keys(freq[t])
+            if cat in cond
+                if freq[t][cat] > 1
+                    total_nonuniq += freq[t][cat]
+                    if t in matched
+                        matchedcount_nonuniq += freq[t][cat]
+                    end
+                end
+                total += freq[t][cat]
+                if t in matched
+                    matchedcount += freq[t][cat]
+                    info(string(taskf, " Matched: ", cat, " ", freq[t][cat], " ", t))
+                else
+                    info(string(taskf, " Not Matched: ", cat, " ", freq[t][cat], " ", t))
+                end
+            else
+                info(string(taskf, " Not Matched: ", cat, " ", freq[t][cat], " ", t))
+            end
+        end
+    end
 
-    ratio = matchedcount / sum(values(freq))
-    ratio2 = matchedcount_nonsingle / total
+    ratio = matchedcount / total
+    ratio2 = matchedcount_nonuniq / total_nonuniq
 
     info("Task: $taskf")
     info("Total number of generated instances: $ind")
 
-    info("Num of matched: $numm ($matchedcount / $(matchedcount_nonsingle)) ")
-    for t in matched; info(t); info("Freq: $(freq[t])"); end;
-    info("")
-    info("Num of unmatched: $numu ($(sum(values(freq)) - matchedcount) / $(total - matchedcount_nonsingle))")
-    for t in unmatched; info(t); info("Freq: $(freq[t])"); end;
-    info("")
+    info("Num of matched: $matchedcount / $(matchedcount_nonuniq)")
     info("Coverage of $(taskf): $(100.0 * ratio)%")
-    info("Uniq Coverage of $(taskf): $(100.0 * (numm / (numm+numu)))%")
-    info("NonSingle Coverage of $(taskf): $(100.0 * ratio2)%")
+    info("NonUniq Coverage of $(taskf): $(100.0 * ratio2)%")
     return ratio, ratio2
 end
 
 function main(args=ARGS)
-    tasklist = [turn_to_x, move_to_x, lang_only,
-        turn_to_x_and_move, move_to_x_and_turn, turn_to_x_move_to_y,
-        move_to_x_turn_to_y, move_until, orient, describe, turn_move_to_x,
-        move_turn_to_x, turn_and_move_to_x, turn_move_until,
-        turn_to_x_move_until, move_until_turn, move_until_turn_to_x]
+    tasklist = [(lang_only, ["Turn", "Move", "CombinationLang"]), (turn_to_x, ["TurnToX"]),
+        (move_to_x,["MoveToX"]), (orient, ["Orient"]), (describe, ["Describe"]),
+        (move_until, ["Conditional"]),(turn_and_move_to_x, ["TurnMoveToX"]), (any_combination, ["AnyCombination"])]
 
     s = ArgParseSettings()
     @add_arg_table s begin
-        ("--tasks"; nargs='*'; default=map(string, tasklist))
         ("--lname"; default="coverage.log")
         ("--oname"; default="taskcov.csv")
     end
@@ -78,33 +88,31 @@ function main(args=ARGS)
 
     srand(123456789)
 
-    grid, jelly, l = getallinstructions(;fname="../data/pickles/databag3.jld")
-    alltext = map(ins->join(ins.text, " "), vcat(grid, jelly, l))
-    allins = Set(alltext)
-    freq = Dict{String, Int}()
-    for t in alltext
-        if t in keys(freq)
-            freq[t] = freq[t] + 1
+    data = readtable("datacategory.csv")
+
+    allins = Set(data[4])
+    freq = Dict{String, Dict{String, Int}}()
+    for i=1:size(data, 1)
+        t = data[i, 4]
+        cat = data[i, 5]
+        if haskey(freq, t)
+            if haskey(freq[t], cat)
+                freq[t][cat] += 1
+            else
+                freq[t][cat] = 1
+            end
         else
-            freq[t] = 1
+            freq[t] = Dict{String, Int}(cat=>1)
         end
     end
 
-    df = DataFrame(TaskName=Any[], Coverage=Any[])
+    df = DataFrame(TaskName=Any[], Coverage=Any[], NonUniqCoverage=Any[])
 
-    tasklist = map(x->eval(parse(x)), o["tasks"])
-
-    total = 0.0
-    total2 = 0.0
-    for taskf in tasklist
-        ratio, ratio2 = coverage(taskf, copy(allins), freq)
-        push!(df, (taskf, ratio*100))
-        total += ratio
-        total2 = ratio2
+    for (taskf, cond) in tasklist
+        ratio, ratio2 = coverage(taskf, copy(allins), freq, cond)
+        push!(df, (taskf, ratio*100, ratio2*100))
     end
 
-    info("Total coverage: $(total * 100)%")
-    info("Total coverage (non single): $(total2 * 100)%")
     writetable(o["oname"], df)
 end
 
