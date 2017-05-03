@@ -501,7 +501,7 @@ function clip_grad(g; args=args)
         end
         gnorm = sqrt(gnorm)
 
-        debug("Gnorm: $gnorm")
+        #debug("Gnorm: $gnorm")
 
         if gnorm > gclip
             for k in keys(g)
