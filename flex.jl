@@ -1063,7 +1063,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
             end
 
             if length(cands) == 0
-                cands = Any[(1.0, cstate5, cstate6, current, 0, false, true, Any[-1])]
+                cands = Any[(1.0, cstate5, cstate6, current, 0, false, true, Any[4])]
             else
                 cands = map(x->(x[1], cstate5, cstate6, x[4], 0, false, x[7], x[end]), cands)
             end
