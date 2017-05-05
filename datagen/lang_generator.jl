@@ -358,7 +358,7 @@ function moveins(navimap, maze, curr, next; cons=[])
         end
 
         @inbounds for m in ["move ", "go ", "walk "]
-            @inbounds for adv in ["forwards ", "straight ", ""]
+            @inbounds for adv in ["forward ", "straight ", ""]
                 push!(cands, (string(m, adv, "as far as you can"), visual_m))
                 @inbounds for unt in ["until ", "until you get to ", " until you reach ", " to "]
                     push!(cands, (string(m, adv, unt, "the wall"), visual_m))
@@ -640,7 +640,7 @@ function moveins(navimap, maze, curr, next; cons=[])
                         end
                         @inbounds for cor in cors
                             det = flr == "octagan" ? "an" : "a"
-                            @inbounds for cond in [" to the intersection with the ", " to the ", "toward the ", "towards the intersection of ", " to the intersection with $det "]
+                            @inbounds for cond in [" to the intersection with the ", " to the ", " toward the ", " towards the intersection of ", " to the intersection with $det "]
                                 push!(cands, (string(m, adv, cond, flr, cor), visual_m))
                                 @inbounds for st in sts
                                     @inbounds for num in numbers[steps]
@@ -1147,7 +1147,7 @@ function turnmoveins(navimap, maze, curr, next, next2; cons=[])
     diff_w, diff_f = around_different_walls_floor(navimap, (curr_s[1][1], curr_s[1][2]))
     wpatrn, fpatrn = navimap.edges[(next_s[1][1], next_s[1][2])][(next_s[2][1], next_s[2][2])]
 
-    if diff_f && (length(cons) == 0 || visual_tm in cons)
+    if diff_f && (is_corner(maze, p2) || is_deadend(maze, p2)) && (length(cons) == 0 || visual_tm in cons)
         @inbounds for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
             cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
             if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
