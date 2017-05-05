@@ -360,7 +360,7 @@ function moveins(navimap, maze, curr, next; cons=[])
         @inbounds for m in ["move ", "go ", "walk "]
             @inbounds for adv in ["forwards ", "straight ", ""]
                 push!(cands, (string(m, adv, "as far as you can"), visual_m))
-                @inbounds for unt in ["until ", "until you get to ", " until you reach "]
+                @inbounds for unt in ["until ", "until you get to ", " until you reach ", " to "]
                     push!(cands, (string(m, adv, unt, "the wall"), visual_m))
                 end
             end
@@ -402,6 +402,21 @@ function moveins(navimap, maze, curr, next; cons=[])
         @inbounds for m in ["move ", "go ", "walk "]
             @inbounds for adv in ["forward", "straight", ""]
                 push!(cands, (string(m, adv, " into the dead end"), visual_m))
+                push!(cands, (string(m, adv, " into the deadend"), visual_m))
+                
+                push!(cands, (string(m, adv, " to the dead end"), visual_m))
+                push!(cands, (string(m, adv, " to the deadend"), visual_m))
+
+                push!(cands, (string(m, adv, "until you get to a deadend"), visual_m))
+                push!(cands, (string(m, adv, "until you get to a dead end"), visual_m))
+
+                @inbounds for st in sts
+                    @inbounds for num in numbers[steps]
+                        push!(cands, (string(m, adv, st, num, st, " into the dead end"), visual_m))
+                        push!(cands, (string(m, adv, st, num, st, " into the deadend"), visual_m))
+                    end
+                end
+
             end
         end
     end
@@ -436,8 +451,11 @@ function moveins(navimap, maze, curr, next; cons=[])
                         push!(cands, (string(m, adv, "all the way to the end of the ", sufx), visual_m))
                         push!(cands, (string(m, adv, "to the end of the ", sufx), visual_m))
                         push!(cands, (string(m, adv, "until the end of the ", sufx), visual_m))
+                        push!(cands, (string(m, adv, "until the ", sufx, " ends"), visual_m))
                     else
                         push!(cands, (string(m, adv, "to the end"), visual_m))
+                        push!(cands, (string(m, adv, "to end"), visual_m))
+
                     end
                     
                     @inbounds for st in sts
@@ -468,22 +486,6 @@ function moveins(navimap, maze, curr, next; cons=[])
                 end
             end
         end
-    elseif is_deadend(maze, p2) && (length(cons) == 0 || visual_m in cons)
-        @inbounds for m in ["move ", "go ", "walk "]
-            @inbounds for adv in ["forward ", "straight ", ""]
-                push!(cands, (string(m, adv, "to the deadend"), visual_m))
-                push!(cands, (string(m, adv, "to the dead end"), visual_m))
-                push!(cands, (string(m, adv, "until you get to a deadend"), visual_m))
-                push!(cands, (string(m, adv, "until you get to a dead end"), visual_m))
-                    
-                @inbounds for st in sts
-                    @inbounds for num in numbers[steps]
-                        push!(cands, (string(m, adv, num, st, " to the deadend"), visual_m))
-                        push!(cands, (string(m, adv, num, st, " to the dead end"), visual_m))
-                    end
-                end
-            end
-        end
     end
 
     if is_intersection(maze, p2) && (length(cons) == 0 || condition_m in cons)
@@ -506,7 +508,7 @@ function moveins(navimap, maze, curr, next; cons=[])
             det = navimap.nodes[curr_s[end][1:2]] == 3 ? "an" : "a"
             @inbounds for m in ["go ", "move ", "walk "]
                 @inbounds for adv in ["forward ", "straight ", "", "on the path "]
-                    @inbounds for cond in ["until the ", "toward the ", "towards the ", "until you get to ", "until yo get $det ", "until you get to the ", "until you reach the ", "till you get to $det ", "to the "]
+                    @inbounds for cond in ["till the ", "until the ", "toward the ", "towards the ", "until you get to ", "until you get $det ", "until you get to the ", "until you reach the ", "till you get to $det ", "to the "]
                         push!(cands, (string(m, adv, cond, rand(item_names[navimap.nodes[curr_s[end][1:2]]])), visual_m))
                     end
                     @inbounds for num in numbers[steps]
@@ -540,7 +542,7 @@ function moveins(navimap, maze, curr, next; cons=[])
             end
 
             wpatrn, fpatrn = navimap.edges[(curr_s[1][1], curr_s[1][2])][(curr_s[2][1], curr_s[2][2])]
-            @inbounds for v in ["follow the ", "along the ", "take the ", "follow this "]
+            @inbounds for v in ["follow the ", "along the ", "take the ", "follow this ", "move along the "]
                 @inbounds for flr in vcat(floor_names[fpatrn], ColorMapping[fpatrn])
                     cors = [" path", " hall", " hallway", " alley", " corridor", "", " floor", " flooring"]
                     if flr == "flower" || flr == "octagon" || flr == "pink-flowered" || flr == "flowered" || flr == "rose"
@@ -637,7 +639,9 @@ function moveins(navimap, maze, curr, next; cons=[])
                             push!(cors, " carpet")
                         end
                         @inbounds for cor in cors
-                            @inbounds for cond in [" to the intersection with the ", " to the "]
+                            det = flr == "octagan" ? "an" : "a"
+                            @inbounds for cond in [" to the intersection with the ", " to the ", "toward the ", "towards the intersection of ", " to the intersection with $det "]
+                                push!(cands, (string(m, adv, cond, flr, cor), visual_m))
                                 @inbounds for st in sts
                                     @inbounds for num in numbers[steps]
                                         push!(cands, (string(m, adv, num, st, cond, flr, cor), visual_m))
@@ -1212,9 +1216,11 @@ function finalins(navimap, maze, curr; cons=[])
         if curr_t == "move"
             if is_corner(maze, p2) && visual_m in cons
                 @inbounds for pos in ["position ", ""]
-                    push!(cands, (string("the end of this hall is ", pos, num), visual_m))
-                    push!(cands, (string("the end of this hall wiil be ", pos, num), visual_m))
-                    push!(cands, (string(pos, num, " is at the end of this hall"), visual_m))
+                    @inbounds for cor in ["hall", "hallway", "alley", "corridor"]
+                        push!(cands, (string("the end of this $cor is ", pos, num), visual_m))
+                        push!(cands, (string("the end of this $cor will be ", pos, num), visual_m))
+                        push!(cands, (string(pos, num, " is at the end of this $cor"), visual_m))
+                    end
                 end
             end
 
