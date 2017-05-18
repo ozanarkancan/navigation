@@ -146,13 +146,22 @@ end
 
 function hyperopt(vocab, emb, args)
     function xform_grid(x)
-        winit,hidden,embl,f1,f2,watt = exp(x) .* [5, 200.0, 200.0, 50, 5, 100]
+        winit,hidden,embl,f1,f2,watt = exp(x) .* [10, 200.0, 200.0, 50, 5, 100]
         hidden = ceil(Int, hidden)
         embl = ceil(Int, embl)
         f1 = ceil(Int, f1)
         f2 = ceil(Int, f2)
         watt = floor(Int, watt)
         (winit,hidden,embl,f1,f2,watt)
+    end
+
+    function xform_gridwo(x)
+        winit,hidden,embl,f1,f2 = exp(x) .* [10, 200.0, 200.0, 50, 5]
+        hidden = ceil(Int, hidden)
+        embl = ceil(Int, embl)
+        f1 = ceil(Int, f1)
+        f2 = ceil(Int, f2)
+        (winit,hidden,embl,f1,f2)
     end
     
     function xform_other(x)
@@ -173,6 +182,15 @@ function hyperopt(vocab, emb, args)
             args["worldatt"] = watt
             info("Config: ")
             info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2]) , worldatt: $watt ")
+
+        elseif args["percp"] && args["encoding"] == "grid" && args["worldatt"] == 0
+            winit, hidden, embl, f1, f2 = xform_gridwo(x)
+            args["winit"] = winit
+            args["hidden"] = hidden
+            args["embed"] = embl
+            args["filters"] = [f1, f2]
+            info("Config: ")
+            info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2])")
         else
             hidden, embl = xform_other(x)
             args["hidden"] = hidden
@@ -189,9 +207,12 @@ function hyperopt(vocab, emb, args)
         return lss
     end
 
-    if args["percp"] && args["encoding"] == "grid"
+    if args["percp"] && args["encoding"] == "grid" && args["worldatt"] != 0
         f0, x0 = goldensection(f, 6; verbose=true)
         xbest = xform_grid(x0)
+    elseif args["percp"] && args["encoding"] == "grid" && args["worldatt"] == 0
+        f0, x0 = goldensection(f, 5; verbose=true)
+        xbest = xform_gridwo(x0)
     else
         f0, x0 = goldensection(f, 2; verbose=true)
         xbest = xform_other(x0)
