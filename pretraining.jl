@@ -15,7 +15,7 @@ function parse_commandline()
         ("--window1"; help = "first dimension of the filters"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
         ("--window2"; help = "second dimension of the filters"; default = [29, 7, 5]; arg_type = Int; nargs = '+')
         ("--filters"; help = "number of filters"; default = [200, 100, 50]; arg_type = Int; nargs = '+')
-        ("--model"; help = "model file"; default = "flex.jl")
+        ("--model"; help = "model file"; default = "backup.jl")
         ("--encdrops"; help = "dropout rates"; nargs = '+'; default = [0.0, 0.0]; arg_type = Float64)
         ("--decdrops"; help = "dropout rates"; nargs = '+'; default = [0.0, 0.0]; arg_type = Float64)
         ("--bs"; help = "batch size"; default = 1; arg_type = Int)
@@ -156,7 +156,7 @@ function hyperopt(vocab, emb, args)
     end
 
     function xform_gridwo(x)
-        winit,hidden,embl,f1,f2 = exp(x) .* [10, 200.0, 200.0, 50, 5]
+        winit,hidden,embl,f1,f2 = exp(x) .* [10, 140.0, 200.0, 50, 5]
         hidden = ceil(Int, hidden)
         embl = ceil(Int, embl)
         f1 = ceil(Int, f1)
@@ -199,7 +199,7 @@ function hyperopt(vocab, emb, args)
             info("hidden: $hidden , embed: $embl ")
         end
 
-        if args["hidden"] > 500 || args["embed"] > 500
+        if args["hidden"] > 500 || args["embed"] > 500 || args["filters"][1] > 1500 || args["filters"][2] > 1500
             return NaN # prevent out of gpu
         end
         lss,_ = pretrain(vocab, emb, args)
