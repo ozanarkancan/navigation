@@ -45,7 +45,8 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
         end
 
         if args["worldatt"] != 0
-            weights["wa1"] = xavier(Float32, 2*hidden, args["worldatt"])
+            wattin = args["attinwatt"] != 0 ? 4*hidden : 2*hidden
+            weights["wa1"] = xavier(Float32, wattin, args["worldatt"])
             weights["wa2"] = xavier(Float32, args["worldatt"], numfilters[1])
         end
         weights["filters_w"] = fs
@@ -74,10 +75,11 @@ function initweights(atype, hidden, vocab, embed, window, onehotworld, numfilter
     weights["dec_b"][1:hidden*2] = 1 # forget gate bias
  
     #attention
-    if args["att"]
+    if args["att"] || args["attinwatt"] != 0
+        atthidden = args["attinwatt"] != 0 ? args["attinwatt"] : hidden
         #fenc, benc, dechid
-        weights["attention_w"] = xavier(Float32, hidden*2+hidden*2, hidden)
-        weights["attention_v"] = xavier(Float32, hidden, 1)
+        weights["attention_w"] = xavier(Float32, hidden*2+hidden*2, atthidden)
+        weights["attention_v"] = xavier(Float32, atthidden, 1)
     end
 
     #output
@@ -285,10 +287,13 @@ function loss(w, state, words, ys; lss=nothing, views=nothing, as=nothing, dropo
 
     #decode
     for i=1:length(ys)
+        att,_ = args["att"] || args["attinwatt"] != 0 ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+        
         if !args["percp"]
             x = spatial(w["emb_world"], as[i])
         elseif args["encoding"] == "grid" && args["worldatt"] != 0
-            worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+            wattinp = args["attinwatt"] == 0 ? state[5] : hcat(state[5], att)
+            worldatt = worldattention(wattinp, w["wa1"], w["wa2"])
             x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, views[i]) # world att
         elseif args["encoding"] == "grid" 
             x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], views[i])
@@ -302,7 +307,7 @@ function loss(w, state, words, ys; lss=nothing, views=nothing, as=nothing, dropo
         preva = !args["preva"] ? nothing : as[i]
         prevainp = args["preva"] && args["percp"]
         
-        att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+        att = args["att"] ? att : nothing
 
         ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
             soft_preva=soft_preva, preva=preva, att=att, dropout=dropout, pdrops=decpdrops, prevainp=prevainp)
@@ -655,25 +660,28 @@ function test(models, data, maps; args=nothing)
             for ind=1:length(models)
                 w = models[ind]
                 state = states[ind]
-                
+
+                att,_ = args["att"] || args["attinwatt"] != 0 ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+
                 if !args["percp"]
                     x = spatial(w["emb_world"], preva)
                 elseif args["encoding"] == "grid" && args["worldatt"] != 0
-                    worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                    wattinp = args["attinwatt"] == 0 ? state[5] : hcat(state[5], att)
+                    worldatt = worldattention(wattinp, w["wa1"], w["wa2"])
                     x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
                 elseif args["encoding"] == "grid" 
                     x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
                 else
                     x = spatial(w["emb_world"], view)
                 end
-                
+
                 soft_inp = args["inpout"] ? w["soft_inp"] : nothing
                 soft_att = args["attout"] ? w["soft_att"] : nothing
                 soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
                 preva = !args["preva"] ? nothing : preva
                 prevainp = args["preva"] && args["percp"]
 
-                att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                att = args["att"] ? att : nothing
                 ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
                 soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
 
@@ -763,11 +771,14 @@ function test_paragraph(models, groups, maps; args=nothing)
                 for ind=1:length(models)
                     w = models[ind]
                     state = states[ind]
-                    
+
+                    att,_ = args["att"] || args["attinwatt"] != 0 ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+
                     if !args["percp"]
                         x = spatial(w["emb_world"], preva)
                     elseif args["encoding"] == "grid" && args["worldatt"] != 0
-                        worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                        wattinp = args["attinwatt"] == 0 ? state[5] : hcat(state[5], att)
+                        worldatt = worldattention(wattinp, w["wa1"], w["wa2"])
                         x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
                     elseif args["encoding"] == "grid" 
                         x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
@@ -781,7 +792,7 @@ function test_paragraph(models, groups, maps; args=nothing)
                     preva = !args["preva"] ? nothing : preva
                     prevainp = args["preva"] && args["percp"]
 
-                    att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                    att = args["att"] ? att : nothing
                     ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
                     soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
 
@@ -946,10 +957,14 @@ function test_beam(models, data, maps; args=nothing)
                 for ind=1:length(models)
                     w = models[ind]
                     state = states[ind]
+
+                    att,_ = args["att"] || args["attinwatt"] != 0 ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+
                     if !args["percp"]
                         x = spatial(w["emb_world"], preva)
                     elseif args["encoding"] == "grid" && args["worldatt"] != 0
-                        worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                        wattinp = args["attinwatt"] == 0 ? state[5] : hcat(state[5], att)
+                        worldatt = worldattention(wattinp, w["wa1"], w["wa2"])
                         x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
                     elseif args["encoding"] == "grid" 
                         x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
@@ -963,7 +978,7 @@ function test_beam(models, data, maps; args=nothing)
                     preva = !args["preva"] ? nothing : preva
                     prevainp = args["preva"] && args["percp"]
 
-                    att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                    att = args["att"] ? att : nothing
                     ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
                     soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
                     cum_ps += probs(Array(ypred))
@@ -1109,10 +1124,13 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
                         w = models[ind]
                         state = states[ind]
 
+                        att,_ = args["att"] || args["attinwatt"] != 0 ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+
                         if !args["percp"]
                             x = spatial(w["emb_world"], preva)
                         elseif args["encoding"] == "grid" && args["worldatt"] != 0
-                            worldatt = worldattention(state[5], w["wa1"], w["wa2"])
+                            wattinp = args["attinwatt"] == 0 ? state[5] : hcat(state[5], att)
+                            worldatt = worldattention(wattinp, w["wa1"], w["wa2"])
                             x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
                         elseif args["encoding"] == "grid" 
                             x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
@@ -1126,7 +1144,7 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
                         preva = !args["preva"] ? nothing : preva
                         prevainp = args["preva"] && args["percp"]
 
-                        att,_ = args["att"] ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+                        att = args["att"] ? att : nothing
                         ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
                         soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
                         cum_ps += probs(Array(ypred))
@@ -1188,18 +1206,18 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 
                 if actions[end] != 4
                     debug("FAILURE")
-                break
-            end
+                    break
+                end
 
-            if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
-                scss += 1
-                debug("SUCCESS\n")
-            else
-                debug("FAILURE\n")
+                if current[1] == instruction.path[end][1] && current[2] == instruction.path[end][2]
+                    scss += 1
+                    debug("SUCCESS\n")
+                else
+                    debug("FAILURE\n")
+                end
             end
         end
     end
-end
 
-return scss / length(groups)
+    return scss / length(groups)
 end
