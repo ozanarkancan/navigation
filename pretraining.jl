@@ -146,7 +146,7 @@ end
 
 function hyperopt(vocab, emb, args)
     function xform_grid(x)
-        winit,hidden,embl,f1,f2,watt = exp(x) .* [10, 200.0, 200.0, 50, 5, 100]
+        winit,hidden,embl,f1,f2,watt = exp(x) .* [10, 80.0, 80.0, 50, 200, 50]
         hidden = ceil(Int, hidden)
         embl = ceil(Int, embl)
         f1 = ceil(Int, f1)
