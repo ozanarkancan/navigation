@@ -8,6 +8,7 @@ function parse_commandline()
         ("--prefix"; help = "prefix"; default = "")
         ("--log"; help = "log file"; default = "")
         ("--nummodels"; arg_type=Int; default=3; help="number of models")
+        ("--desc"; help = "model description"; default="")
     end
     return parse_args(s)
 end		
