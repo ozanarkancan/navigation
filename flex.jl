@@ -114,7 +114,7 @@ end
 function cnn(filters, bias, x)
     inp = x
     for i=1:length(filters)-1
-        inp = relu(conv4(filters[i], inp; padding=0) .+ bias[i])
+        inp = relu.(conv4(filters[i], inp; padding=0) .+ bias[i])
     end
     inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
     return transpose(mat(inp))
@@ -123,10 +123,10 @@ end
 function cnn(filters, bias, worldatt, x)
     inp = x
     for i=1:length(filters)-1
-        inp = relu(conv4(filters[i], inp; padding=0) .+ bias[i])
+        inp = relu.(conv4(filters[i], inp; padding=0) .+ bias[i])
         if i == 1
             #inp = conv4(worldatt, inp; padding=0)
-            inp = relu(conv4(worldatt, inp; padding=0))
+            inp = relu.(conv4(worldatt, inp; padding=0))
         end
     end
     inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
@@ -154,12 +154,12 @@ end
 function lstm(weight,bias,hidden,cell,input)
     gates   = hcat(input,hidden) * weight .+ bias
     hsize   = size(hidden,2)
-    forget  = sigm(gates[:,1:hsize])
-    ingate  = sigm(gates[:,1+hsize:2hsize])
-    outgate = sigm(gates[:,1+2hsize:3hsize])
-    change  = tanh(gates[:,1+3hsize:end])
+    forget  = sigm.(gates[:,1:hsize])
+    ingate  = sigm.(gates[:,1+hsize:2hsize])
+    outgate = sigm.(gates[:,1+2hsize:3hsize])
+    change  = tanh.(gates[:,1+3hsize:end])
     cell    = cell .* forget + ingate .* change
-    hidden  = outgate .* tanh(cell)
+    hidden  = outgate .* tanh.(cell)
     return (hidden,cell)
 end
 
@@ -172,7 +172,7 @@ function attention(states, attention_w, attention_v)
         hu = vcat(hu, hcat(states[5], hp))
     end
 
-    raw_att = tanh(hu * attention_w) * attention_v
+    raw_att = tanh.(hu * attention_w) * attention_v
     raw_att = raw_att .- maximum(raw_att)
 
     att_s = exp(raw_att)
@@ -184,7 +184,7 @@ function attention(states, attention_w, attention_v)
 end
 
 function worldattention(prevh, wa1, wa2)
-    h = tanh(prevh * wa1) * wa2
+    h = tanh.(prevh * wa1) * wa2
     h = h .- maximum(h)
     att_p = exp(h)
     att_p = att_p ./ sum(att_p)

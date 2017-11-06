@@ -77,7 +77,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
     end
 
     ptr = args["pretrain"]
-    w = ptr != "" ? loadmodel(ptr; flex=true) : initweights(KnetArray, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
+    w = ptr != "" ? loadmodel(ptr; flex=true) : initweights(KnetArray{Float32}, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
 
     info("Model Prms:")
     for k in keys(w)
