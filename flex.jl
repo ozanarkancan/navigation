@@ -116,7 +116,7 @@ function cnn(filters, bias, x)
     for i=1:length(filters)-1
         inp = relu.(conv4(filters[i], inp; padding=0) .+ bias[i])
     end
-    inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
+    inp = sigm.(conv4(filters[end], inp; padding=0) .+ bias[end])
     return transpose(mat(inp))
 end
 
@@ -129,10 +129,10 @@ function cnn(filters, bias, worldatt, x)
             inp = relu.(conv4(worldatt, inp; padding=0))
         end
     end
-    inp = sigm(conv4(filters[end], inp; padding=0) .+ bias[end])
+    inp = sigm.(conv4(filters[end], inp; padding=0) .+ bias[end])
     if length(filters) == 1
         #inp = conv4(worldatt, inp; padding=0)
-        inp = sigm(conv4(worldatt, inp; padding=0))
+        inp = sigm.(conv4(worldatt, inp; padding=0))
     end
     return transpose(mat(inp))
 end
@@ -186,7 +186,7 @@ end
 function worldattention(prevh, wa1, wa2)
     h = tanh.(prevh * wa1) * wa2
     h = h .- maximum(h)
-    att_p = exp(h)
+    att_p = exp.(h)
     att_p = att_p ./ sum(att_p)
     return reshape(att_p, 1, 1, size(wa2, 2), 1)
 end
@@ -256,7 +256,7 @@ end
 
 function probs(linear)
     linear = linear .- maximum(linear, 2)
-    ps = exp(linear) ./ sum(exp(linear), 2)
+    ps = exp.(linear) ./ sum(exp.(linear), 2)
     return ps
 end
 
