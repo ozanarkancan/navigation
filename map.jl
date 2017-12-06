@@ -57,6 +57,35 @@ function getmap(fname)
     return Map(name, nodes, edges)
 end
 
+function readmapsjson(fname)
+    maps = JSON.parsefile(fname)
+
+    converted = Dict()
+
+    for k in keys(maps)
+        m = maps[k]
+        nodes = Dict()
+        edges = Dict()
+
+        for kn in keys(m["nodes"])
+            nodes[eval(parse(kn))] = m["nodes"][kn]
+        end
+
+        for ke in keys(m["edges"])
+            n1 = eval(parse(ke))
+            for kke in keys(m["edges"][ke])
+                n2 = eval(parse(kke))
+                wall, flr = m["edges"][ke][kke]
+                d = get!(edges, n1, Dict(n2 => (wall, flr)))
+                get!(d, n2, (wall, flr))
+            end
+        end
+
+        converted = Map(k, nodes, edges)
+    end
+    return converted
+end
+
 function getlocation(map::Map, current, action)
     if action == 1#move
         if current[3] == 0
@@ -77,16 +106,3 @@ function getlocation(map::Map, current, action)
     end
     return next
 end
-
-#=
-function main()
-    fname = "data/maps/map-grid.json"
-    grid = getmap(fname)
-    println(grid.name)
-    println("")
-    println(grid.nodes)
-    println("")
-    println(grid.edges)
-end
-=#
-#main()

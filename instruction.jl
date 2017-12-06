@@ -27,6 +27,23 @@ function getallinstructions(;fname="data/pickles/databag3.jld")
 	grid, jelly, l
 end
 
+function readinsjson(fname)
+    instructions = JSON.parsefile("instructions.json")
+
+    function json2ins(j)
+        println(j["path"])
+        ind1 = findfirst(j["path"], '[')
+        ind2 = findfirst(j["path"], ']')
+        i = Instruction(j["fname"], j["text"], eval(parse(j["path"][ind1:ind2])),
+                        j["map"], j["id"])
+        return i
+    end
+
+    data = map(json2ins, instructions)
+
+    return data
+end
+
 function merge_singles(singles)
 	prev_p1 = ""
 	prev_p2 = ""
