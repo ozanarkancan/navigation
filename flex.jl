@@ -868,19 +868,19 @@ end
 
 # state[2k-1,2k]: hidden and cell for the k'th lstm layer
 function initstate(atype, hidden, batchsize, length)
-    state = Array(Any, 6)
+    state = Array{Any}(6)
     #forward
-    state[1] = Array(Any, length+1)
+    state[1] = Array{Any}(length+1)
     for i=1:(length+1); state[1][i] = convert(atype, zeros(batchsize, hidden)); end
 
-    state[2] = Array(Any, length+1)
+    state[2] = Array{Any}(length+1)
     for i=1:(length+1); state[2][i] = convert(atype, zeros(batchsize, hidden)); end
 
     #backward
-    state[3] = Array(Any, length+1)
+    state[3] = Array{Any}(length+1)
     for i=1:(length+1); state[3][i] = convert(atype, zeros(batchsize, hidden)); end
 
-    state[4] = Array(Any, length+1)
+    state[4] = Array{Any}(length+1)
     for i=1:(length+1); state[4][i] = convert(atype, zeros(batchsize, hidden)); end
 
     state[5] = convert(atype, zeros(batchsize, hidden*2))
