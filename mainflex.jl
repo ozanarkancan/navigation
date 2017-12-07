@@ -47,6 +47,7 @@ function parse_commandline()
         ("--beamsize"; help = "world attention"; arg_type = Int; default = 10)
         ("--beam"; help = "activate beam search"; action = :store_false)
         ("--globalloss"; help = "use global loss"; action = :store_true)
+        ("--sailx"; help = "folder of sailx data"; default = "")
     end
     return parse_args(s)
 end		
@@ -177,18 +178,7 @@ function get_maps()
     return maps
 end
 
-function mainflex()
-    Logging.configure(filename=args["log"])
-    if args["level"] == "info"
-        Logging.configure(level=INFO)
-    else
-        Logging.configure(level=DEBUG)
-    end
-    args["window"] = collect(zip(args["window1"], args["window2"]))
-    srand(args["seed"])
-    info("*** Parameters ***")
-    for k in keys(args); info("$k -> $(args[k])"); end
-
+function sail(args)
     grid, jelly, l = getallinstructions()
     lg = length(grid)
     lj = length(jelly)
@@ -216,6 +206,41 @@ function mainflex()
             end
             execute(trainins[i], testins[(i-1)*2+j], maps, vocab, emb, args; dev_ins=devins[(i-1)*2+j])
         end
+    end
+end
+
+function sailx(args)
+    trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
+    devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
+    testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
+
+    maps = readmapsjson(string(args["sailx"], "/train/maps.json"))
+    merge!(maps, readmapsjson(string(args["sailx"], "/dev/maps.json")))
+    merge!(maps, readmapsjson(string(args["sailx"], "/test/maps.json")))
+
+    vocab = build_dict(vcat(grid, jelly, l))
+    emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
+    info("\nVocab: $(length(vocab))")
+    
+    execute(trainins, testins, maps, vocab, emb, args; dev_ins=devins)
+end
+
+function mainflex()
+    Logging.configure(filename=args["log"])
+    if args["level"] == "info"
+        Logging.configure(level=INFO)
+    else
+        Logging.configure(level=DEBUG)
+    end
+    args["window"] = collect(zip(args["window1"], args["window2"]))
+    srand(args["seed"])
+    info("*** Parameters ***")
+    for k in keys(args); info("$k -> $(args[k])"); end
+
+    if args["sailx"] == ""
+        sail(args)
+    else
+        sailx(args)
     end
 end
 

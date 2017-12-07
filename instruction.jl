@@ -28,7 +28,7 @@ function getallinstructions(;fname="data/pickles/databag3.jld")
 end
 
 function readinsjson(fname)
-    instructions = JSON.parsefile("instructions.json")
+    instructions = JSON.parsefile(fname)
 
     function json2ins(j)
         println(j["path"])
