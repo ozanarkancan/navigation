@@ -31,7 +31,6 @@ function readinsjson(fname)
     instructions = JSON.parsefile(fname)
 
     function json2ins(j)
-        println(j["path"])
         ind1 = findfirst(j["path"], '[')
         ind2 = findfirst(j["path"], ']')
         i = Instruction(j["fname"], j["text"], eval(parse(j["path"][ind1:ind2])),

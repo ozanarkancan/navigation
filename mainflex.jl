@@ -218,7 +218,7 @@ function sailx(args)
     merge!(maps, readmapsjson(string(args["sailx"], "/dev/maps.json")))
     merge!(maps, readmapsjson(string(args["sailx"], "/test/maps.json")))
 
-    vocab = build_dict(vcat(grid, jelly, l))
+    vocab = build_dict(vcat(trainins, devins, testins))
     emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
     info("\nVocab: $(length(vocab))")
     

@@ -81,7 +81,7 @@ function readmapsjson(fname)
             end
         end
 
-        converted = Map(k, nodes, edges)
+        converted[k] = Map(k, nodes, edges)
     end
     return converted
 end
