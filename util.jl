@@ -95,11 +95,11 @@ left hand side: left of the agent
 (20, 20) is the agent curent location and it is a node
 neighbors of a node are edges
 =#
-function state_agent_centric(map, loc; vdims = [39 39])
+function state_agent_centric(map::Map, loc; vdims = [39, 39])
     #lfeatvec = length(Items) + length(Floors) + length(Walls) + 3
     lfeatvec = length(Items) + length(Floors) + length(Walls) + length(MapColors) + 3
     view = zeros(Float32, vdims[1], vdims[2], lfeatvec, 1)
-    mid = [round(Int, vdims[1]/2) round(Int, vdims[2]/2)]
+    mid = [round(Int, vdims[1]/2), round(Int, vdims[2]/2)]
 
     if loc[3] == 0
         ux = 0; uy = -1;
@@ -247,10 +247,11 @@ function state_agent_centric(map, loc; vdims = [39 39])
     nv[4, :, :, 1] = view[20, 1:20, :, :]
     nv[5, :, :, 1] = view[1:20, 20, :, :]
     #return view
+
     return nv
 end
 
-function state_agent_centric_multihot(map, loc)
+function state_agent_centric_multihot(map::Map, loc)
     lfeatvec = length(Items) + length(Floors) + length(Walls) + 1
     view = zeros(Float32, 1, length(Items) + 4 * lfeatvec)
 
@@ -394,7 +395,7 @@ function getactions(path)
     return actions
 end
 
-function build_instance(instance, map, vocab; vdims=[39, 39], emb=nothing, encoding="grid")
+function build_instance(instance::Instruction, map::Map, vocab; vdims=[39, 39], emb=nothing, encoding="grid")
     words = emb == nothing ? ins_arr(vocab, instance.text) : ins_arr_embed(emb, vocab, instance.text)
 
     states = Any[]

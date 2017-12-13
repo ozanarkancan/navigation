@@ -164,6 +164,109 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
     end
 end
 
+function execute_sailx(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
+    trn_data = map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), train_ins)
+    trn_data = minibatch(trn_data;bs=args["bs"])
+
+    train_data = map(ins-> (ins, ins_arr(vocab, ins.text)), train_ins)
+    vdims = size(trn_data[1][2][1])
+
+    info("\nWorld: $(vdims)")
+
+    embedsize = args["wvecs"] ? 300 : args["embed"]
+    vocabsize = length(vocab) + 1
+    world = length(vdims) > 2 ? vdims[3] : vdims[2]
+
+    premb = nothing
+    if args["wvecs"]
+        premb = zeros(Float32, vocabsize, embedsize)
+        for k in keys(vocab)
+            premb[vocab[k], :] = emb[k]
+        end
+    end
+
+    ptr = args["pretrain"]
+    w = ptr != "" ? loadmodel(ptr; flex=true) : initweights(KnetArray{Float32}, args["hidden"], vocabsize, args["embed"], args["window"], world, args["filters"]; args=args, premb=premb, winit=args["winit"])
+
+    info("Model Prms:")
+    for k in keys(w)
+        info("$k : $(size(w[k])) ")
+        if startswith(k, "filter")
+            for i=1:length(w[k])
+                info("$k , $i : $(size(w[k][i]))")
+            end
+        end
+    end
+
+    dev_data = dev_ins != nothing ? map(ins -> (ins, ins_arr(vocab, ins.text)), dev_ins) : nothing
+    data = dev_ins != nothing ? map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dev_ins) : nothing
+    dev_d = minibatch(data;bs=args["bs"])
+
+    test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
+
+    globalbest = 0.0
+
+    prms_sp = initparams(w; args=args)
+    patience = 0
+    sofarbest = 0.0
+    for i=1:args["epoch"]
+        shuffle!(trn_data)
+        @time lss = !args["globalloss"] ? train(w, prms_sp, trn_data; args=args) : train_global(w, prms_sp, train_data, maps; args=args)
+        @time train_acc = test([w], train_data, maps; args=args)
+        @time tst_acc = test([w], test_data, maps; args=args)
+        @time trnloss = train_loss(w, trn_data; args=args)
+        
+        if args["beam"]
+            @time tst_acc_beam = test_beam([w], test_data, maps; args=args)
+        end
+
+        dev_acc = 0
+        dev_prg_acc = 0
+        dev_loss = 0
+
+        if args["vDev"]
+            @time dev_acc = test([w], dev_data, maps; args=args)
+            @time dev_loss = train_loss(w, dev_d; args=args)
+            if args["beam"]
+                @time dev_acc_beam = test_beam([w], dev_data, maps; args=args)
+            end
+        end
+
+        tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
+        tunefordev = args["tunefor"] == "single" ? dev_acc : dev_prg_acc
+        tunefor = args["vDev"] ? tunefordev : tunefor
+
+        if tunefor > sofarbest
+            sofarbest = tunefor
+            patience = 0
+            if sofarbest > globalbest
+                globalbest = sofarbest
+                info("Saving the model...")
+                savemodel(w, args["save"]; flex=true)
+            end
+        else
+            patience += 1
+        end
+
+        if args["vDev"]
+            info("Epoch: $(i), trn loss: $(lss) , single dev acc: $(dev_acc) , $(dev_ins[1].map)")
+            if args["beam"]
+                info("Beam: $(i), single dev: $(dev_acc_beam) , single tst: $(tst_acc_beam) , $(dev_ins[1].map)")
+            end
+            info("TestIt: $(i), trn loss: $(lss) , single tst acc: $(tst_acc) , $(test_ins[1].map)")
+            info("Losses: $(i), trn loss: $(trnloss) , dev loss: $(dev_loss) , $(dev_ins[1].map)")
+        else
+            info("Epoch: $(i), trn loss: $(lss) , single tst acc: $(tst_acc) , $(test_ins[1].map)")
+        end
+        info("Train: $(i) , trn acc: $(train_acc)")
+
+        if patience >= args["patience"]
+            break
+        end
+    end
+end
+
+
 function get_maps()
     fname = "data/maps/map-grid.json"
     grid = getmap(fname)
@@ -210,19 +313,29 @@ function sail(args)
 end
 
 function sailx(args)
-    trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
-    devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
-    testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
+    trainins, devins, testins, maps, vocab = nothing, nothing, nothing, nothing, nothing
+    if isfile(args["sailx"]*"/sailx_data.jld")
+        d = load(args["sailx"]*"/sailx_data.jld")
+        trainins, devins, testins, maps, vocab = d["trn"], d["dev"], d["tst"], d["maps"], d["vocab"]
+    else
+        info("Reading training data")
+        trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
+        info("Reading dev data")
+        devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
+        info("Reading test data")
+        testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
 
-    maps = readmapsjson(string(args["sailx"], "/train/maps.json"))
-    merge!(maps, readmapsjson(string(args["sailx"], "/dev/maps.json")))
-    merge!(maps, readmapsjson(string(args["sailx"], "/test/maps.json")))
-
-    vocab = build_dict(vcat(trainins, devins, testins))
+        maps = readmapsjson(string(args["sailx"], "/train/maps.json"))
+        merge!(maps, readmapsjson(string(args["sailx"], "/dev/maps.json")))
+        merge!(maps, readmapsjson(string(args["sailx"], "/test/maps.json")))
+        vocab = build_dict(vcat(trainins, devins, testins))
+        save(args["sailx"]*"/sailx_data.jld", "trn", trainins, "dev", devins, "tst", testins, "maps", maps, "vocab", vocab)
+    end
+    
     emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
     info("\nVocab: $(length(vocab))")
     
-    execute(trainins, testins, maps, vocab, emb, args; dev_ins=devins)
+    execute_sailx(trainins, testins, maps, vocab, emb, args; dev_ins=devins)
 end
 
 function mainflex()

@@ -498,10 +498,10 @@ function clip_grad(g; args=args)
         for k in keys(g)
             if startswith(k, "filter")
                 for el in g[k]
-                    gnorm += sumabs2(el)
+                    gnorm += sum(abs2, el)
                 end
             else
-                gnorm += sumabs2(g[k])
+                gnorm += sum(abs2, g[k])
             end
         end
         gnorm = sqrt(gnorm)
