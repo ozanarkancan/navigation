@@ -249,14 +249,14 @@ function execute_sailx(train_ins, test_ins, maps, vocab, emb, args; dev_ins=noth
         end
 
         if args["vDev"]
-            info("Epoch: $(i), trn loss: $(lss) , single dev acc: $(dev_acc) , $(dev_ins[1].map)")
+            info("Epoch: $(i), trn loss: $(lss) , single dev acc: $(dev_acc)")
             if args["beam"]
-                info("Beam: $(i), single dev: $(dev_acc_beam) , single tst: $(tst_acc_beam) , $(dev_ins[1].map)")
+                info("Beam: $(i), single dev: $(dev_acc_beam) , single tst: $(tst_acc_beam)")
             end
-            info("TestIt: $(i), trn loss: $(lss) , single tst acc: $(tst_acc) , $(test_ins[1].map)")
-            info("Losses: $(i), trn loss: $(trnloss) , dev loss: $(dev_loss) , $(dev_ins[1].map)")
+            info("TestIt: $(i), trn loss: $(lss) , single tst acc: $(tst_acc)")
+            info("Losses: $(i), trn loss: $(trnloss) , dev loss: $(dev_loss)")
         else
-            info("Epoch: $(i), trn loss: $(lss) , single tst acc: $(tst_acc) , $(test_ins[1].map)")
+            info("Epoch: $(i), trn loss: $(lss) , single tst acc: $(tst_acc)")
         end
         info("Train: $(i) , trn acc: $(train_acc)")
 
@@ -324,11 +324,14 @@ function sailx(args)
         devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
         info("Reading test data")
         testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
-
+        
+        info("Reading maps")
         maps = readmapsjson(string(args["sailx"], "/train/maps.json"))
         merge!(maps, readmapsjson(string(args["sailx"], "/dev/maps.json")))
         merge!(maps, readmapsjson(string(args["sailx"], "/test/maps.json")))
         vocab = build_dict(vcat(trainins, devins, testins))
+
+        info("Saving processed sailx")
         save(args["sailx"]*"/sailx_data.jld", "trn", trainins, "dev", devins, "tst", testins, "maps", maps, "vocab", vocab)
     end
     
