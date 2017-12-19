@@ -200,7 +200,7 @@ function execute_sailx(train_ins, test_ins, maps, vocab, emb, args; dev_ins=noth
 
     dev_data = dev_ins != nothing ? map(ins -> (ins, ins_arr(vocab, ins.text)), dev_ins) : nothing
     data = dev_ins != nothing ? map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dev_ins) : nothing
-    dev_d = minibatch(data;bs=args["bs"])
+    dev_d = data != nothing ? minibatch(data;bs=args["bs"]) : nothing
 
     test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
 
@@ -224,16 +224,17 @@ function execute_sailx(train_ins, test_ins, maps, vocab, emb, args; dev_ins=noth
         dev_prg_acc = 0
         dev_loss = 0
 
+        tunefordev = 0
         if args["vDev"]
             @time dev_acc = test([w], dev_data, maps; args=args)
             @time dev_loss = train_loss(w, dev_d; args=args)
             if args["beam"]
                 @time dev_acc_beam = test_beam([w], dev_data, maps; args=args)
             end
+            tunefordev = args["tunefor"] == "single" ? dev_acc : dev_prg_acc
         end
 
         tunefor = args["tunefor"] == "single" ? tst_acc : tst_prg_acc
-        tunefordev = args["tunefor"] == "single" ? dev_acc : dev_prg_acc
         tunefor = args["vDev"] ? tunefordev : tunefor
 
         if tunefor > sofarbest
@@ -313,32 +314,22 @@ function sail(args)
 end
 
 function sailx(args)
-    trainins, devins, testins, maps, vocab = nothing, nothing, nothing, nothing, nothing
-    if isfile(args["sailx"]*"/sailx_data.jld")
-        d = load(args["sailx"]*"/sailx_data.jld")
-        trainins, devins, testins, maps, vocab = d["trn"], d["dev"], d["tst"], d["maps"], d["vocab"]
-    else
-        info("Reading training data")
-        trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
-        info("Reading dev data")
-        devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
-        info("Reading test data")
-        testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
-        
-        info("Reading maps")
-        maps = readmapsjson(string(args["sailx"], "/train/maps.json"))
-        merge!(maps, readmapsjson(string(args["sailx"], "/dev/maps.json")))
-        merge!(maps, readmapsjson(string(args["sailx"], "/test/maps.json")))
-        vocab = build_dict(vcat(trainins, devins, testins))
+    info("Reading training data")
+    trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
+    info("Reading dev data")
+    devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
+    info("Reading test data")
+    testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
 
-        info("Saving processed sailx")
-        save(args["sailx"]*"/sailx_data.jld", "trn", trainins, "dev", devins, "tst", testins, "maps", maps, "vocab", vocab)
-    end
-    
+    info("Reading maps")
+    maps = readmapsjson(string(args["sailx"], "/train/maps.json"))
+    merge!(maps, readmapsjson(string(args["sailx"], "/dev/maps.json")))
+    vocab = build_dict(vcat(trainins, devins, testins))
+
     emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
     info("\nVocab: $(length(vocab))")
     
-    execute_sailx(trainins, testins, maps, vocab, emb, args; dev_ins=devins)
+    execute_sailx(trainins, devins, maps, vocab, emb, args)
 end
 
 function mainflex()
