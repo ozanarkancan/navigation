@@ -134,7 +134,7 @@ function sailx(args)
     trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
     devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
     testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
-    maps = readmapsjson(string(args["sailx"], "/test/maps.json"))
+    maps = readmapsjson(string(args["sailx"], (args["vDev"] ? "/dev/maps.json" : "/test/maps.json")))
     vocab = build_dict(vcat(trainins, devins, testins))
 
     models = Any[]
@@ -152,7 +152,7 @@ function sailx(args)
         end
     end
 
-    test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), testins)
+    test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), args["vDev"] ? devins : testins)
     
     if args["categorical"] != ""
         df = DataFrame(fname=Any[], text=Any[], actions=Any[], Accuracy=Float64[], id=Any[])
