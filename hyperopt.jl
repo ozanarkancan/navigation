@@ -154,7 +154,16 @@ function hyperopt(instances, maps, vocab, emb, args)
         watt = floor(Int, watt)
         (winit,hidden,embl,f1,f2,watt)
     end
-
+    
+    function xform_grid_nowatt(x)
+        winit,hidden,embl,f1,f2 = exp.(x) .* [10.4597, 60.0, 120.0, 123, 155]
+        hidden = ceil(Int, hidden)
+        embl = ceil(Int, embl)
+        f1 = ceil(Int, f1)
+        f2 = ceil(Int, f2)
+        (winit,hidden,embl,f1,f2)
+    end
+    
     function xform_other(x)
         hidden,embl,winit = exp.(x) .* [110.0, 100.0, 1.0]
         hidden = ceil(Int, hidden)
@@ -173,6 +182,14 @@ function hyperopt(instances, maps, vocab, emb, args)
             args["worldatt"] = watt
             info("Config: ")
             info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2]) , worldatt: $watt ")
+        elseif args["percp"] && args["encoding"] == "grid" && args["worldatt"] == 0
+            winit, hidden, embl, f1, f2 = xform_grid_nowatt(x)
+            args["winit"] = winit
+            args["hidden"] = hidden
+            args["embed"] = embl
+            args["filters"] = [f1, f2]
+            info("Config: ")
+            info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2])")
         else
             hidden, embl, winit = xform_other(x)
             args["hidden"] = hidden
@@ -189,11 +206,13 @@ function hyperopt(instances, maps, vocab, emb, args)
         info("Config Loss: $lss")
         return lss
     end
-
     if args["percp"] && args["encoding"] == "grid" && args["worldatt"] != 0
         f0, x0 = goldensection(f, 6; verbose=true)
         xbest = xform_grid(x0)
-   else
+    elseif args["percp"] && args["encoding"] == "grid" && args["worldatt"] == 0
+        f0, x0 = goldensection(f, 5; verbose=true)
+        xbest = xform_grid_nowatt(x0)
+    else
         f0, x0 = goldensection(f, 3; verbose=true)
         xbest = xform_other(x0)
     end
