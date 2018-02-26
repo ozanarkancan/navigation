@@ -146,22 +146,28 @@ end
 
 function hyperopt(instances, maps, vocab, emb, args)
     function xform_grid(x)
-        winit,hidden,embl,f1,f2,watt = exp.(x) .* [10.4597, 60.0, 120.0, 123, 155, 45]
+        hidden, embl, f1, f2, watt, w1, w2, winit = exp.(x) .* [165.0, 80.0, 130, 54, 60, 5, 14, 6.0]
         hidden = ceil(Int, hidden)
         embl = ceil(Int, embl)
         f1 = ceil(Int, f1)
-        f2 = ceil(Int, f2)
+        f2 = ceil(Int, f2) 
         watt = floor(Int, watt)
-        (winit,hidden,embl,f1,f2,watt)
+        w1 = ceil(Int, w1)
+        w2 = ceil(Int, w2)
+
+        (hidden,embl,f1,f2,watt,w1,w2,winit)
     end
     
     function xform_grid_nowatt(x)
-        winit,hidden,embl,f1,f2 = exp.(x) .* [10.4597, 60.0, 120.0, 123, 155]
+        winit,hidden,embl,f1,f2,w1,w2 = exp.(x) .* [8, 140.0, 80.0, 80, 80, 5, 14]
         hidden = ceil(Int, hidden)
         embl = ceil(Int, embl)
         f1 = ceil(Int, f1)
         f2 = ceil(Int, f2)
-        (winit,hidden,embl,f1,f2)
+        w1 = ceil(Int, w1)
+        w2 = ceil(Int, w2)
+
+        (winit,hidden,embl,f1,f2,w1,w2)
     end
     
     function xform_other(x)
@@ -174,22 +180,24 @@ function hyperopt(instances, maps, vocab, emb, args)
     function f(x)
         srand(args["seed"])
         if args["percp"] && args["encoding"] == "grid" && args["worldatt"] != 0
-            winit, hidden, embl, f1, f2, watt = xform_grid(x)
+            hidden, embl, f1, f2, watt, w1, w2, winit = xform_grid(x)
             args["winit"] = winit
             args["hidden"] = hidden
             args["embed"] = embl
             args["filters"] = [f1, f2]
             args["worldatt"] = watt
+            args["window"] = [(1,w1), (5, w2)]
             info("Config: ")
-            info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2]) , worldatt: $watt ")
+            info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2]) , worldatt: $watt, window: $(args["window"])")
         elseif args["percp"] && args["encoding"] == "grid" && args["worldatt"] == 0
-            winit, hidden, embl, f1, f2 = xform_grid_nowatt(x)
+            winit, hidden, embl, f1, f2, w1, w2 = xform_grid_nowatt(x)
             args["winit"] = winit
             args["hidden"] = hidden
             args["embed"] = embl
             args["filters"] = [f1, f2]
+            args["window"] = [(1,w1), (5, w2)]
             info("Config: ")
-            info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2])")
+            info("winit: $winit , hidden: $hidden , embed: $embl , filters: $([f1, f2]), window: $(args["window"])")
         else
             hidden, embl, winit = xform_other(x)
             args["hidden"] = hidden
@@ -198,19 +206,20 @@ function hyperopt(instances, maps, vocab, emb, args)
             info("Config: ")
             info("hidden: $hidden , embed: $embl , winit: $winit")
         end
-
-        if args["hidden"] > 500 || args["embed"] > 500 || args["filters"][1] > 1500 || args["filters"][2] > 1500
+        wsize = args["window"][1][2] + args["window"][2][2] - 1
+        if args["hidden"] > 400 || args["embed"] > 400 || args["filters"][1] > 1000 || args["filters"][2] > 1000 || wsize > 20
             return NaN # prevent out of gpu
         end
         lss,_ = pretrain(instances, maps, vocab, emb, args)
         info("Config Loss: $lss")
         return lss
     end
+    
     if args["percp"] && args["encoding"] == "grid" && args["worldatt"] != 0
-        f0, x0 = goldensection(f, 6; verbose=true)
+        f0, x0 = goldensection(f, 8; verbose=true)
         xbest = xform_grid(x0)
     elseif args["percp"] && args["encoding"] == "grid" && args["worldatt"] == 0
-        f0, x0 = goldensection(f, 5; verbose=true)
+        f0, x0 = goldensection(f, 7; verbose=true)
         xbest = xform_grid_nowatt(x0)
     else
         f0, x0 = goldensection(f, 3; verbose=true)
