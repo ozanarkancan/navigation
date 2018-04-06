@@ -1221,3 +1221,134 @@ function test_paragraph_beam(models, groups, maps; args=nothing)
 
     return scss / length(groups)
 end
+
+function predict_beam(models, words, navimap, initial; args=nothing)
+    beamsize = args["beamsize"]
+    words = map(v->convert(args["atype"],v), words)
+    states = map(weights->initstate(args["atype"], args["hidden"], 1, length(words)), models)
+    for i=1:length(models)
+        w = models[i]
+        state = states[i]
+        encode(w["enc_w_f"], w["enc_b_f"], w["enc_w_b"], w["enc_b_b"], w["emb_word"], state, words; dropout=false)
+        state[5] = hcat(state[1][end], state[3][end])
+        state[6] = hcat(state[2][end], state[4][end])
+    end
+    
+    cstate5 = Any[]
+    cstate6 = Any[]
+    
+    for m=1:length(models)
+        push!(cstate5, copy(states[m][5]))
+        push!(cstate6, copy(states[m][6]))
+    end
+    
+    current = initial
+    cands = Any[(1.0, cstate5, cstate6, current, 0, false, Any[4])]
+
+    nactions = 0
+    stop = false
+    stopsearch = false
+    araw = args["preva"] ? reshape(Float32[0.0, 0.0, 0.0, 1.0], 1, 4) : nothing
+    while !stopsearch
+        newcands = Any[]
+        newcand = false
+        for cand in cands
+            current = cand[4]
+            for m=1:length(models)
+                states[m][5] = copy(cand[2][m])
+                states[m][6] = copy(cand[3][m])
+            end
+            depth = cand[5]
+            prevActions = cand[end]
+            lastAction = prevActions[end]
+            stopped = cand[6]
+
+            if araw != nothing
+                araw[:] = 0.0
+                araw[1, lastAction] = 1.0
+            end
+
+            if stopped
+                push!(newcands, cand)
+                continue
+            end
+
+            view = !args["percp"] ? nothing : args["encoding"] == "grid" ? state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(navimap, current)
+            view = args["percp"] ? convert(args["atype"], view) : nothing
+            preva = araw != nothing ? convert(args["atype"], araw)  : araw
+
+            cum_ps = zeros(Float32, 1, 4)
+
+            for ind=1:length(models)
+                w = models[ind]
+                state = states[ind]
+
+                att,_ = args["att"] || args["attinwatt"] != 0 ? attention(state, w["attention_w"], w["attention_v"]) : (nothing, nothing)
+
+                if !args["percp"]
+                    x = spatial(w["emb_world"], preva)
+                elseif args["encoding"] == "grid" && args["worldatt"] != 0
+                    wattinp = args["attinwatt"] == 0 ? state[5] : hcat(state[5], att)
+                    worldatt = worldattention(wattinp, w["wa1"], w["wa2"])
+                    x =  spatial(w["filters_w"], w["filters_b"], w["emb_world"], worldatt, view) # world att
+                elseif args["encoding"] == "grid" 
+                    x = spatial(w["filters_w"], w["filters_b"], w["emb_world"], view)
+                else
+                    x = spatial(w["emb_world"], view)
+                end
+
+                soft_inp = args["inpout"] ? w["soft_inp"] : nothing
+                soft_att = args["attout"] ? w["soft_att"] : nothing
+                soft_preva = args["prevaout"] ? w["soft_preva"] : nothing
+                preva = !args["preva"] ? nothing : preva
+                prevainp = args["preva"] && args["percp"]
+
+                att = args["att"] ? att : nothing
+                ypred = decode(w["dec_w"], w["dec_b"], w["soft_h"], w["soft_b"], state, x; soft_inp=soft_inp, soft_att=soft_att, 
+                               soft_preva=soft_preva, preva=preva, att=att, dropout=false, prevainp=prevainp)
+                cum_ps += probs(Array(ypred))
+            end
+
+            cum_ps = cum_ps ./ length(models)
+
+            for i=1:4
+                mystop = stopped
+                nactions = depth + 1
+                actcopy = copy(prevActions)
+                if nactions > args["limactions"] && i < 4
+                    mystop = true
+                end
+                push!(actcopy, i)
+                cur = identity(current)
+                if i < 4
+                    cur = getlocation(maps[instruction.map], cur, i)
+                end
+
+                if (i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))) || i==4
+                    mystop = true
+                end
+
+                cstate5 = Any[]
+                cstate6 = Any[]
+                for m=1:length(models)
+                    push!(cstate5, copy(states[m][5]))
+                    push!(cstate6, copy(states[m][6]))
+                end
+
+                push!(newcands, (cand[1] * cum_ps[1, i], cstate5, cstate6, cur, nactions, mystop, actcopy))
+                newcand = true
+            end
+        end
+        
+        stopsearch = !newcand
+        
+        if newcand
+            sort!(newcands; by=x->x[1], rev=true)
+            l = length(newcands) < beamsize ? length(newcands) : beamsize
+            cands = newcands[1:l]
+        end
+    end
+    current = cands[1][4]
+    actions = cands[1][end]
+    return actions[2:end]
+end
