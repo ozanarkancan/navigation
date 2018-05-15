@@ -30,6 +30,8 @@ function parse_commandline()
         ("--load"; help = "model path"; default = "")
         ("--pretrain"; help = "model path"; default = "")
         ("--vDev"; help = "vDev or vTest"; action = :store_false)
+        ("--oldvdev"; help = "vDev training scheme"; action = :store_true)
+        ("--oldvtest"; help = "vTest training scheme"; action = :store_true)
         ("--charenc"; help = "charecter embedding"; action = :store_true)
         ("--encoding"; help = "grid or multihot"; default = "grid")
         ("--wvecs"; help = "use word vectors"; action= :store_true)
@@ -93,7 +95,7 @@ function execute(train_ins, test_ins, maps, vocab, emb, args; dev_ins=nothing)
     dev_data = dev_ins != nothing ? map(ins -> (ins, ins_arr(vocab, ins.text)), dev_ins) : nothing
     dev_data_grp = dev_ins != nothing ? map(x->map(ins->(ins, ins_arr(vocab, ins.text)),x), group_singles(dev_ins)) : nothing
     data = dev_ins != nothing ? map(x -> build_instance(x, maps[x.map], vocab; encoding=args["encoding"], emb=nothing), dev_ins) : nothing
-    dev_d = minibatch(data;bs=args["bs"])
+    dev_d = data != nothing ? minibatch(data;bs=args["bs"]) : nothing
 
     test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
     test_data_grp = map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
@@ -313,6 +315,64 @@ function sail(args)
     end
 end
 
+function sail_vdev(args)
+    grid, jelly, l = getallinstructions()
+    lg = length(grid)
+    lj = length(jelly)
+    ll = length(l)
+    dg = floor(Int, lg*0.1)
+    dj = floor(Int, lj*0.1)
+    dl = floor(Int, ll*0.1)
+
+    #trainfiles
+    #1: grid+jelly
+    #2: grid+l
+    #3: jelly+l
+
+    maps = get_maps()
+
+    vocab = build_dict(vcat(grid, jelly, l))
+    emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
+    info("\nVocab: $(length(vocab))")
+
+    base_s = args["save"]
+    base_l = args["load"]
+    for i in [3,2,1]
+        for j=1:10
+            args["save"] = string(base_s, "_", j, "_", args["trainfiles"][i])
+            if base_l != ""
+                args["load"] = string(base_l, "_", j, "_", args["trainfiles"][i])
+            end
+            execute(trainins[i], testins[(i-1)*2+j], maps, vocab, emb, args; dev_ins=devins[(i-1)*2+j])
+        end
+    end
+end
+
+function sail_vtest(args)
+    grid, jelly, l = getallinstructions()
+    lg = length(grid)
+    lj = length(jelly)
+    ll = length(l)
+
+    trainins = [(grid, jelly), (grid, l), (jelly, l)]
+    testins = [l, jelly, grid]
+    maps = get_maps()
+
+    vocab = build_dict(vcat(grid, jelly, l))
+    emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
+    info("\nVocab: $(length(vocab))")
+
+    base_s = args["save"]
+    base_l = args["load"]
+    for i in [3,2,1]
+        args["save"] = string(base_s, "_vtest_", args["trainfiles"][i])
+        if base_l != ""
+            args["load"] = string(base_l, "_vtest_", args["trainfiles"][i])
+        end
+        execute(trainins[i], testins[i], maps, vocab, emb, args)
+    end
+end
+
 function sailx(args)
     info("Reading training data")
     trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
@@ -345,7 +405,13 @@ function mainflex()
     for k in keys(args); info("$k -> $(args[k])"); end
 
     if args["sailx"] == ""
-        sail(args)
+        if args["oldvtest"]
+            sail_vtest(args)
+        elseif args["oldvdev"]
+            sail_vdev(args)
+        else
+            sail(args)
+        end
     else
         sailx(args)
     end
