@@ -30,8 +30,8 @@ function parse_commandline()
         ("--load"; help = "model path"; default = "")
         ("--pretrain"; help = "model path"; default = "")
         ("--vDev"; help = "vDev or vTest"; action = :store_false)
-        ("--oldvdev"; help = "vDev training scheme"; action = :store_true)
-        ("--oldvtest"; help = "vTest training scheme"; action = :store_true)
+        ("--oldvdev"; help = "vDev training scheme"; default = [0]; nargs='+'; arg_type =Int)
+        ("--oldvtest"; help = "vTest training scheme"; default = [0]; nargs='+'; arg_type =Int)
         ("--charenc"; help = "charecter embedding"; action = :store_true)
         ("--encoding"; help = "grid or multihot"; default = "grid")
         ("--wvecs"; help = "use word vectors"; action= :store_true)
@@ -364,7 +364,7 @@ function sail_vtest(args)
 
     base_s = args["save"]
     base_l = args["load"]
-    for i in [3,2,1]
+    for i in args["oldvtest"]
         args["save"] = string(base_s, "_vtest_", args["trainfiles"][i])
         if base_l != ""
             args["load"] = string(base_l, "_vtest_", args["trainfiles"][i])
@@ -405,9 +405,9 @@ function mainflex()
     for k in keys(args); info("$k -> $(args[k])"); end
 
     if args["sailx"] == ""
-        if args["oldvtest"]
+        if args["oldvtest"][1] != 0
             sail_vtest(args)
-        elseif args["oldvdev"]
+        elseif args["oldvdev"][1] != 0
             sail_vdev(args)
         else
             sail(args)

@@ -42,6 +42,9 @@ function parse_commandline()
         ("--beam"; help = "activate beam search"; action = :store_true)
         ("--categorical"; help = "dump categorical"; default="")
         ("--sailx"; help = "folder for sailx"; default="")
+        ("--oldvdev"; help = "vDev training scheme"; default = [0]; nargs='+'; arg_type =Int)
+        ("--oldvtest"; help = "vTest training scheme"; default = [0]; nargs='+'; arg_type =Int)
+
     end
     return parse_args(s)
 end		
@@ -183,6 +186,66 @@ function sailx(args)
     
 end
 
+function sail_vtest(args)
+    grid, jelly, l = getallinstructions()
+    lg = length(grid)
+    lj = length(jelly)
+    ll = length(l)
+
+    testins = [l, jelly, grid]
+    maps = get_maps()
+
+    vocab = build_dict(vcat(grid, jelly, l))
+    emb = args["wvecs"] ? load("data/embeddings.jld", "vectors") : nothing
+    info("\nVocab: $(length(vocab))")
+
+    models = Any[]
+    for mfile in args["load"]
+        push!(models, loadmodel(mfile; flex=true))
+        w = models[end]
+        info("Model Prms:")
+        for k in keys(w)
+            info("$k : $(size(w[k])) ")
+            if startswith(k, "filter")
+                for i=1:length(w[k])
+                    info("$k , $i : $(size(w[k][i]))")
+                end
+            end
+        end
+    end
+
+    test_ins = testins[args["oldvtest"][1]]
+    test_data = map(ins-> (ins, ins_arr(vocab, ins.text)), test_ins)
+    test_data_grp = map(x->map(ins-> (ins, ins_arr(vocab, ins.text)),x), group_singles(test_ins))
+    
+    if args["categorical"] != ""
+        df = DataFrame(fname=Any[], text=Any[], actions=Any[], Accuracy=Float64[], id=Any[])
+        info("Model Prms:")
+        w = models[1]
+        for k in keys(w)
+            info("$k : $(size(w[k])) ")
+            if startswith(k, "filter")
+                for i=1:length(w[k])
+                    info("$k , $i : $(size(w[k][i]))")
+                end
+            end
+        end
+
+        for d in test_data
+            acc = test_beam(models, [d], maps; args=args)
+            push!(df, (d[1].fname, join(d[1].text, " "), getactions(d[1].path), acc, d[1].id))
+        end
+
+        writetable(args["categorical"], df)
+    else
+        @time tst_acc_beam = test_beam(models, test_data, maps; args=args)
+        @time tst_prg_acc_beam = test_paragraph_beam(models, test_data_grp, maps; args=args)
+
+        info("Beam Single: $tst_acc_beam , Beam Paragraph: $tst_prg_acc_beam")
+    end
+end
+
+
 function mainflex()
     Logging.configure(filename=args["log"])
     if args["level"] == "info"
@@ -193,13 +256,18 @@ function mainflex()
     srand(args["seed"])
     info("*** Parameters ***")
     for k in keys(args); info("$k -> $(args[k])"); end
-
+    
     if args["sailx"] == ""
-        sail(args)
+        if args["oldvtest"][1] != 0
+            sail_vtest(args)
+        elseif args["oldvdev"][1] != 0
+            sail_vdev(args)
+        else
+            sail(args)
+        end
     else
         sailx(args)
     end
-
 end
 
 mainflex()
