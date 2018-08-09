@@ -134,10 +134,12 @@ function sail(args)
 end
 
 function sailx(args)
+    info("Reading data")
     trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
     devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
     testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
     maps = readmapsjson(string(args["sailx"], (args["vDev"] ? "/dev/maps.json" : "/test/maps.json")))
+    info("Vocab generation")
     vocab = build_dict(vcat(trainins, devins, testins))
 
     models = Any[]
@@ -177,20 +179,34 @@ function sailx(args)
 
         writetable(args["categorical"], df)
     else
+        tasks = Dict()
+        for datum in test_data
+            fname = join(split(datum[1].fname,"_")[1:(end-1)], "_")
+            if !(fname in collect(keys(tasks)))
+                tasks[fname] = [0.0, 0.0, 0.0]#beam=1, beam=10, count
+            end
 
-        @time tst_acc = test(models, test_data, maps; args=args)
-        @time tst_acc_beam = test_beam(models, test_data, maps; args=args)
-
-        info("Single: $tst_acc , Beam Single: $tst_acc_beam")
+            tst_acc = test(models, [datum], maps; args=args)
+            tst_acc_beam = test_beam(models, [datum], maps; args=args)
+            tasks[fname][1] = tasks[fname][1] + tst_acc
+            tasks[fname][2] = tasks[fname][2] + tst_acc_beam
+            tasks[fname][3] = tasks[fname][3] + 1
+        end
+        singles = 0.0
+        beams = 0.0
+        for (k,v) in tasks
+            singles += v[1]
+            beams += v[2]
+            info("Task: $k Single: $(v[1] / v[3]) , Beam Single: $(v[2] / v[3])")
+        end
+        l = length(test_data)
+        info("Total: Single: $(singles / l) , Beam: $(beams / l)")
     end
     
 end
 
 function sail_vtest(args)
     grid, jelly, l = getallinstructions()
-    lg = length(grid)
-    lj = length(jelly)
-    ll = length(l)
 
     testins = [l, jelly, grid]
     maps = get_maps()
