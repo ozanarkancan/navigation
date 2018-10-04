@@ -135,12 +135,19 @@ end
 
 function sailx(args)
     info("Reading data")
-    trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
     devins = readinsjson(string(args["sailx"], "/dev/instructions.json"))
     testins = readinsjson(string(args["sailx"], "/test/instructions.json"))
     maps = readmapsjson(string(args["sailx"], (args["vDev"] ? "/dev/maps.json" : "/test/maps.json")))
-    info("Vocab generation")
-    vocab = build_dict(vcat(trainins, devins, testins))
+
+    vocab = nothing
+    if isfile(string(args["sailx"], "/vocab.jld"))
+        vocab = load(string(args["sailx"], "/vocab.jld"), "vocab")
+    else
+        info("Vocab generation")
+        trainins = readinsjson(string(args["sailx"], "/train/instructions.json"))
+        vocab = build_dict(vcat(trainins, devins, testins))
+        save(string(args["sailx"], "/vocab.jld"), "vocab", vocab) 
+    end
 
     models = Any[]
     for mfile in args["load"]

@@ -328,6 +328,9 @@ function sail_vdev(args)
     #1: grid+jelly
     #2: grid+l
     #3: jelly+l
+    
+    trainins = [(grid, jelly, dg, dj), (grid, l, dg, dl), (jelly, l, dj, dl)]
+    testins = [l, jelly, grid]
 
     maps = get_maps()
 
@@ -337,13 +340,23 @@ function sail_vdev(args)
 
     base_s = args["save"]
     base_l = args["load"]
-    for i in [3,2,1]
+    for i in args["oldvdev"]
         for j=1:10
             args["save"] = string(base_s, "_", j, "_", args["trainfiles"][i])
             if base_l != ""
                 args["load"] = string(base_l, "_", j, "_", args["trainfiles"][i])
             end
-            execute(trainins[i], testins[(i-1)*2+j], maps, vocab, emb, args; dev_ins=devins[(i-1)*2+j])
+            ttuple = trainins[i]
+            t = (vcat(j == 1 ? [] : ttuple[1][1:(j-1)*ttuple[3]],
+                      j == 10 ? [] : ttuple[1][j*ttuple[3]+1:end]),
+                 vcat(j == 1 ? [] : ttuple[2][1:(j-1)*ttuple[4]],
+                      j == 10 ? [] : ttuple[2][j*ttuple[4]+1:end]))
+
+            d = vcat(ttuple[1][(j-1)*ttuple[3]+1:j*ttuple[3]],
+                     ttuple[2][(j-1)*ttuple[4]+1:j*ttuple[4]])
+            info("i: $i j: $j lt: $(length(t)) ld: $(length(d))")
+
+            execute(t, testins[i], maps, vocab, emb, args; dev_ins=d)
         end
     end
 end
