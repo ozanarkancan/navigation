@@ -127,6 +127,7 @@ function cnn(filters, bias, worldatt, x)
         if i == 1
             #inp = conv4(worldatt, inp; padding=0)
             inp = relu.(conv4(worldatt, inp; padding=0))
+            debug("Out of cnn: $(Array(inp))")
         end
     end
     inp = sigm.(conv4(filters[end], inp; padding=0) .+ bias[end])
@@ -188,6 +189,7 @@ function worldattention(prevh, wa1, wa2)
     h = h .- maximum(h)
     att_p = exp.(h)
     att_p = att_p ./ sum(att_p)
+    debug("Attention: $(Array(att_p))")
     return reshape(att_p, 1, 1, size(wa2, 2), 1)
 end
 
@@ -1273,7 +1275,7 @@ function predict_beam(models, words, navimap, initial; args=nothing)
                 continue
             end
 
-            view = !args["percp"] ? nothing : args["encoding"] == "grid" ? state_agent_centric(maps[instruction.map], current) : state_agent_centric_multihot(navimap, current)
+            view = !args["percp"] ? nothing : args["encoding"] == "grid" ? state_agent_centric(navimap, current) : state_agent_centric_multihot(navimap, current)
             view = args["percp"] ? convert(args["atype"], view) : nothing
             preva = araw != nothing ? convert(args["atype"], araw)  : araw
 
@@ -1321,10 +1323,10 @@ function predict_beam(models, words, navimap, initial; args=nothing)
                 push!(actcopy, i)
                 cur = identity(current)
                 if i < 4
-                    cur = getlocation(maps[instruction.map], cur, i)
+                    cur = getlocation(navimap, cur, i)
                 end
 
-                if (i == 1 && !haskey(maps[instruction.map].edges[(current[1], current[2])], (cur[1], cur[2]))) || i==4
+                if (i == 1 && !haskey(navimap.edges[(current[1], current[2])], (cur[1], cur[2]))) || i==4
                     mystop = true
                 end
 

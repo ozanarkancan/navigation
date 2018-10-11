@@ -9,5 +9,5 @@ p = WeightVec(p)
 singles = [parse(Float32, ARGS[1]), parse(Float32, ARGS[2]), parse(Float32, ARGS[3])]
 paragraphs = [parse(Float32, ARGS[4]), parse(Float32, ARGS[5]), parse(Float32, ARGS[6])]
 
-println("Single: $(mean_and_std(singles, s))")
-println("Paragraph: $(mean_and_std(paragraphs, p))")
+println("Single: $(mean_and_std(singles, s;corrected=false))")
+println("Paragraph: $(mean_and_std(paragraphs, p;corrected=false))")
