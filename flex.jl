@@ -131,6 +131,7 @@ function cnn(filters, bias, worldatt, x)
         end
     end
     inp = sigm.(conv4(filters[end], inp; padding=0) .+ bias[end])
+    debug("End of cnn: $(findmax(Array(inp)))")
     if length(filters) == 1
         #inp = conv4(worldatt, inp; padding=0)
         inp = sigm.(conv4(worldatt, inp; padding=0))
@@ -189,7 +190,6 @@ function worldattention(prevh, wa1, wa2)
     h = h .- maximum(h)
     att_p = exp.(h)
     att_p = att_p ./ sum(att_p)
-    debug("Attention: $(Array(att_p))")
     return reshape(att_p, 1, 1, size(wa2, 2), 1)
 end
 

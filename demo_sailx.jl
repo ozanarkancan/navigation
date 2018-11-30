@@ -67,7 +67,7 @@ function demo()
     Logging.configure(filename="demo.log")
 
     while true
-        debug("\n***New instruction***")
+        debug("\n\n***New instruction***")
         println("Enter the starting position: ")
         print("> ")
         initial = readline(STDIN)
